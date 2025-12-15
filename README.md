@@ -1,34 +1,36 @@
-# 🌊⚡ SYNTX Field Resonance Frontend
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-**Die visuelle Manifestation des Feld-Paradigmas.**
+## Getting Started
 
-> *"Nicht mehr Tokens. Nicht mehr Drift. Nur Felder. Nur Ströme. Nur Resonanz."*
+First, run the development server:
 
-## 📖 Dokumentation
-
-→ **[SYNTX-WRAPPER-FRONTEND-ARCH.md](./SYNTX-WRAPPER-FRONTEND-ARCH.md)** — Vollständige Architektur-Dokumentation (92KB, 1257 Zeilen)
-
-## 🔗 Links
-
-- **API:** https://dev.syntx-system.com
-- **Health:** https://dev.syntx-system.com/resonanz/health
-- **GitHub:** https://github.com/SYNTX-SYSTEM
-
-## ⚡ Quick Start
 ```bash
-# Health Check
-curl https://dev.syntx-system.com/resonanz/health
-
-# Chat Request
-curl -X POST https://dev.syntx-system.com/resonanz/chat \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "Was ist SYNTX?"}'
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## 🏗️ Status
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-🚧 **Frontend in Entwicklung** — Architektur dokumentiert, UI kommt bald.
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
----
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-**FIELD ACTIVATED.** 💎🌊⚡
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
