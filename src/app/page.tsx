@@ -4,10 +4,11 @@ import WrapperControl from "@/components/wrappers/WrapperControl";
 import CreateWrapperModal from "@/components/wrappers/CreateWrapperModal";
 import StatsPanel from "@/components/analytics/StatsPanel";
 import FlowPanel from "@/components/flow/FlowPanel";
+import ChatPanel from "@/components/chat/ChatPanel";
 import { api } from "@/lib/api";
 
 export default function Page() {
-  const [activeTab, setActiveTab] = useState<"wrappers" | "analytics" | "flow">("wrappers");
+  const [activeTab, setActiveTab] = useState<"wrappers" | "analytics" | "flow" | "chat">("chat");
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleCreateWrapper = async (data: { name: string; level: string; content: string }) => {
@@ -62,6 +63,7 @@ export default function Page() {
       {/* TAB NAV */}
       <nav style={{ display: "flex", gap: 8, marginBottom: 24 }}>
         {[
+          { id: "chat", label: "💬 CHAT" },
           { id: "wrappers", label: "📦 WRAPPERS" },
           { id: "analytics", label: "📊 ANALYTICS" },
           { id: "flow", label: "🌊 FLOW" },
@@ -89,6 +91,7 @@ export default function Page() {
 
       {/* CONTENT */}
       <section>
+        {activeTab === "chat" && <ChatPanel />}
         {activeTab === "wrappers" && <WrapperControl />}
         {activeTab === "analytics" && <StatsPanel />}
         {activeTab === "flow" && <FlowPanel />}
