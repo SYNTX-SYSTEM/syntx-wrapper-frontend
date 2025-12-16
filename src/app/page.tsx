@@ -8,14 +8,16 @@ import FlowPanel from "@/components/flow/FlowPanel";
 import ChatPanel from "@/components/chat/ChatPanel";
 import GraphsPanel from "@/components/graphs/GraphsPanel";
 import SystemPanel from "@/components/system/SystemPanel";
+import DataPanel from "@/components/data/DataPanel";
 import LiveBadge from "@/components/ui/LiveBadge";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { useRealtime, useRealtimeHealth } from "@/hooks/useRealtime";
 import { api } from "@/lib/api";
 
-type TabId = "system" | "chat" | "graphs" | "wrappers" | "analytics" | "flow";
+type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "analytics" | "flow";
 
 const TABS = [
+  { id: "data", label: "DATA", icon: "📊", color: "#8b5cf6" },
   { id: "system", label: "SYSTEM", icon: "🖥️", color: "#10b981" },
   { id: "chat", label: "CHAT", icon: "💬", color: "#00d4ff" },
   { id: "graphs", label: "GRAPHS", icon: "📈", color: "#d946ef" },
@@ -252,6 +254,7 @@ function Dashboard() {
       </nav>
 
       <section style={{ opacity: isTransitioning ? 0 : 1, transform: isTransitioning ? "translateY(10px)" : "translateY(0)", transition: "all 0.15s ease" }}>
+        {activeTab === "data" && <DataPanel />}
         {activeTab === "system" && <SystemPanel />}
         {activeTab === "chat" && <ChatPanel />}
         {activeTab === "graphs" && <GraphsPanel />}
