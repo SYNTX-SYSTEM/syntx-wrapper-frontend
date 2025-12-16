@@ -5,7 +5,7 @@ import { Card, Button, Input } from '@/components/ui';
 import { FieldFlowVisualizer } from '@/components/flow';
 import { useMutation } from '@/hooks/useApi';
 import { api } from '@/lib/api';
-import type { ChatResponse } from '@/types/api';
+import type { ChatResponse } from '@/lib/api';
 
 export function ChatInterface() {
   const [prompt, setPrompt] = useState('');

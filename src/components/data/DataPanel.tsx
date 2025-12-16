@@ -213,7 +213,7 @@ export default function DataPanel() {
       acc[name].total += d.latency; acc[name].count += 1;
       return acc;
     }, {});
-    return Object.values(grouped).map((d: any) => ({ name: d.name, avg: d.total / d.count }));
+    return Object.values(grouped).map((d: any) => ({ name: d.name, avg: d.total / d.count, count: d.count }));
   }, [latencyTimeline]);
 
   const radarData = React.useMemo(() => latencyByWrapper.map(w => ({ wrapper: w.name, speed: Math.max(0, 100 - (w.avg * 2)), volume: w.count * 10 })), [latencyByWrapper]);

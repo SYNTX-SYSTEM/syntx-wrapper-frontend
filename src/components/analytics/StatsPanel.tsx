@@ -92,7 +92,7 @@ export default function StatsPanel() {
       ]);
       setStats(statsData);
       setStreamEvents(streamData.events || []);
-      setTrainingData(training.requests || []);
+      setTrainingData(training.entries || []);
     } catch (e) {
       console.error(e);
     } finally {

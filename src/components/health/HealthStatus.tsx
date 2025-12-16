@@ -1,5 +1,4 @@
 'use client';
-
 import { Card, StatusBadge } from '@/components/ui';
 import { useApi } from '@/hooks/useApi';
 import { api } from '@/lib/api';
@@ -41,18 +40,6 @@ export function HealthStatus() {
             />
             <span className="text-xs text-syntx-muted font-mono">v{data.version}</span>
           </div>
-          
-          {data.last_response && (
-            <div className="pt-4 border-t border-syntx-border/30 space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-syntx-muted">Last Response</span>
-                <span className="text-syntx-cyan font-mono">{data.last_response.latency_ms}ms</span>
-              </div>
-              <div className="text-xs text-syntx-muted/70 font-mono truncate">
-                {new Date(data.last_response.timestamp).toLocaleString()}
-              </div>
-            </div>
-          )}
         </div>
       ) : null}
     </Card>

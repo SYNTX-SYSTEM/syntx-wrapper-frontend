@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { api } from '@/lib/api';
+import { api, Wrapper } from '@/lib/api';
 import { usePagination } from '@/hooks/usePagination';
 import { useFilter } from '@/hooks/useFilter';
 import { useExport } from '@/hooks/useExport';
@@ -12,7 +12,7 @@ import ExportButton from '@/components/ui/ExportButton';
 
 const COLORS = { cyan: '#00d4ff', magenta: '#d946ef', green: '#10b981', orange: '#f59e0b' };
 
-interface Wrapper { name: string; path: string; size_bytes: number; size_human: string; last_modified: string; is_active: boolean; }
+
 
 function WrapperDetailModal({ wrapper, onClose }: { wrapper: Wrapper; onClose: () => void }) {
   const [content, setContent] = useState<string | null>(null);
@@ -92,7 +92,7 @@ export default function WrapperControl() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 120px 120px', gap: 8, padding: '12px 24px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <SortHeader label="Name" sortKey="name" currentSort={sorting as any} onSort={toggleSort as any} />
-        <SortHeader label="Size" sortKey="size_bytes" currentSort={sorting as any} onSort={toggleSort as any} />
+        <SortHeader label="Size" sortKey="size" currentSort={sorting as any} onSort={toggleSort as any} />
         <SortHeader label="Modified" sortKey="last_modified" currentSort={sorting as any} onSort={toggleSort as any} />
         <div style={{ padding: '8px 12px', fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.5)' }}>ACTIONS</div>
       </div>

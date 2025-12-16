@@ -82,7 +82,7 @@ function HeroSection({ onEnter }: { onEnter: () => void }) {
         transition: "all 1s ease",
       }}>
         <div style={{ marginBottom: 40 }}>
-          <Image src="/logo.png" alt="SYNTX" width={120} height={120} style={{ filter: "drop-shadow(0 0 30px rgba(0,212,255,0.5))" }} />
+          <img src="/logo.png" alt="SYNTX" width={120} height={120} style={{ filter: "drop-shadow(0 0 30px rgba(0,212,255,0.5))" }} />
         </div>
 
         <h1 style={{
@@ -201,7 +201,7 @@ function Dashboard() {
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div onClick={() => setShowHero(true)} style={{ cursor: "pointer", width: 50, height: 50, borderRadius: 12, background: "rgba(0,0,0,0.3)", border: "1px solid rgba(0,212,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Image src="/logo.png" alt="SYNTX" width={35} height={35} />
+            <img src="/logo.png" alt="SYNTX" width={35} height={35} />
           </div>
           <div>
             <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, background: "linear-gradient(135deg, #00d4ff, #d946ef)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>SYNTX</h1>
