@@ -4,18 +4,13 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { api, StreamEvent } from '@/lib/api';
 import { usePagination } from '@/hooks/usePagination';
 import { useFilter } from '@/hooks/useFilter';
+import { useExport } from '@/hooks/useExport';
 import Pagination from '@/components/ui/Pagination';
 import SortHeader from '@/components/ui/SortHeader';
 import FilterBar from '@/components/ui/FilterBar';
+import ExportButton from '@/components/ui/ExportButton';
 
-const COLORS = {
-  cyan: '#00d4ff',
-  magenta: '#d946ef',
-  green: '#10b981',
-  orange: '#f59e0b',
-  red: '#ef4444',
-};
-
+const COLORS = { cyan: '#00d4ff', magenta: '#d946ef', green: '#10b981', orange: '#f59e0b', red: '#ef4444' };
 const STAGE_CONFIG: Record<string, { color: string; icon: string }> = {
   '1_INCOMING': { color: COLORS.cyan, icon: '📥' },
   '2_WRAPPERS_LOADED': { color: COLORS.green, icon: '📦' },
@@ -37,10 +32,7 @@ interface RequestGroup {
 function FlowDetailModal({ requestId, onClose }: { requestId: string; onClose: () => void }) {
   const [detail, setDetail] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.getHistory(requestId).then(setDetail).catch(console.error).finally(() => setLoading(false));
-  }, [requestId]);
+  useEffect(() => { api.getHistory(requestId).then(setDetail).catch(console.error).finally(() => setLoading(false)); }, [requestId]);
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
@@ -82,40 +74,23 @@ export default function FlowPanel() {
   const [allEvents, setAllEvents] = useState<StreamEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
+  const { exportJSON, exportCSV } = useExport();
 
   const fetchData = useCallback(async () => {
-    try {
-      const data = await api.getStream(500);
-      setAllEvents(data.events || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+    try { const data = await api.getStream(500); setAllEvents(data.events || []); } 
+    catch (e) { console.error(e); } 
+    finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
+  useEffect(() => { fetchData(); const interval = setInterval(fetchData, 10000); return () => clearInterval(interval); }, [fetchData]);
 
-  // Group events by request_id
   const requestGroups = useMemo(() => {
     const grouped: Record<string, RequestGroup> = {};
     allEvents.forEach(event => {
       if (!grouped[event.request_id]) {
-        grouped[event.request_id] = {
-          request_id: event.request_id,
-          timestamp: new Date(event.timestamp),
-          latency_ms: 0,
-          wrapper: event.wrapper_chain?.[0] || 'unknown',
-          stages: [],
-        };
+        grouped[event.request_id] = { request_id: event.request_id, timestamp: new Date(event.timestamp), latency_ms: 0, wrapper: event.wrapper_chain?.[0] || 'unknown', stages: [] };
       }
-      if (!grouped[event.request_id].stages.includes(event.stage)) {
-        grouped[event.request_id].stages.push(event.stage);
-      }
+      if (!grouped[event.request_id].stages.includes(event.stage)) grouped[event.request_id].stages.push(event.stage);
       if (event.latency_ms) grouped[event.request_id].latency_ms = event.latency_ms;
       if (event.stage === '1_INCOMING' && event.prompt) grouped[event.request_id].prompt = event.prompt;
       if (event.stage === '5_RESPONSE' && event.response) grouped[event.request_id].response = event.response;
@@ -123,96 +98,64 @@ export default function FlowPanel() {
     return Object.values(grouped);
   }, [allEvents]);
 
-  // Get unique wrappers for filter
-  const wrapperOptions = useMemo(() => {
-    const wrappers = [...new Set(requestGroups.map(r => r.wrapper))];
-    return [
-      { value: 'all', label: 'All Wrappers' },
-      ...wrappers.map(w => ({ value: w, label: w.replace('syntex_wrapper_', '') }))
-    ];
-  }, [requestGroups]);
+  const wrapperOptions = useMemo(() => [
+    { value: 'all', label: 'All Wrappers' },
+    ...[...new Set(requestGroups.map(r => r.wrapper))].map(w => ({ value: w, label: w.replace('syntex_wrapper_', '') }))
+  ], [requestGroups]);
 
-  // Filter
-  const { filteredItems, searchQuery, setSearchQuery, filters, setFilter, clearFilters, activeFilterCount } = useFilter(requestGroups, {
-    searchFields: ['prompt', 'response', 'request_id', 'wrapper'],
-  });
+  const { filteredItems, searchQuery, setSearchQuery, filters, setFilter, clearFilters, activeFilterCount } = useFilter(requestGroups, { searchFields: ['prompt', 'response', 'request_id', 'wrapper'] });
+  const finalFiltered = filteredItems.filter(r => !filters.wrapper || filters.wrapper === 'all' || r.wrapper === filters.wrapper);
+  const { items: paginatedRequests, pagination, sorting, setPage, setPageSize, toggleSort } = usePagination(finalFiltered, 10, { key: 'timestamp', direction: 'desc' });
 
-  // Pagination
-  const { items: paginatedRequests, pagination, sorting, setPage, setPageSize, toggleSort } = usePagination(
-    filteredItems.filter(r => !filters.wrapper || filters.wrapper === 'all' || r.wrapper === filters.wrapper),
-    10,
-    { key: 'timestamp', direction: 'desc' }
-  );
+  const handleExportJSON = () => exportJSON(finalFiltered.map(r => ({ ...r, timestamp: r.timestamp.toISOString() })), 'syntx_flow');
+  const handleExportCSV = () => exportCSV(finalFiltered.map(r => ({ ...r, timestamp: r.timestamp.toISOString(), stages: r.stages.join(', ') })), 'syntx_flow', [
+    { key: 'request_id', label: 'Request ID' },
+    { key: 'timestamp', label: 'Timestamp' },
+    { key: 'wrapper', label: 'Wrapper' },
+    { key: 'latency_ms', label: 'Latency (ms)' },
+    { key: 'prompt', label: 'Prompt' },
+    { key: 'response', label: 'Response' },
+    { key: 'stages', label: 'Stages' },
+  ]);
 
-  if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>Loading Field Flow...</div>;
-  }
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>Loading Field Flow...</div>;
 
   return (
     <div style={{ background: 'linear-gradient(135deg, rgba(10,26,46,0.9), rgba(6,13,24,0.95))', borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-      {/* Header */}
       <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontSize: 24 }}>🌊</span>
           <h2 style={{ margin: 0, fontFamily: 'monospace', fontSize: 16, color: COLORS.cyan }}>FIELD FLOW</h2>
           <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>{requestGroups.length} Requests</span>
         </div>
+        <ExportButton onExportJSON={handleExportJSON} onExportCSV={handleExportCSV} disabled={finalFiltered.length === 0} color={COLORS.cyan} />
       </div>
 
-      {/* Filter Bar */}
-      <FilterBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Search prompts, responses, IDs..."
-        filters={[{ key: 'wrapper', label: 'Wrapper', options: wrapperOptions }]}
-        filterValues={filters}
-        onFilterChange={setFilter}
-        onClear={clearFilters}
-        activeCount={activeFilterCount}
-        color={COLORS.cyan}
-      />
+      <FilterBar searchQuery={searchQuery} onSearchChange={setSearchQuery} searchPlaceholder="Search prompts, responses, IDs..." filters={[{ key: 'wrapper', label: 'Wrapper', options: wrapperOptions }]} filterValues={filters} onFilterChange={setFilter} onClear={clearFilters} activeCount={activeFilterCount} color={COLORS.cyan} />
 
-      {/* Table Header */}
       <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 120px 100px 80px', gap: 8, padding: '12px 24px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <SortHeader label="Zeit" sortKey="timestamp" currentSort={sorting as any} onSort={toggleSort as any} />
         <SortHeader label="Prompt" sortKey="prompt" currentSort={sorting as any} onSort={toggleSort as any} />
         <SortHeader label="Wrapper" sortKey="wrapper" currentSort={sorting as any} onSort={toggleSort as any} />
         <SortHeader label="Latency" sortKey="latency_ms" currentSort={sorting as any} onSort={toggleSort as any} color={COLORS.orange} />
-        <div style={{ padding: '8px 12px', fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.5)', letterSpacing: 1 }}>STAGES</div>
+        <div style={{ padding: '8px 12px', fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.5)' }}>STAGES</div>
       </div>
 
-      {/* Rows */}
       <div style={{ maxHeight: 500, overflow: 'auto' }}>
         {paginatedRequests.length === 0 ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
-            {activeFilterCount > 0 ? 'No results matching filters' : 'No requests yet'}
-          </div>
+          <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>{activeFilterCount > 0 ? 'No results matching filters' : 'No requests yet'}</div>
         ) : paginatedRequests.map((req) => (
-          <div
-            key={req.request_id}
-            onClick={() => setSelectedRequest(req.request_id)}
-            style={{ display: 'grid', gridTemplateColumns: '120px 1fr 120px 100px 80px', gap: 8, padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer', transition: 'all 0.2s ease' }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0,212,255,0.05)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-          >
+          <div key={req.request_id} onClick={() => setSelectedRequest(req.request_id)} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 120px 100px 80px', gap: 8, padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0,212,255,0.05)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
             <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.6)' }}>{req.timestamp.toLocaleTimeString('de-DE')}</div>
             <div style={{ fontSize: 12, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.prompt || req.request_id.slice(0, 12) + '...'}</div>
             <div style={{ fontSize: 10, fontFamily: 'monospace', padding: '4px 8px', borderRadius: 6, background: COLORS.magenta + '20', color: COLORS.magenta, width: 'fit-content' }}>{req.wrapper.replace('syntex_wrapper_', '')}</div>
             <div style={{ fontSize: 12, fontFamily: 'monospace', color: COLORS.orange }}>{req.latency_ms ? `${(req.latency_ms / 1000).toFixed(1)}s` : '-'}</div>
-            <div style={{ display: 'flex', gap: 4 }}>
-              {req.stages.sort().map(stage => (
-                <div key={stage} style={{ width: 8, height: 8, borderRadius: '50%', background: STAGE_CONFIG[stage]?.color || COLORS.cyan }} title={stage} />
-              ))}
-            </div>
+            <div style={{ display: 'flex', gap: 4 }}>{req.stages.sort().map(s => <div key={s} style={{ width: 8, height: 8, borderRadius: '50%', background: STAGE_CONFIG[s]?.color || COLORS.cyan }} title={s} />)}</div>
           </div>
         ))}
       </div>
 
-      {/* Pagination */}
-      <div style={{ padding: '0 24px 16px' }}>
-        <Pagination page={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} pageSize={pagination.pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} />
-      </div>
-
+      <div style={{ padding: '0 24px 16px' }}><Pagination page={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} pageSize={pagination.pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} /></div>
       {selectedRequest && <FlowDetailModal requestId={selectedRequest} onClose={() => setSelectedRequest(null)} />}
     </div>
   );

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useExport } from '@/hooks/useExport';
+import ExportButton from '@/components/ui/ExportButton';
 import { api, StatsResponse, StreamEvent, TrainingEntry } from '@/lib/api';
 import { usePagination } from '@/hooks/usePagination';
 import Pagination from '@/components/ui/Pagination';

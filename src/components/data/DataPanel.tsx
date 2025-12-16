@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useExport } from '@/hooks/useExport';
+import ExportButton from '@/components/ui/ExportButton';
 import { api, StatsResponse, StreamEvent } from '@/lib/api';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
