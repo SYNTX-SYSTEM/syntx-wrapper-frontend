@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { api, StreamEvent } from '@/lib/api';
 import { usePagination } from '@/hooks/usePagination';
+import { useFilter } from '@/hooks/useFilter';
 import Pagination from '@/components/ui/Pagination';
 import SortHeader from '@/components/ui/SortHeader';
+import FilterBar from '@/components/ui/FilterBar';
 
 const COLORS = {
   cyan: '#00d4ff',
@@ -63,12 +65,9 @@ function FlowDetailModal({ requestId, onClose }: { requestId: string; onClose: (
                   <span style={{ fontFamily: 'monospace', fontSize: 12, color: config.color, fontWeight: 700 }}>{stage.stage}</span>
                   <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{new Date(stage.timestamp).toLocaleString('de-DE')}</span>
                 </div>
-                {stage.prompt && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 8 }}><strong>Prompt:</strong> {stage.prompt}</div>}
-                {stage.wrapper_text && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 11, color: 'rgba(255,255,255,0.7)', maxHeight: 150, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{stage.wrapper_text}</div>}
-                {stage.calibrated_field && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 11, color: 'rgba(255,255,255,0.7)', maxHeight: 200, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{stage.calibrated_field}</div>}
-                {stage.backend_url && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 8 }}><strong>Backend:</strong> <span style={{ color: COLORS.magenta }}>{stage.backend_url}</span></div>}
-                {stage.params && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 11, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}><strong>Params:</strong> <pre style={{ margin: '8px 0 0', color: COLORS.cyan }}>{JSON.stringify(stage.params, null, 2)}</pre></div>}
-                {stage.response && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 12, color: 'rgba(255,255,255,0.8)', maxHeight: 200, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{stage.response}</div>}
+                {stage.prompt && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 12, marginBottom: 8 }}><strong>Prompt:</strong> {stage.prompt}</div>}
+                {stage.backend_url && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 12, marginBottom: 8 }}><strong>Backend:</strong> <span style={{ color: COLORS.magenta }}>{stage.backend_url}</span></div>}
+                {stage.response && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 12, maxHeight: 200, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{stage.response}</div>}
                 {stage.latency_ms && <div style={{ marginTop: 8, fontSize: 11, color: COLORS.orange }}>⚡ {(stage.latency_ms/1000).toFixed(2)}s</div>}
               </div>
             );
@@ -102,9 +101,8 @@ export default function FlowPanel() {
   }, [fetchData]);
 
   // Group events by request_id
-  const requestGroups = React.useMemo(() => {
+  const requestGroups = useMemo(() => {
     const grouped: Record<string, RequestGroup> = {};
-    
     allEvents.forEach(event => {
       if (!grouped[event.request_id]) {
         grouped[event.request_id] = {
@@ -115,78 +113,67 @@ export default function FlowPanel() {
           stages: [],
         };
       }
-      
       if (!grouped[event.request_id].stages.includes(event.stage)) {
         grouped[event.request_id].stages.push(event.stage);
       }
-      
-      if (event.latency_ms) {
-        grouped[event.request_id].latency_ms = event.latency_ms;
-      }
-      
-      if (event.stage === '1_INCOMING' && event.prompt) {
-        grouped[event.request_id].prompt = event.prompt;
-      }
-      
-      if (event.stage === '5_RESPONSE' && event.response) {
-        grouped[event.request_id].response = event.response;
-      }
+      if (event.latency_ms) grouped[event.request_id].latency_ms = event.latency_ms;
+      if (event.stage === '1_INCOMING' && event.prompt) grouped[event.request_id].prompt = event.prompt;
+      if (event.stage === '5_RESPONSE' && event.response) grouped[event.request_id].response = event.response;
     });
-    
     return Object.values(grouped);
   }, [allEvents]);
 
-  const {
-    items: paginatedRequests,
-    pagination,
-    sorting,
-    setPage,
-    setPageSize,
-    toggleSort,
-  } = usePagination(requestGroups, 10, { key: 'timestamp', direction: 'desc' });
+  // Get unique wrappers for filter
+  const wrapperOptions = useMemo(() => {
+    const wrappers = [...new Set(requestGroups.map(r => r.wrapper))];
+    return [
+      { value: 'all', label: 'All Wrappers' },
+      ...wrappers.map(w => ({ value: w, label: w.replace('syntex_wrapper_', '') }))
+    ];
+  }, [requestGroups]);
+
+  // Filter
+  const { filteredItems, searchQuery, setSearchQuery, filters, setFilter, clearFilters, activeFilterCount } = useFilter(requestGroups, {
+    searchFields: ['prompt', 'response', 'request_id', 'wrapper'],
+  });
+
+  // Pagination
+  const { items: paginatedRequests, pagination, sorting, setPage, setPageSize, toggleSort } = usePagination(
+    filteredItems.filter(r => !filters.wrapper || filters.wrapper === 'all' || r.wrapper === filters.wrapper),
+    10,
+    { key: 'timestamp', direction: 'desc' }
+  );
 
   if (loading) {
-    return (
-      <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>
-        Loading Field Flow...
-      </div>
-    );
+    return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>Loading Field Flow...</div>;
   }
 
   return (
-    <div style={{
-      background: 'linear-gradient(135deg, rgba(10,26,46,0.9), rgba(6,13,24,0.95))',
-      borderRadius: 20,
-      border: '1px solid rgba(255,255,255,0.08)',
-      overflow: 'hidden',
-    }}>
+    <div style={{ background: 'linear-gradient(135deg, rgba(10,26,46,0.9), rgba(6,13,24,0.95))', borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
       {/* Header */}
-      <div style={{
-        padding: '20px 24px',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        background: 'rgba(0,0,0,0.2)',
-      }}>
+      <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontSize: 24 }}>🌊</span>
           <h2 style={{ margin: 0, fontFamily: 'monospace', fontSize: 16, color: COLORS.cyan }}>FIELD FLOW</h2>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>
-            {requestGroups.length} Requests
-          </span>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>{requestGroups.length} Requests</span>
         </div>
       </div>
 
+      {/* Filter Bar */}
+      <FilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search prompts, responses, IDs..."
+        filters={[{ key: 'wrapper', label: 'Wrapper', options: wrapperOptions }]}
+        filterValues={filters}
+        onFilterChange={setFilter}
+        onClear={clearFilters}
+        activeCount={activeFilterCount}
+        color={COLORS.cyan}
+      />
+
       {/* Table Header */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '120px 1fr 120px 100px 80px',
-        gap: 8,
-        padding: '12px 24px',
-        background: 'rgba(0,0,0,0.3)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-      }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 120px 100px 80px', gap: 8, padding: '12px 24px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <SortHeader label="Zeit" sortKey="timestamp" currentSort={sorting as any} onSort={toggleSort as any} />
         <SortHeader label="Prompt" sortKey="prompt" currentSort={sorting as any} onSort={toggleSort as any} />
         <SortHeader label="Wrapper" sortKey="wrapper" currentSort={sorting as any} onSort={toggleSort as any} />
@@ -196,49 +183,25 @@ export default function FlowPanel() {
 
       {/* Rows */}
       <div style={{ maxHeight: 500, overflow: 'auto' }}>
-        {paginatedRequests.map((req) => (
+        {paginatedRequests.length === 0 ? (
+          <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
+            {activeFilterCount > 0 ? 'No results matching filters' : 'No requests yet'}
+          </div>
+        ) : paginatedRequests.map((req) => (
           <div
             key={req.request_id}
             onClick={() => setSelectedRequest(req.request_id)}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '120px 1fr 120px 100px 80px',
-              gap: 8,
-              padding: '14px 24px',
-              borderBottom: '1px solid rgba(255,255,255,0.03)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              background: 'transparent',
-            }}
+            style={{ display: 'grid', gridTemplateColumns: '120px 1fr 120px 100px 80px', gap: 8, padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer', transition: 'all 0.2s ease' }}
             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0,212,255,0.05)'}
             onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.6)' }}>
-              {req.timestamp.toLocaleTimeString('de-DE')}
-            </div>
-            <div style={{ fontSize: 12, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {req.prompt || req.request_id.slice(0, 12) + '...'}
-            </div>
-            <div style={{
-              fontSize: 10,
-              fontFamily: 'monospace',
-              padding: '4px 8px',
-              borderRadius: 6,
-              background: COLORS.magenta + '20',
-              color: COLORS.magenta,
-              width: 'fit-content',
-            }}>
-              {req.wrapper.replace('syntex_wrapper_', '')}
-            </div>
-            <div style={{ fontSize: 12, fontFamily: 'monospace', color: COLORS.orange }}>
-              {req.latency_ms ? `${(req.latency_ms / 1000).toFixed(1)}s` : '-'}
-            </div>
+            <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.6)' }}>{req.timestamp.toLocaleTimeString('de-DE')}</div>
+            <div style={{ fontSize: 12, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.prompt || req.request_id.slice(0, 12) + '...'}</div>
+            <div style={{ fontSize: 10, fontFamily: 'monospace', padding: '4px 8px', borderRadius: 6, background: COLORS.magenta + '20', color: COLORS.magenta, width: 'fit-content' }}>{req.wrapper.replace('syntex_wrapper_', '')}</div>
+            <div style={{ fontSize: 12, fontFamily: 'monospace', color: COLORS.orange }}>{req.latency_ms ? `${(req.latency_ms / 1000).toFixed(1)}s` : '-'}</div>
             <div style={{ display: 'flex', gap: 4 }}>
               {req.stages.sort().map(stage => (
-                <div key={stage} style={{
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: STAGE_CONFIG[stage]?.color || COLORS.cyan,
-                }} title={stage} />
+                <div key={stage} style={{ width: 8, height: 8, borderRadius: '50%', background: STAGE_CONFIG[stage]?.color || COLORS.cyan }} title={stage} />
               ))}
             </div>
           </div>
@@ -247,23 +210,10 @@ export default function FlowPanel() {
 
       {/* Pagination */}
       <div style={{ padding: '0 24px 16px' }}>
-        <Pagination
-          page={pagination.page}
-          totalPages={pagination.totalPages}
-          totalItems={pagination.totalItems}
-          pageSize={pagination.pageSize}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
-        />
+        <Pagination page={pagination.page} totalPages={pagination.totalPages} totalItems={pagination.totalItems} pageSize={pagination.pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} />
       </div>
 
-      {/* Modal */}
-      {selectedRequest && (
-        <FlowDetailModal
-          requestId={selectedRequest}
-          onClose={() => setSelectedRequest(null)}
-        />
-      )}
+      {selectedRequest && <FlowDetailModal requestId={selectedRequest} onClose={() => setSelectedRequest(null)} />}
     </div>
   );
 }
