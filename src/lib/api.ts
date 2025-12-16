@@ -1,114 +1,294 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://dev.syntx-system.com';
+// ═══════════════════════════════════════════════════════════════
+// SYNTX API CLIENT - Alle 16 Endpoints
+// Base URL: https://dev.syntx-system.com
+// ═══════════════════════════════════════════════════════════════
 
-class APIError extends Error {
+const BASE_URL = 'https://dev.syntx-system.com';
+
+// ═══════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════
+
+export interface HealthResponse {
+  status: 'healthy' | 'unhealthy';
+  version: string;
+  timestamp: string;
+}
+
+export interface ConfigResponse {
+  default_wrapper: string;
+}
+
+export interface Wrapper {
+  name: string;
+  size: number;
+  size_human: string;
+  last_modified: string;
+  is_active: boolean;
+}
+
+export interface WrapperListResponse {
+  wrappers: Wrapper[];
+  count: number;
+  active_wrapper: string;
+}
+
+export interface WrapperDetailResponse {
+  name: string;
+  content: string;
+  size: number;
+  last_modified: string;
+  is_active: boolean;
+}
+
+export interface ActivateResponse {
+  success: boolean;
+  message: string;
+  active_wrapper: string;
+}
+
+export interface UploadResponse {
+  success: boolean;
+  message: string;
+  wrapper_name: string;
+  size: number;
+}
+
+export interface StreamEvent {
+  stage: string;
+  timestamp: string;
+  request_id: string;
+  latency_ms?: number;
+  [key: string]: any;
+}
+
+export interface StreamResponse {
+  events: StreamEvent[];
+  count: number;
+}
+
+export interface TrainingEntry {
+  timestamp: string;
+  request_id: string;
+  prompt: string;
+  response: string;
+  mode: string;
+  wrapper_chain: string[];
+  latency_ms: number;
+  success: boolean;
+}
+
+export interface TrainingResponse {
+  entries: TrainingEntry[];
+  count: number;
+  total: number;
+}
+
+export interface StatsResponse {
+  total_requests: number;
+  success_rate: number;
+  average_latency_ms: number;
+  median_latency_ms: number;
+  wrapper_usage: Record<string, number>;
+}
+
+export interface WrapperStatsResponse {
+  wrapper_name: string;
+  total_requests: number;
+  success_rate: number;
+  average_latency_ms: number;
+  median_latency_ms: number;
+}
+
+export interface ChatRequest {
+  prompt: string;
+  mode?: string;
+  include_init?: boolean;
+  max_new_tokens?: number;
+}
+
+export interface ChatResponse {
+  response: string;
+  metadata: {
+    request_id: string;
+    wrapper_chain: string[];
+    latency_ms: number;
+  };
+  field_flow?: StreamEvent[];
+}
+
+export interface HistoryResponse {
+  request_id: string;
+  prompt: string;
+  response: string;
+  mode: string;
+  wrapper_chain: string[];
+  latency_ms: number;
+  timestamp: string;
+  field_flow: StreamEvent[];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// API ERROR
+// ═══════════════════════════════════════════════════════════════
+
+export class APIError extends Error {
   constructor(public status: number, message: string) {
     super(message);
     this.name = 'APIError';
   }
 }
 
-async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${API_BASE}${endpoint}`;
-  const res = await fetch(url, {
+// ═══════════════════════════════════════════════════════════════
+// FETCH HELPER
+// ═══════════════════════════════════════════════════════════════
+
+async function fetchAPI<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const url = `${BASE_URL}${endpoint}`;
+  
+  const response = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options?.headers,
+      ...options.headers,
     },
   });
 
-  if (!res.ok) {
-    throw new APIError(res.status, `API Error: ${res.statusText}`);
+  if (!response.ok) {
+    throw new APIError(response.status, `API Error: ${response.statusText}`);
   }
 
-  return res.json();
+  return response.json();
 }
 
+// ═══════════════════════════════════════════════════════════════
+// API METHODS - Alle 16 Endpoints
+// ═══════════════════════════════════════════════════════════════
+
 export const api = {
-  // 1. Health
-  getHealth: () => fetchAPI<import('@/types/api').HealthResponse>('/resonanz/health'),
+  // ─────────────────────────────────────────────────────────────
+  // HEALTH & CONFIG
+  // ─────────────────────────────────────────────────────────────
+  
+  /** GET /resonanz/health - System Health Check */
+  getHealth: () => 
+    fetchAPI<HealthResponse>('/resonanz/health'),
 
-  // 2. Config - GET
-  getConfig: () => fetchAPI<import('@/types/api').ConfigResponse>('/resonanz/config/default-wrapper'),
+  /** GET /resonanz/config/default-wrapper - Get default wrapper */
+  getConfig: () => 
+    fetchAPI<ConfigResponse>('/resonanz/config/default-wrapper'),
 
-  // 3. Config - PUT
-  setConfig: (wrapperName: string) =>
-    fetchAPI<import('@/types/api').ConfigResponse>(
-      `/resonanz/config/default-wrapper?wrapper_name=${wrapperName}`,
-      { method: 'PUT' }
-    ),
+  /** PUT /resonanz/config/default-wrapper - Set default wrapper */
+  setConfig: (wrapperName: string) => 
+    fetchAPI<ConfigResponse>('/resonanz/config/default-wrapper', {
+      method: 'PUT',
+      body: JSON.stringify({ default_wrapper: wrapperName }),
+    }),
 
-  // 4. Wrappers - List
-  getWrappers: () => fetchAPI<import('@/types/api').WrapperListResponse>('/resonanz/wrappers'),
+  // ─────────────────────────────────────────────────────────────
+  // WRAPPERS
+  // ─────────────────────────────────────────────────────────────
+  
+  /** GET /resonanz/wrappers - List all wrappers */
+  getWrappers: () => 
+    fetchAPI<WrapperListResponse>('/resonanz/wrappers'),
 
-  // 5. Wrappers - Active Only
-  getActiveWrapper: () =>
-    fetchAPI<import('@/types/api').WrapperListResponse>('/resonanz/wrappers?active=true'),
+  /** GET /resonanz/wrappers?active=true - Get active wrapper */
+  getActiveWrapper: () => 
+    fetchAPI<WrapperListResponse>('/resonanz/wrappers?active=true'),
 
-  // 6. Wrapper - Detail
-  getWrapper: (name: string) =>
-    fetchAPI<import('@/types/api').WrapperDetailResponse>(`/resonanz/wrapper/${name}`),
+  /** GET /resonanz/wrapper/{name} - Get wrapper details */
+  getWrapper: (name: string) => 
+    fetchAPI<WrapperDetailResponse>(`/resonanz/wrapper/${encodeURIComponent(name)}`),
 
-  // 7. Wrapper - Activate
-  activateWrapper: (name: string) =>
-    fetchAPI<{ status: string; message: string; active_wrapper: string }>(
-      `/resonanz/wrappers/${name}/activate`,
-      { method: 'POST' }
-    ),
+  /** POST /resonanz/wrappers/{name}/activate - Activate wrapper */
+  activateWrapper: (name: string) => 
+    fetchAPI<ActivateResponse>(`/resonanz/wrappers/${encodeURIComponent(name)}/activate`, {
+      method: 'POST',
+    }),
 
-  // 8. Wrapper - Upload
-  uploadWrapper: async (file: File) => {
+  /** POST /resonanz/upload - Upload new wrapper */
+  uploadWrapper: async (file: File): Promise<UploadResponse> => {
     const formData = new FormData();
     formData.append('file', file);
-    const res = await fetch(`${API_BASE}/resonanz/upload`, {
+    
+    const response = await fetch(`${BASE_URL}/resonanz/upload`, {
       method: 'POST',
       body: formData,
     });
-    return res.json();
+    
+    if (!response.ok) {
+      throw new APIError(response.status, `Upload failed: ${response.statusText}`);
+    }
+    
+    return response.json();
   },
 
-  // 9. Wrapper - Upload with Metadata
-  uploadWrapperMeta: async (file: File, meta: { description?: string; author?: string; version?: string; tags?: string }) => {
+  /** POST /resonanz/upload-metadata - Upload wrapper with metadata */
+  uploadWrapperMeta: async (
+    file: File, 
+    metadata: { name?: string; frequency?: string; description?: string }
+  ): Promise<UploadResponse> => {
     const formData = new FormData();
     formData.append('file', file);
-    if (meta.description) formData.append('description', meta.description);
-    if (meta.author) formData.append('author', meta.author);
-    if (meta.version) formData.append('version', meta.version);
-    if (meta.tags) formData.append('tags', meta.tags);
-    const res = await fetch(`${API_BASE}/resonanz/upload-metadata`, {
+    formData.append('metadata', JSON.stringify(metadata));
+    
+    const response = await fetch(`${BASE_URL}/resonanz/upload-metadata`, {
       method: 'POST',
       body: formData,
     });
-    return res.json();
+    
+    if (!response.ok) {
+      throw new APIError(response.status, `Upload failed: ${response.statusText}`);
+    }
+    
+    return response.json();
   },
 
-  // 10. Stream
-  getStream: (limit = 20, stage = 'all') =>
-    fetchAPI<import('@/types/api').StreamResponse>(`/resonanz/strom?limit=${limit}&stage=${stage}`),
+  // ─────────────────────────────────────────────────────────────
+  // STROM & ANALYTICS
+  // ─────────────────────────────────────────────────────────────
+  
+  /** GET /resonanz/strom - Get field flow events */
+  getStream: (limit: number = 10, stage?: string) => {
+    const params = new URLSearchParams({ limit: limit.toString() });
+    if (stage) params.append('stage', stage);
+    return fetchAPI<StreamResponse>(`/resonanz/strom?${params}`);
+  },
 
-  // 11. Training Data
-  getTraining: (limit = 100, wrapper = 'all', successOnly = false) =>
-    fetchAPI<import('@/types/api').TrainingResponse>(
-      `/resonanz/training?limit=${limit}&wrapper=${wrapper}&success_only=${successOnly}`
-    ),
+  /** GET /resonanz/training - Get training data */
+  getTraining: (limit: number = 50, wrapper?: string, successOnly?: boolean) => {
+    const params = new URLSearchParams({ limit: limit.toString() });
+    if (wrapper) params.append('wrapper', wrapper);
+    if (successOnly !== undefined) params.append('success_only', successOnly.toString());
+    return fetchAPI<TrainingResponse>(`/resonanz/training?${params}`);
+  },
 
-  // 12. Stats
-  getStats: () => fetchAPI<import('@/types/api').StatsResponse>('/resonanz/stats'),
+  /** GET /resonanz/stats - Get system statistics */
+  getStats: () => 
+    fetchAPI<StatsResponse>('/resonanz/stats'),
 
-  // 13. Wrapper Stats
-  getWrapperStats: (name: string) =>
-    fetchAPI<import('@/types/api').WrapperStatsResponse>(`/resonanz/stats/wrapper/${name}`),
+  /** GET /resonanz/stats/wrapper/{name} - Get stats for specific wrapper */
+  getWrapperStats: (name: string) => 
+    fetchAPI<WrapperStatsResponse>(`/resonanz/stats/wrapper/${encodeURIComponent(name)}`),
 
-  // 14. Chat
-  chat: (request: import('@/types/api').ChatRequest) =>
-    fetchAPI<import('@/types/api').ChatResponse>('/resonanz/chat', {
+  // ─────────────────────────────────────────────────────────────
+  // CHAT & HISTORY
+  // ─────────────────────────────────────────────────────────────
+  
+  /** POST /resonanz/chat - Send chat request */
+  chat: (request: ChatRequest) => 
+    fetchAPI<ChatResponse>('/resonanz/chat', {
       method: 'POST',
       body: JSON.stringify(request),
     }),
 
-  // 15. History
-  getHistory: (requestId: string) =>
-    fetchAPI<import('@/types/api').HistoryResponse>(`/resonanz/history/${requestId}`),
+  /** GET /resonanz/history/{request_id} - Get request history */
+  getHistory: (requestId: string) => 
+    fetchAPI<HistoryResponse>(`/resonanz/history/${encodeURIComponent(requestId)}`),
 };
 
-export { APIError };
+export default api;
