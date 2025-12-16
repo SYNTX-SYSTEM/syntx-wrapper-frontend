@@ -8,6 +8,9 @@ import FlowPanel from "@/components/flow/FlowPanel";
 import ChatPanel from "@/components/chat/ChatPanel";
 import GraphsPanel from "@/components/graphs/GraphsPanel";
 import SystemPanel from "@/components/system/SystemPanel";
+import LiveBadge from "@/components/ui/LiveBadge";
+import { ToastProvider, useToast } from "@/components/ui/Toast";
+import { useRealtime, useRealtimeHealth } from "@/hooks/useRealtime";
 import { api } from "@/lib/api";
 
 type TabId = "system" | "chat" | "graphs" | "wrappers" | "analytics" | "flow";
@@ -157,11 +160,14 @@ function HeroSection({ onEnter }: { onEnter: () => void }) {
   );
 }
 
-export default function Page() {
-  const [showHero, setShowHero] = useState(true);
+function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabId>("system");
   const [modalOpen, setModalOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showHero, setShowHero] = useState(false);
+  
+  const { isLive, pulse, lastUpdate, newEventCount, hasNewData } = useRealtime(5000);
+  const { isOnline } = useRealtimeHealth(10000);
 
   const handleTabChange = (tab: TabId) => {
     if (tab === activeTab) return;
@@ -202,10 +208,12 @@ export default function Page() {
         </div>
 
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 20 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 10px #10b981" }} />
-            <span style={{ fontSize: 11, fontFamily: "monospace", color: "#10b981" }}>RESONATING</span>
-          </div>
+          <LiveBadge 
+            isLive={isLive && isOnline} 
+            pulse={pulse} 
+            lastUpdate={lastUpdate} 
+            newCount={hasNewData ? newEventCount : 0} 
+          />
           {activeTab === "wrappers" && (
             <button onClick={() => setModalOpen(true)} style={{ padding: "12px 24px", borderRadius: 10, background: "linear-gradient(135deg, #00d4ff, #00a8cc)", color: "#030b15", fontWeight: 700, fontFamily: "monospace", border: "none", cursor: "pointer", boxShadow: "0 0 30px rgba(0,212,255,0.4)" }}>+ NEU</button>
           )}
@@ -254,5 +262,19 @@ export default function Page() {
 
       <CreateWrapperModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleCreateWrapper} />
     </main>
+  );
+}
+
+export default function Page() {
+  const [showHero, setShowHero] = useState(true);
+
+  if (showHero) {
+    return <HeroSection onEnter={() => setShowHero(false)} />;
+  }
+
+  return (
+    <ToastProvider>
+      <Dashboard />
+    </ToastProvider>
   );
 }
