@@ -1,34 +1,23 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { api, StatsResponse, StreamEvent } from '@/lib/api';
+import { api, StatsResponse, StreamEvent, TrainingEntry } from '@/lib/api';
 
-// ═══════════════════════════════════════════════════════════════
-// GLASS CARD
-// ═══════════════════════════════════════════════════════════════
 function GlassCard({ children, style = {}, glowColor = '#00d4ff' }: {
   children: React.ReactNode;
   style?: React.CSSProperties;
   glowColor?: string;
 }) {
-  const [hover, setHover] = useState(false);
-  
   return (
-    <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        position: 'relative',
-        borderRadius: 16,
-        background: 'linear-gradient(135deg, rgba(10,26,46,0.9) 0%, rgba(6,13,24,0.95) 100%)',
-        backdropFilter: 'blur(20px)',
-        border: `1px solid ${hover ? glowColor + '40' : 'rgba(255,255,255,0.08)'}`,
-        boxShadow: hover ? `0 0 40px ${glowColor}20` : 'none',
-        transition: 'all 0.4s ease',
-        overflow: 'hidden',
-        ...style,
-      }}
-    >
+    <div style={{
+      position: 'relative',
+      borderRadius: 16,
+      background: 'linear-gradient(135deg, rgba(10,26,46,0.9) 0%, rgba(6,13,24,0.95) 100%)',
+      backdropFilter: 'blur(20px)',
+      border: `1px solid rgba(255,255,255,0.08)`,
+      overflow: 'hidden',
+      ...style,
+    }}>
       <div style={{
         position: 'absolute',
         top: 0, left: 0, right: 0, height: 1,
@@ -39,9 +28,6 @@ function GlassCard({ children, style = {}, glowColor = '#00d4ff' }: {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// METRIC BOX
-// ═══════════════════════════════════════════════════════════════
 function MetricBox({ label, value, unit, color = '#00d4ff' }: {
   label: string;
   value: string | number;
@@ -68,12 +54,9 @@ function MetricBox({ label, value, unit, color = '#00d4ff' }: {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// WRAPPER USAGE BAR
-// ═══════════════════════════════════════════════════════════════
 function WrapperUsageBar({ name, count, total }: { name: string; count: number; total: number }) {
   const percent = total > 0 ? (count / total) * 100 : 0;
-  const displayName = name.replace('syntex_wrapper_', '').replace(' (fallback)', '').toUpperCase();
+  const displayName = name.replace('syntex_wrapper_', '').toUpperCase();
   
   let color = '#00d4ff';
   if (name.includes('human')) color = '#10b981';
@@ -87,37 +70,67 @@ function WrapperUsageBar({ name, count, total }: { name: string; count: number; 
         <span style={{ fontFamily: 'monospace', fontSize: 12, color }}>{count} ({percent.toFixed(0)}%)</span>
       </div>
       <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
-        <div style={{ width: `${percent}%`, height: '100%', background: `linear-gradient(90deg, ${color}, ${color}80)`, borderRadius: 3, transition: 'width 0.5s ease' }} />
+        <div style={{ width: `${percent}%`, height: '100%', background: `linear-gradient(90deg, ${color}, ${color}80)`, borderRadius: 3 }} />
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// STAGE CONFIG
-// ═══════════════════════════════════════════════════════════════
-const STAGE_CONFIG: Record<string, { color: string; icon: string; label: string }> = {
-  '1_INCOMING': { color: '#00d4ff', icon: '📥', label: 'INCOMING' },
-  '2_WRAPPERS_LOADED': { color: '#10b981', icon: '📦', label: 'WRAPPERS' },
-  '3_FIELD_CALIBRATED': { color: '#f59e0b', icon: '⚡', label: 'CALIBRATED' },
-  '4_BACKEND_FORWARD': { color: '#d946ef', icon: '🚀', label: 'BACKEND' },
-  '5_RESPONSE': { color: '#10b981', icon: '✅', label: 'RESPONSE' },
-};
+function StreamEventRow({ event, onClick }: { event: StreamEvent; onClick: () => void }) {
+  const stageColors: Record<string, string> = {
+    '1_INCOMING': '#00d4ff',
+    '2_WRAPPERS_LOADED': '#10b981',
+    '3_FIELD_CALIBRATED': '#f59e0b',
+    '4_BACKEND_FORWARD': '#d946ef',
+    '5_RESPONSE': '#10b981',
+  };
+  const color = stageColors[event.stage] || '#00d4ff';
+  const time = new Date(event.timestamp).toLocaleTimeString('de-DE');
+  
+  return (
+    <div onClick={onClick} style={{
+      display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
+      background: 'rgba(0,0,0,0.2)', borderRadius: 8, marginBottom: 6, borderLeft: `3px solid ${color}`,
+      cursor: 'pointer', transition: 'all 0.2s ease',
+    }}
+    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.4)'}
+    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.2)'}
+    >
+      <span style={{ fontSize: 10, fontFamily: 'monospace', color, minWidth: 100 }}>{event.stage}</span>
+      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>{time}</span>
+      <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', flex: 1 }}>
+        {event.request_id?.slice(0, 8)}...
+      </span>
+      {event.latency_ms && <span style={{ fontSize: 11, color: '#f59e0b', fontFamily: 'monospace' }}>{event.latency_ms}ms</span>}
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════════════════════════════
-// STREAM EVENT ROW
+// TRAINING ROW - NEU!
 // ═══════════════════════════════════════════════════════════════
-function StreamEventRow({ event, onClick }: { event: StreamEvent; onClick: () => void }) {
-  const config = STAGE_CONFIG[event.stage] || { color: '#00d4ff', icon: '●', label: event.stage };
-  const time = new Date(event.timestamp).toLocaleTimeString('de-DE');
+function TrainingRow({ entry, onClick }: { entry: TrainingEntry; onClick: () => void }) {
+  const getWrapperColor = (chain: string[]) => {
+    const name = chain[0] || '';
+    if (name.includes('human')) return '#10b981';
+    if (name.includes('sigma')) return '#f59e0b';
+    if (name.includes('deepsweep')) return '#d946ef';
+    if (name.includes('true_raw')) return '#ef4444';
+    return '#00d4ff';
+  };
+  
+  const color = getWrapperColor(entry.wrapper_chain);
+  const time = new Date(entry.timestamp).toLocaleString('de-DE');
   
   return (
     <div 
       onClick={onClick}
       style={{
-        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
-        background: 'rgba(0,0,0,0.2)', borderRadius: 10, marginBottom: 6, 
-        borderLeft: `3px solid ${config.color}`,
+        padding: 16,
+        background: 'rgba(0,0,0,0.2)',
+        borderRadius: 12,
+        marginBottom: 8,
+        border: `1px solid ${entry.success ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
         cursor: 'pointer',
         transition: 'all 0.2s ease',
       }}
@@ -130,125 +143,88 @@ function StreamEventRow({ event, onClick }: { event: StreamEvent; onClick: () =>
         e.currentTarget.style.transform = 'translateX(0)';
       }}
     >
-      <span style={{ fontSize: 16 }}>{config.icon}</span>
-      <span style={{ fontSize: 11, fontFamily: 'monospace', color: config.color, minWidth: 100, fontWeight: 600 }}>
-        {config.label}
-      </span>
-      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>{time}</span>
-      <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace', flex: 1 }}>
-        {event.request_id?.slice(0, 8)}...
-      </span>
-      {event.latency_ms && (
-        <span style={{ 
-          fontSize: 11, color: '#f59e0b', fontFamily: 'monospace',
-          background: 'rgba(245,158,11,0.1)', padding: '2px 8px', borderRadius: 4,
-        }}>
-          {(event.latency_ms / 1000).toFixed(1)}s
-        </span>
-      )}
-      <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>→</span>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// CODE BLOCK
-// ═══════════════════════════════════════════════════════════════
-function CodeBlock({ content, maxHeight = 200 }: { content: string; maxHeight?: number }) {
-  return (
-    <div style={{
-      background: 'rgba(0,0,0,0.5)',
-      borderRadius: 8,
-      padding: 16,
-      maxHeight,
-      overflow: 'auto',
-      fontFamily: 'monospace',
-      fontSize: 12,
-      lineHeight: 1.6,
-      color: 'rgba(255,255,255,0.8)',
-      whiteSpace: 'pre-wrap',
-      wordBreak: 'break-word',
-      border: '1px solid rgba(255,255,255,0.05)',
-    }}>
-      {content}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// EXPANDABLE SECTION
-// ═══════════════════════════════════════════════════════════════
-function ExpandableSection({ title, icon, color, children, defaultOpen = false }: {
-  title: string;
-  icon: string;
-  color: string;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  
-  return (
-    <div style={{ marginBottom: 12 }}>
-      <div
-        onClick={() => setOpen(!open)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '12px 16px',
-          background: `${color}10`,
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <span style={{
+          padding: '4px 8px',
+          borderRadius: 6,
+          fontSize: 9,
+          fontFamily: 'monospace',
+          fontWeight: 700,
+          color: color,
+          background: `${color}15`,
           border: `1px solid ${color}30`,
-          borderRadius: open ? '10px 10px 0 0' : 10,
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-        }}
-      >
-        <span style={{ fontSize: 16 }}>{icon}</span>
-        <span style={{ flex: 1, fontFamily: 'monospace', fontSize: 12, color, fontWeight: 600, letterSpacing: 1 }}>
-          {title}
-        </span>
-        <span style={{ 
-          color: 'rgba(255,255,255,0.4)', 
-          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-          transition: 'transform 0.2s ease',
         }}>
-          ▼
+          {entry.wrapper_chain[0]?.replace('syntex_wrapper_', '').toUpperCase() || 'DEFAULT'}
+        </span>
+        <span style={{
+          padding: '4px 8px',
+          borderRadius: 6,
+          fontSize: 9,
+          fontFamily: 'monospace',
+          fontWeight: 700,
+          color: entry.success ? '#10b981' : '#ef4444',
+          background: entry.success ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+        }}>
+          {entry.success ? '✓ SUCCESS' : '✕ FAILED'}
+        </span>
+        <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
+          {time}
         </span>
       </div>
-      {open && (
-        <div style={{
-          padding: 16,
-          background: 'rgba(0,0,0,0.2)',
-          border: `1px solid ${color}20`,
-          borderTop: 'none',
-          borderRadius: '0 0 10px 10px',
-        }}>
-          {children}
-        </div>
-      )}
+
+      {/* Prompt Preview */}
+      <div style={{
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.7)',
+        marginBottom: 8,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }}>
+        💬 {entry.prompt}
+      </div>
+
+      {/* Response Preview */}
+      <div style={{
+        fontSize: 11,
+        color: 'rgba(255,255,255,0.4)',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        paddingLeft: 20,
+      }}>
+        → {entry.response?.slice(0, 100)}...
+      </div>
+
+      {/* Footer */}
+      <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
+        <span style={{ fontSize: 10, color: '#f59e0b', fontFamily: 'monospace' }}>
+          ⚡ {(entry.latency_ms / 1000).toFixed(1)}s
+        </span>
+        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
+          ID: {entry.request_id.slice(0, 8)}
+        </span>
+      </div>
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FLOW DETAIL MODAL
+// TRAINING DETAIL MODAL
 // ═══════════════════════════════════════════════════════════════
-function FlowDetailModal({ requestId, onClose }: { requestId: string; onClose: () => void }) {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.getHistory(requestId)
-      .then(setData)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [requestId]);
-
-  const stages = data?.stages || [];
+function TrainingDetailModal({ entry, onClose }: { entry: TrainingEntry; onClose: () => void }) {
+  const getWrapperColor = (chain: string[]) => {
+    const name = chain[0] || '';
+    if (name.includes('human')) return '#10b981';
+    if (name.includes('sigma')) return '#f59e0b';
+    if (name.includes('deepsweep')) return '#d946ef';
+    return '#00d4ff';
+  };
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, 
+      position: 'fixed', inset: 0,
       background: 'rgba(0,0,0,0.85)',
       backdropFilter: 'blur(12px)',
       zIndex: 1000,
@@ -257,12 +233,12 @@ function FlowDetailModal({ requestId, onClose }: { requestId: string; onClose: (
     }}>
       <div style={{
         width: '100%',
-        maxWidth: 900,
-        maxHeight: '90vh',
-        background: 'linear-gradient(135deg, #0a1a2e 0%, #050b14 100%)',
+        maxWidth: 800,
+        maxHeight: '85vh',
+        background: 'linear-gradient(135deg, #0a1a2e, #050b14)',
         borderRadius: 20,
         border: '1px solid rgba(0,212,255,0.3)',
-        boxShadow: '0 0 80px rgba(0,212,255,0.2), 0 0 160px rgba(0,212,255,0.1)',
+        boxShadow: '0 0 60px rgba(0,212,255,0.2)',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
@@ -274,206 +250,120 @@ function FlowDetailModal({ requestId, onClose }: { requestId: string; onClose: (
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(0,212,255,0.05)',
+          background: 'rgba(0,0,0,0.3)',
         }}>
-          <div>
-            <h2 style={{ margin: 0, fontFamily: 'monospace', color: '#00d4ff', fontSize: 16 }}>
-              🌊 FIELD FLOW DETAIL
-            </h2>
-            <div style={{ marginTop: 6, fontFamily: 'monospace', fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
-              REQUEST: {requestId}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 24 }}>📚</span>
+            <div>
+              <h2 style={{ margin: 0, fontFamily: 'monospace', fontSize: 14, color: '#00d4ff' }}>TRAINING ENTRY</h2>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4, fontFamily: 'monospace' }}>
+                {entry.request_id}
+              </div>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            style={{
-              background: 'rgba(255,255,255,0.1)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              borderRadius: 8,
-              padding: '8px 16px',
-              color: 'white',
-              cursor: 'pointer',
-              fontFamily: 'monospace',
-              fontSize: 12,
-              transition: 'all 0.2s ease',
-            }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-          >
+          <button onClick={onClose} style={{
+            background: 'rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: 8,
+            padding: '8px 16px',
+            color: 'white',
+            cursor: 'pointer',
+            fontFamily: 'monospace',
+          }}>
             ✕ CLOSE
           </button>
         </div>
 
-        {/* Pipeline Visualization */}
-        <div style={{
-          padding: '20px 24px',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
-          display: 'flex',
-          justifyContent: 'center',
-          gap: 8,
-          flexWrap: 'wrap',
-        }}>
-          {Object.entries(STAGE_CONFIG).map(([stage, config], i) => {
-            const hasStage = stages.some((s: any) => s.stage === stage);
-            return (
-              <React.Fragment key={stage}>
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 6,
-                  opacity: hasStage ? 1 : 0.3,
-                }}>
-                  <div style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: '50%',
-                    background: hasStage ? `${config.color}20` : 'rgba(255,255,255,0.05)',
-                    border: `2px solid ${hasStage ? config.color : 'rgba(255,255,255,0.1)'}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 18,
-                    boxShadow: hasStage ? `0 0 20px ${config.color}40` : 'none',
-                  }}>
-                    {config.icon}
-                  </div>
-                  <span style={{ 
-                    fontSize: 9, 
-                    fontFamily: 'monospace', 
-                    color: hasStage ? config.color : 'rgba(255,255,255,0.3)',
-                    fontWeight: 600,
-                  }}>
-                    {config.label}
-                  </span>
-                </div>
-                {i < 4 && (
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    color: 'rgba(255,255,255,0.2)',
-                    fontSize: 20,
-                    marginTop: -15,
-                  }}>
-                    →
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
-
         {/* Content */}
         <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.4)' }}>
-              Loading...
+          {/* Meta Info */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+            <div style={{
+              padding: '12px 16px',
+              background: `${getWrapperColor(entry.wrapper_chain)}15`,
+              border: `1px solid ${getWrapperColor(entry.wrapper_chain)}30`,
+              borderRadius: 10,
+            }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>WRAPPER</div>
+              <div style={{ fontFamily: 'monospace', color: getWrapperColor(entry.wrapper_chain), fontWeight: 600 }}>
+                {entry.wrapper_chain.join(' → ')}
+              </div>
             </div>
-          ) : (
-            <>
-              {/* Latency Banner */}
-              {stages.find((s: any) => s.latency_ms) && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  marginBottom: 20,
-                }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.1))',
-                    border: '1px solid rgba(245,158,11,0.3)',
-                    borderRadius: 12,
-                    padding: '12px 24px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}>
-                    <span style={{ fontSize: 20 }}>⚡</span>
-                    <div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>TOTAL LATENCY</div>
-                      <div style={{ fontSize: 24, fontWeight: 700, color: '#f59e0b', fontFamily: 'monospace' }}>
-                        {(stages.find((s: any) => s.latency_ms)?.latency_ms / 1000).toFixed(2)}s
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+            <div style={{
+              padding: '12px 16px',
+              background: entry.success ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+              border: `1px solid ${entry.success ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+              borderRadius: 10,
+            }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>STATUS</div>
+              <div style={{ fontFamily: 'monospace', color: entry.success ? '#10b981' : '#ef4444', fontWeight: 600 }}>
+                {entry.success ? '✓ SUCCESS' : '✕ FAILED'}
+              </div>
+            </div>
+            <div style={{
+              padding: '12px 16px',
+              background: 'rgba(245,158,11,0.1)',
+              border: '1px solid rgba(245,158,11,0.3)',
+              borderRadius: 10,
+            }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>LATENCY</div>
+              <div style={{ fontFamily: 'monospace', color: '#f59e0b', fontWeight: 600 }}>
+                {(entry.latency_ms / 1000).toFixed(2)}s
+              </div>
+            </div>
+            <div style={{
+              padding: '12px 16px',
+              background: 'rgba(0,212,255,0.1)',
+              border: '1px solid rgba(0,212,255,0.3)',
+              borderRadius: 10,
+            }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>TIMESTAMP</div>
+              <div style={{ fontFamily: 'monospace', color: '#00d4ff', fontWeight: 600, fontSize: 12 }}>
+                {new Date(entry.timestamp).toLocaleString('de-DE')}
+              </div>
+            </div>
+          </div>
 
-              {/* Stage Sections */}
-              {stages.map((stage: any) => {
-                const config = STAGE_CONFIG[stage.stage] || { color: '#00d4ff', icon: '●', label: stage.stage };
-                
-                return (
-                  <ExpandableSection
-                    key={stage.stage}
-                    title={config.label}
-                    icon={config.icon}
-                    color={config.color}
-                    defaultOpen={stage.stage === '1_INCOMING' || stage.stage === '5_RESPONSE'}
-                  >
-                    {/* Timestamp */}
-                    <div style={{ marginBottom: 12, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>
-                      ⏱ {new Date(stage.timestamp).toLocaleString('de-DE')}
-                    </div>
+          {/* Prompt */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', marginBottom: 8, letterSpacing: 1 }}>
+              💬 PROMPT
+            </div>
+            <div style={{
+              padding: 16,
+              background: 'rgba(0,212,255,0.05)',
+              border: '1px solid rgba(0,212,255,0.2)',
+              borderRadius: 10,
+              fontFamily: 'system-ui',
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: 'rgba(255,255,255,0.9)',
+            }}>
+              {entry.prompt}
+            </div>
+          </div>
 
-                    {/* Stage-specific content */}
-                    {stage.stage === '1_INCOMING' && (
-                      <>
-                        <div style={{ marginBottom: 8, fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>PROMPT:</div>
-                        <CodeBlock content={stage.prompt || 'N/A'} maxHeight={100} />
-                        <div style={{ marginTop: 12, display: 'flex', gap: 16 }}>
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
-                            Mode: <span style={{ color: '#00d4ff' }}>{stage.mode}</span>
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-                    {stage.stage === '2_WRAPPERS_LOADED' && (
-                      <>
-                        <div style={{ marginBottom: 8, fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>
-                          WRAPPER CHAIN: <span style={{ color: '#10b981' }}>{stage.chain?.join(' → ')}</span>
-                        </div>
-                        <div style={{ marginTop: 12, marginBottom: 8, fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>WRAPPER TEXT:</div>
-                        <CodeBlock content={stage.wrapper_text || 'N/A'} maxHeight={250} />
-                      </>
-                    )}
-
-                    {stage.stage === '3_FIELD_CALIBRATED' && (
-                      <>
-                        <div style={{ marginBottom: 8, fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>CALIBRATED FIELD (Wrapper + Prompt):</div>
-                        <CodeBlock content={stage.calibrated_field || 'N/A'} maxHeight={300} />
-                      </>
-                    )}
-
-                    {stage.stage === '4_BACKEND_FORWARD' && (
-                      <>
-                        <div style={{ marginBottom: 12, fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
-                          Backend: <span style={{ color: '#d946ef' }}>{stage.backend_url}</span>
-                        </div>
-                        <div style={{ marginBottom: 8, fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>PARAMS:</div>
-                        <CodeBlock content={JSON.stringify(stage.params, null, 2)} maxHeight={150} />
-                      </>
-                    )}
-
-                    {stage.stage === '5_RESPONSE' && (
-                      <>
-                        <div style={{ marginBottom: 8, fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>RESPONSE:</div>
-                        <CodeBlock content={stage.response || 'N/A'} maxHeight={200} />
-                        <div style={{ marginTop: 12, display: 'flex', gap: 20 }}>
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
-                            Latency: <span style={{ color: '#f59e0b', fontWeight: 600 }}>{stage.latency_ms}ms</span>
-                          </div>
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
-                            Wrappers: <span style={{ color: '#10b981' }}>{stage.wrapper_chain?.join(', ')}</span>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </ExpandableSection>
-                );
-              })}
-            </>
-          )}
+          {/* Response */}
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', marginBottom: 8, letterSpacing: 1 }}>
+              🤖 RESPONSE
+            </div>
+            <div style={{
+              padding: 16,
+              background: 'rgba(217,70,239,0.05)',
+              border: '1px solid rgba(217,70,239,0.2)',
+              borderRadius: 10,
+              fontFamily: 'system-ui',
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: 'rgba(255,255,255,0.9)',
+              maxHeight: 300,
+              overflow: 'auto',
+              whiteSpace: 'pre-wrap',
+            }}>
+              {entry.response}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -481,24 +371,88 @@ function FlowDetailModal({ requestId, onClose }: { requestId: string; onClose: (
 }
 
 // ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// FLOW DETAIL MODAL  
+// ═══════════════════════════════════════════════════════════════
+function FlowDetailModal({ requestId, onClose }: { requestId: string; onClose: () => void }) {
+  const [detail, setDetail] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.getHistory(requestId).then(setDetail).catch(console.error).finally(() => setLoading(false));
+  }, [requestId]);
+
+  const STAGE_CONFIG: Record<string, { color: string; icon: string }> = {
+    '1_INCOMING': { color: '#00d4ff', icon: '📥' },
+    '2_WRAPPERS_LOADED': { color: '#10b981', icon: '📦' },
+    '3_FIELD_CALIBRATED': { color: '#f59e0b', icon: '⚡' },
+    '4_BACKEND_FORWARD': { color: '#d946ef', icon: '🚀' },
+    '5_RESPONSE': { color: '#10b981', icon: '✅' },
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ width: '100%', maxWidth: 900, maxHeight: '90vh', background: 'linear-gradient(135deg, #0a1a2e, #050b14)', borderRadius: 20, border: '1px solid rgba(0,212,255,0.3)', boxShadow: '0 0 60px rgba(0,212,255,0.2)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 24 }}>🌊</span>
+            <div>
+              <h2 style={{ margin: 0, fontFamily: 'monospace', fontSize: 14, color: '#00d4ff' }}>FIELD FLOW DETAIL</h2>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4, fontFamily: 'monospace' }}>{requestId}</div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, padding: '8px 16px', color: 'white', cursor: 'pointer', fontFamily: 'monospace' }}>✕ CLOSE</button>
+        </div>
+        <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+          {loading ? <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.4)' }}>Loading...</div> : detail?.stages?.map((stage: any) => {
+            const config = STAGE_CONFIG[stage.stage] || { color: '#00d4ff', icon: '●' };
+            return (
+              <div key={stage.stage} style={{ marginBottom: 16, padding: 16, background: `${config.color}10`, border: `1px solid ${config.color}30`, borderRadius: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontSize: 20 }}>{config.icon}</span>
+                  <span style={{ fontFamily: 'monospace', fontSize: 12, color: config.color, fontWeight: 700 }}>{stage.stage}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{new Date(stage.timestamp).toLocaleString('de-DE')}</span>
+                </div>
+                {stage.prompt && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 8 }}><strong>Prompt:</strong> {stage.prompt}</div>}
+                {stage.wrapper_text && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 11, color: 'rgba(255,255,255,0.7)', maxHeight: 150, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{stage.wrapper_text}</div>}
+                {stage.calibrated_field && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 11, color: 'rgba(255,255,255,0.7)', maxHeight: 200, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{stage.calibrated_field}</div>}
+                {stage.backend_url && <div style={{ padding: 12, background: "rgba(0,0,0,0.3)", borderRadius: 8, fontSize: 12, color: "rgba(255,255,255,0.8)", marginBottom: 8 }}><strong>Backend:</strong> <span style={{ color: "#d946ef" }}>{stage.backend_url}</span></div>}
+                {stage.params && <div style={{ padding: 12, background: "rgba(0,0,0,0.3)", borderRadius: 8, fontSize: 11, color: "rgba(255,255,255,0.7)", marginBottom: 8 }}><strong>Params:</strong> <pre style={{ margin: "8px 0 0", color: "#00d4ff" }}>{JSON.stringify(stage.params, null, 2)}</pre></div>}
+                {stage.response && <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: 12, color: 'rgba(255,255,255,0.8)', maxHeight: 200, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{stage.response}</div>}
+                {stage.latency_ms && <div style={{ marginTop: 8, fontSize: 11, color: '#f59e0b' }}>⚡ {(stage.latency_ms/1000).toFixed(2)}s</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
 export default function StatsPanel() {
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [events, setEvents] = useState<StreamEvent[]>([]);
+  const [training, setTraining] = useState<TrainingEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<'stream' | 'training'>('stream');
+  const [selectedTraining, setSelectedTraining] = useState<TrainingEntry | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [statsData, streamData] = await Promise.all([
+      const [statsData, streamData, trainingData] = await Promise.all([
         api.getStats(),
         api.getStream(20),
+        api.getTraining(20),
       ]);
       setStats(statsData);
       setEvents(streamData.events || []);
+      setTraining(trainingData.entries || []);
       setError(null);
     } catch (e: any) {
       setError(e.message);
@@ -537,7 +491,7 @@ export default function StatsPanel() {
             <MetricBox label="MAX" value={(stats.max_latency_ms / 1000).toFixed(1)} unit="s" color="#ef4444" />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
             <div>
               <h3 style={{ margin: '0 0 16px', fontSize: 12, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)', letterSpacing: 1 }}>WRAPPER USAGE</h3>
               {Object.keys(stats.wrapper_usage).length > 0 ? (
@@ -557,35 +511,74 @@ export default function StatsPanel() {
             </div>
           </div>
 
-          <div style={{ marginTop: 24 }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 12, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)', letterSpacing: 1 }}>
-              🌊 FIELD FLOW STREAM 
-              <span style={{ marginLeft: 8, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>Klicken für Details</span>
-            </h3>
+          {/* Section Toggle */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            {[
+              { id: 'stream', label: '🌊 FIELD FLOW', count: events.length },
+              { id: 'training', label: '📚 TRAINING DATA', count: training.length },
+            ].map(section => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id as any)}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: 8,
+                  border: activeSection === section.id ? '1px solid rgba(0,212,255,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                  background: activeSection === section.id ? 'rgba(0,212,255,0.1)' : 'transparent',
+                  color: activeSection === section.id ? '#00d4ff' : 'rgba(255,255,255,0.5)',
+                  fontFamily: 'monospace',
+                  fontSize: 11,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {section.label} <span style={{ opacity: 0.5 }}>({section.count})</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Stream Section */}
+          {activeSection === 'stream' && (
             <div style={{ maxHeight: 350, overflowY: 'auto' }}>
               {events.length > 0 ? (
                 events.map((event, i) => (
-                  <StreamEventRow 
-                    key={`${event.request_id}-${event.stage}-${i}`} 
-                    event={event} 
-                    onClick={() => setSelectedRequest(event.request_id)}
-                  />
+                  <StreamEventRow key={`${event.request_id}-${event.stage}-${i}`} event={event} onClick={() => setSelectedRequest(event.request_id)} />
                 ))
               ) : (
                 <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, textAlign: 'center', padding: 20 }}>Noch keine Events</div>
               )}
             </div>
-          </div>
+          )}
+
+          {/* Training Section */}
+          {activeSection === 'training' && (
+            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+              {training.length > 0 ? (
+                training.map(entry => (
+                  <TrainingRow 
+                    key={entry.request_id} 
+                    entry={entry} 
+                    onClick={() => setSelectedTraining(entry)} 
+                  />
+                ))
+              ) : (
+                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, textAlign: 'center', padding: 20 }}>Noch keine Training Daten</div>
+              )}
+            </div>
+          )}
         </>
       )}
 
-      {/* Detail Modal */}
+      {/* Training Detail Modal */}
+      {selectedTraining && (
+        <TrainingDetailModal entry={selectedTraining} onClose={() => setSelectedTraining(null)} />
+      )}
+
+      {/* Flow Detail Modal */}
       {selectedRequest && (
-        <FlowDetailModal 
-          requestId={selectedRequest} 
-          onClose={() => setSelectedRequest(null)} 
-        />
+        <FlowDetailModal requestId={selectedRequest} onClose={() => setSelectedRequest(null)} />
       )}
     </GlassCard>
   );
 }
+
