@@ -183,9 +183,8 @@ export const api = {
 
   /** PUT /resonanz/config/default-wrapper - Set default wrapper */
   setConfig: (wrapperName: string) => 
-    fetchAPI<ConfigResponse>('/resonanz/config/default-wrapper', {
+    fetchAPI<ConfigResponse>(`/resonanz/config/default-wrapper?wrapper_name=${encodeURIComponent(wrapperName)}`, {
       method: 'PUT',
-      body: JSON.stringify({ default_wrapper: wrapperName }),
     }),
 
   // ─────────────────────────────────────────────────────────────

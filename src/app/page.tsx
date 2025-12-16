@@ -6,10 +6,11 @@ import StatsPanel from "@/components/analytics/StatsPanel";
 import FlowPanel from "@/components/flow/FlowPanel";
 import ChatPanel from "@/components/chat/ChatPanel";
 import GraphsPanel from "@/components/graphs/GraphsPanel";
+import SystemPanel from "@/components/system/SystemPanel";
 import { api } from "@/lib/api";
 
 export default function Page() {
-  const [activeTab, setActiveTab] = useState<"chat" | "wrappers" | "analytics" | "flow" | "graphs">("graphs");
+  const [activeTab, setActiveTab] = useState<"system" | "chat" | "wrappers" | "analytics" | "flow" | "graphs">("system");
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleCreateWrapper = async (data: { name: string; level: string; content: string }) => {
@@ -64,6 +65,7 @@ export default function Page() {
       {/* TAB NAV */}
       <nav style={{ display: "flex", gap: 8, marginBottom: 24 }}>
         {[
+          { id: "system", label: "🖥️ SYSTEM" },
           { id: "chat", label: "💬 CHAT" },
           { id: "graphs", label: "📈 GRAPHS" },
           { id: "wrappers", label: "📦 WRAPPERS" },
@@ -93,6 +95,7 @@ export default function Page() {
 
       {/* CONTENT */}
       <section>
+        {activeTab === "system" && <SystemPanel />}
         {activeTab === "chat" && <ChatPanel />}
         {activeTab === "graphs" && <GraphsPanel />}
         {activeTab === "wrappers" && <WrapperControl />}
