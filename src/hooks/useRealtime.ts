@@ -80,7 +80,7 @@ export function useRealtimeHealth(interval = 10000) {
       try {
         const data = await api.getHealth();
         setHealth(data);
-        setIsOnline(data?.status === 'healthy');
+        setIsOnline(data?.status?.includes('GESUND') || data?.status === 'healthy');
       } catch {
         setIsOnline(false);
       }

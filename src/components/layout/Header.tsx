@@ -44,8 +44,8 @@ export function Header() {
           {/* Status */}
           <div className="flex items-center gap-4">
             <StatusBadge
-              status={health?.status === 'healthy' ? 'healthy' : 'loading'}
-              label={health?.status === 'healthy' ? 'RESONATING' : 'CONNECTING'}
+              status={health?.status?.includes('GESUND') || health?.status?.includes('GESUND') || health?.status === 'healthy' ? 'healthy' : 'loading'}
+              label={health?.status?.includes('GESUND') || health?.status?.includes('GESUND') || health?.status === 'healthy' ? 'RESONATING' : 'CONNECTING'}
             />
           </div>
         </div>
