@@ -38,7 +38,7 @@ export function HealthStatus() {
               status={data.status === 'healthy' ? 'healthy' : 'error'} 
               label={data.status.toUpperCase()} 
             />
-            <span className="text-xs text-syntx-muted font-mono">v{data.version}</span>
+            <span className="text-xs text-syntx-muted font-mono">v{data.api_version}</span>
           </div>
         </div>
       ) : null}

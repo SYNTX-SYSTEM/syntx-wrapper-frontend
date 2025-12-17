@@ -154,7 +154,7 @@ function LiveFeed({ events }: { events: StreamEvent[] }) {
         <div key={event.request_id + i} style={{
           display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
           background: i === 0 ? 'rgba(0,212,255,0.05)' : 'transparent',
-          borderLeft: `3px solid ${WRAPPER_COLORS[event.wrapper_chain?.[0]] || '#00d4ff'}`,
+          borderLeft: `3px solid ${WRAPPER_COLORS[event.wrapper_chain?.[0] as keyof typeof WRAPPER_COLORS] || '#00d4ff'}`,
           marginBottom: 4, borderRadius: '0 8px 8px 0',
         }}>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: event.latency_ms ? '#10b981' : '#f59e0b' }} />

@@ -182,9 +182,9 @@ function Dashboard() {
 
   const handleCreateWrapper = async (data: { name: string; level: string; content: string }) => {
     try {
-      const blob = new Blob([data.content], { type: "text/plain" });
-      const file = new File([blob], `${data.name}.txt`, { type: "text/plain" });
-      await api.uploadWrapperMeta(file, { name: data.name, frequency: data.level });
+      // Neuer CRUD-Weg: createWrapper statt File-Upload
+      await api.createWrapper({ name: data.name, content: data.content, description: data.level });
+      // 🌟 Feld geboren!
       setModalOpen(false);
       window.location.reload();
     } catch (err) {

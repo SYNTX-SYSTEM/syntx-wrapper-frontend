@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useExport } from '@/hooks/useExport';
 import ExportButton from '@/components/ui/ExportButton';
-import { api, StatsResponse, StreamEvent, TrainingEntry } from '@/lib/api';
+import { api, StatsResponse, StreamEvent, TrainingRequest } from '@/lib/api';
 import { usePagination } from '@/hooks/usePagination';
 import Pagination from '@/components/ui/Pagination';
 import SortHeader from '@/components/ui/SortHeader';
@@ -78,7 +78,7 @@ function FlowDetailModal({ requestId, onClose }: { requestId: string; onClose: (
 export default function StatsPanel() {
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [streamEvents, setStreamEvents] = useState<StreamEvent[]>([]);
-  const [trainingData, setTrainingData] = useState<TrainingEntry[]>([]);
+  const [trainingData, setTrainingData] = useState<TrainingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<'stream' | 'training'>('stream');
@@ -92,7 +92,7 @@ export default function StatsPanel() {
       ]);
       setStats(statsData);
       setStreamEvents(streamData.events || []);
-      setTrainingData(training.entries || []);
+      setTrainingData(training.requests || []);
     } catch (e) {
       console.error(e);
     } finally {
