@@ -108,6 +108,9 @@ export interface TrainingResponse {
 export interface ChatRequest {
   prompt: string;
   mode?: string;
+  format?: string;
+  language?: 'de' | 'en';
+  include_terminology?: boolean;
   max_new_tokens?: number;
   temperature?: number;
   top_p?: number;
@@ -143,4 +146,155 @@ export interface HistoryResponse {
   request_id: string;
   stages: FieldFlowStage[];
   total_stages: number;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 📋 FORMAT TYPES - SYNTX OUTPUT FORMATE
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Format Field - Einzelnes Feld in einem Format */
+/** Format Field - Einzelnes Feld in einem Format (Backend Schema) */
+export interface FormatField {
+  name: string;
+  weight?: number;
+  description?: { de?: string; en?: string } | string;
+  keywords?: { de?: string[]; en?: string[] };
+  headers?: { de?: string[]; en?: string[] };
+  validation?: {
+    min_length?: number;
+    max_length?: number;
+    required?: boolean;
+  };
+}
+
+/** Format - Basis-Struktur */
+export interface Format {
+  name: string;
+  description: string;
+  version: string;
+  fields: FormatField[];
+  template?: string;
+  language: 'de' | 'en' | 'both';
+  created_at: string;
+  updated_at: string;
+  usage_count: number;
+  score?: FormatScore;
+}
+
+/** Format Score - Qualitätsbewertung */
+export interface FormatScore {
+  overall: number;
+  field_coverage: number;
+  consistency: number;
+  clarity: number;
+  last_scored: string;
+}
+
+/** Format List Response */
+export interface FormatListResponse {
+  formats: Format[];
+  total: number;
+  active_format?: string;
+}
+
+/** Format Detail Response */
+export interface FormatDetailResponse extends Format {
+  content: string;
+  raw_template: string;
+}
+
+/** Format Create Request - Full */
+export interface FormatCreateRequest {
+  name: string;
+  description: string;
+  fields: FormatField[];
+  template: string;
+  language?: 'de' | 'en' | 'both';
+  version?: string;
+}
+
+/** Format Quick Create Request */
+/** Format Quick Create Request - ⚡ SCHNELL-GEBURT */
+export interface FormatQuickCreateRequest {
+  name: string;                      // Format-Name
+  description_de: string;            // Deutsche Beschreibung
+  description_en?: string;           // Englische Beschreibung (optional)
+  field_names: string[];             // Array der Feldnamen
+  wrapper?: string;                  // Empfohlener Wrapper (optional)
+}
+
+/** Format Update Request */
+export interface FormatUpdateRequest {
+  description?: string | { de?: string; en?: string };
+  fields?: FormatField[];
+  template?: string;
+  language?: 'de' | 'en' | 'both';
+  version?: string;
+}
+
+/** Format Scan Request */
+/** Format Scan Request - 🔍 RESPONSE SCANNEN */
+export interface FormatScanRequest {
+  format: string;                    // Format-Name (nicht format_name!)
+  response: string;                  // Die zu scannende Response
+}
+
+/** Format Scan Response */
+/** Format Scan Response - 🔍 SCAN ERGEBNIS */
+export interface FormatScanResponse {
+  format: string;                    // Format-Name
+  fields_expected: number;           // Erwartete Felder
+  fields_found: number;              // Gefundene Felder
+  missing_fields: string[];          // Fehlende Felder
+  low_quality_fields: {              // Felder mit niedriger Qualität
+    field: string;
+    score: number;
+    reasons: string[];
+  }[];
+  coherence_score: number;           // Kohärenz-Score (0-100)
+  recommendations: string[];         // Empfehlungen
+}
+
+/** Format Clone Request */
+/** Format Clone Request - 🧬 FORMAT KLONEN */
+export interface FormatCloneRequest {
+  source: string;                    // Quell-Format (nicht source_format!)
+  target: string;                    // Ziel-Name (nicht target_name!)
+  modifications?: {                  // Optionale Modifikationen
+    fields?: string[];               // Nur bestimmte Felder übernehmen
+    wrapper?: string;                // Anderen Wrapper setzen
+    description_de?: string;         // Neue Beschreibung
+  };
+}
+
+/** Format Score Request */
+/** Format Score Request - 📊 FORMAT BEWERTEN */
+export interface FormatScoreRequest {
+  format: string;                    // Format-Name (nicht format_name!)
+}
+
+/** Format Score Response */
+/** Format Score Response - 📊 BEWERTUNGS-ERGEBNIS */
+export interface FormatScoreResponse {
+  format: string;                    // Format-Name
+  semantic_clarity: number;          // Wie sprechend sind Feldnamen? (0-100)
+  redundancy: number;                // Keyword-Überlappung (0 = gut)
+  field_balance: 'EXCELLENT' | 'OK' | 'CRITICAL';  // Gewichtungs-Verteilung
+  i18n_score: number;                // Internationalisierung (0-100)
+  risk_zones: string[];              // Felder mit Problemen
+  overall: number;                   // Gesamtscore (0-100)
+  meta: {
+    fields_analyzed: number;         // Anzahl analysierter Felder
+    languages: string[];             // Verfügbare Sprachen
+  };
+}
+
+/** Format Delete Response */
+export interface FormatDeleteResponse {
+  status: 'success';
+  message: string;
+  deleted: {
+    name: string;
+    had_usage: boolean;
+  };
 }

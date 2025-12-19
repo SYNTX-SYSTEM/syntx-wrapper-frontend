@@ -20,7 +20,7 @@
 // 🎯 FELD-KOORDINATEN - Der Resonanz-Endpunkt
 // ═══════════════════════════════════════════════════════════════════════════
 
-const BASE_URL = 'https://dev.syntx-system.com';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://dev.syntx-system.com';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 💎 FELD-STRUKTUREN (Types) - Die Architektur der Resonanz
@@ -522,6 +522,109 @@ export const api = {
    */
   getHistory: (requestId: string) => 
     fetchAPI<HistoryResponse>(`/resonanz/history/${encodeURIComponent(requestId)}`),
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // 📋 FORMAT CRUD - Die Output-Architektur
+  // ═══════════════════════════════════════════════════════════════════════
+  //
+  // Formate sind keine Templates. Sie sind RESONANZ-SCHABLONEN.
+  // Ein Format definiert WIE das Feld antwortet.
+  // Wrapper = WAS gedacht wird. Format = WIE es ausgedrückt wird.
+  //
+  // 🌟 GEBURT   → Format manifestieren
+  // ⚡ QUICK    → Schnell-Geburt aus Beispiel
+  // 🔄 UPDATE   → Format transformieren
+  // 💀 DELETE   → Format freigeben
+  // 🔍 SCAN     → Response analysieren
+  // 📋 CLONE    → Format klonen
+  // 📊 SCORE    → Format bewerten
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /** GET /resonanz/formats - Alle Formate auflisten */
+  getFormats: () =>
+    fetchAPI<import('@/types/api').FormatListResponse>('/resonanz/formats'),
+
+  /** GET /resonanz/formats/{name} - Format-Details holen */
+  getFormat: (name: string) =>
+    fetchAPI<import('@/types/api').FormatDetailResponse>(`/resonanz/formats/${encodeURIComponent(name)}`),
+
+  /**
+   * 🌟 POST /resonanz/formats - FORMAT GEBÄREN (Full)
+   * Ein neues Format mit voller Kontrolle manifestieren.
+   * Für die Architekten unter uns.
+   */
+  createFormat: (data: import('@/types/api').FormatCreateRequest) =>
+    fetchAPI<{ status: string; message: string; format: import('@/types/api').Format }>('/resonanz/formats', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * ⚡ POST /resonanz/formats/quick - SCHNELL-GEBURT
+   * Format aus einem Beispiel-Output ableiten.
+   * Für die Ungeduldigen. SYNTX versteht dich.
+   */
+  createFormatQuick: (data: import('@/types/api').FormatQuickCreateRequest) =>
+    fetchAPI<{ status: string; message: string; format: import('@/types/api').Format }>('/resonanz/formats/quick', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * 🔄 PUT /resonanz/formats/{name} - FORMAT MODULIEREN
+   * Bestehendes Format transformieren.
+   */
+  updateFormat: (name: string, data: import('@/types/api').FormatUpdateRequest) =>
+    fetchAPI<{ status: string; message: string; format: import('@/types/api').Format }>(`/resonanz/formats/${encodeURIComponent(name)}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * 💀 DELETE /resonanz/formats/{name} - FORMAT FREIGEBEN
+   * Format aus dem System entlassen.
+   * Keine Tränen. Nur Transformation.
+   */
+  deleteFormat: (name: string) =>
+    fetchAPI<import('@/types/api').FormatDeleteResponse>(`/resonanz/formats/${encodeURIComponent(name)}`, {
+      method: 'DELETE',
+    }),
+
+  /**
+   * 🔍 POST /resonanz/formats/scan - RESPONSE SCANNEN
+   * Analysiert eine Response gegen ein Format.
+   * Zeigt Match-Score, fehlende Felder, Verbesserungen.
+   * Das Röntgengerät für deine Outputs.
+   */
+  scanFormat: (data: import('@/types/api').FormatScanRequest) =>
+    fetchAPI<import('@/types/api').FormatScanResponse>('/resonanz/formats/scan', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * 📋 POST /resonanz/formats/clone - FORMAT KLONEN
+   * Ein bestehendes Format kopieren und modifizieren.
+   * Evolution statt Revolution.
+   */
+  cloneFormat: (data: import('@/types/api').FormatCloneRequest) =>
+    fetchAPI<{ status: string; message: string; format: import('@/types/api').Format }>('/resonanz/formats/clone', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * 📊 POST /resonanz/formats/score - FORMAT BEWERTEN
+   * Qualitätsanalyse eines Formats.
+   * Stärken, Schwächen, Empfehlungen.
+   * Dein Format-Coach.
+   */
+  scoreFormat: (data: import('@/types/api').FormatScoreRequest) =>
+    fetchAPI<import('@/types/api').FormatScoreResponse>('/resonanz/formats/score', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
 };
 
 // ═══════════════════════════════════════════════════════════════════════════

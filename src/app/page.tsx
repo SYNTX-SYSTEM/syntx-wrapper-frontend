@@ -9,12 +9,13 @@ import ChatPanel from "@/components/chat/ChatPanel";
 import GraphsPanel from "@/components/graphs/GraphsPanel";
 import SystemPanel from "@/components/system/SystemPanel";
 import DataPanel from "@/components/data/DataPanel";
+import FormatPanel from "@/components/formats/FormatPanel";
 import LiveBadge from "@/components/ui/LiveBadge";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { useRealtime, useRealtimeHealth } from "@/hooks/useRealtime";
 import { api } from "@/lib/api";
 
-type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "analytics" | "flow";
+type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow";
 
 const TABS = [
   { id: "data", label: "DATA", icon: "📊", color: "#8b5cf6" },
@@ -22,6 +23,7 @@ const TABS = [
   { id: "chat", label: "CHAT", icon: "💬", color: "#00d4ff" },
   { id: "graphs", label: "GRAPHS", icon: "📈", color: "#d946ef" },
   { id: "wrappers", label: "WRAPPERS", icon: "📦", color: "#f59e0b" },
+  { id: "formats", label: "FORMATS", icon: "📋", color: "#14b8a6" },
   { id: "analytics", label: "ANALYTICS", icon: "📊", color: "#00d4ff" },
   { id: "flow", label: "FLOW", icon: "🌊", color: "#10b981" },
 ] as const;
@@ -259,6 +261,7 @@ function Dashboard() {
         {activeTab === "chat" && <ChatPanel />}
         {activeTab === "graphs" && <GraphsPanel />}
         {activeTab === "wrappers" && <WrapperControl />}
+        {activeTab === "formats" && <FormatPanel />}
         {activeTab === "analytics" && <StatsPanel />}
         {activeTab === "flow" && <FlowPanel />}
       </section>
