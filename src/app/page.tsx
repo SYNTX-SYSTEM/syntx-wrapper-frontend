@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import WrapperControl from "@/components/wrappers/WrapperControl";
+import { WrapperPanel as WrapperControl } from "@/components/wrappers";
 import CreateWrapperModal from "@/components/wrappers/CreateWrapperModal";
 import StatsPanel from "@/components/analytics/StatsPanel";
 import FlowPanel from "@/components/flow/FlowPanel";
