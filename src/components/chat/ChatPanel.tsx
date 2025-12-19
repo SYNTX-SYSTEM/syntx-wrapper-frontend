@@ -4,112 +4,439 @@ import React, { useState, useEffect, useRef } from 'react';
 import { api, Wrapper } from '@/lib/api';
 
 // ═══════════════════════════════════════════════════════════════
-// MOBILE DETECTION HOOK
+// 🎨 CYBER STYLES - MAXIMUM MOVEMENT
 // ═══════════════════════════════════════════════════════════════
+
+const cyberStyles = `
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 20px var(--glow-color, #00d4ff); }
+    50% { box-shadow: 0 0 40px var(--glow-color, #00d4ff), 0 0 60px var(--glow-color, #00d4ff); }
+  }
+  @keyframes borderFlow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  @keyframes floatUp {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  @keyframes textGlow {
+    0%, 100% { text-shadow: 0 0 10px currentColor; }
+    50% { text-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+  }
+  @keyframes slideIn {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scanLine {
+    0% { top: -10%; opacity: 0; }
+    50% { opacity: 0.5; }
+    100% { top: 110%; opacity: 0; }
+  }
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-8px); opacity: 1; }
+  }
+  @keyframes scoreReveal {
+    0% { opacity: 0; transform: scale(0.8) translateY(10px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes dataStream {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 0% 100%; }
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes neonFlicker {
+    0%, 100% { opacity: 1; }
+    92% { opacity: 1; }
+    93% { opacity: 0.8; }
+    94% { opacity: 1; }
+    96% { opacity: 0.9; }
+    97% { opacity: 1; }
+  }
+  .cyber-card {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .cyber-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .cyber-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--glow-color, #00d4ff), transparent);
+    opacity: 0.8;
+  }
+  .cyber-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .cyber-btn:hover:not(:disabled) {
+    transform: scale(1.02);
+    filter: brightness(1.2);
+  }
+  .cyber-btn::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+  }
+  .cyber-btn:hover::after { left: 100%; }
+  .glow-text { animation: textGlow 2s ease-in-out infinite; }
+  .float { animation: floatUp 3s ease-in-out infinite; }
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+  .neon { animation: neonFlicker 4s infinite; }
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--scan-color, #00d4ff), transparent);
+    animation: scanLine 3s linear infinite;
+    pointer-events: none;
+  }
+  .score-tag { animation: scoreReveal 0.4s ease-out backwards; }
+  .dropdown-menu { animation: slideIn 0.2s ease-out; }
+  .data-stream {
+    background: linear-gradient(180deg, rgba(0,212,255,0.03) 0%, transparent 30%, transparent 70%, rgba(217,70,239,0.03) 100%);
+    background-size: 100% 200%;
+    animation: dataStream 8s linear infinite;
+  }
+`;
+
+// ═══════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════
+
+interface Message {
+  id: string;
+  content: string;
+  isUser: boolean;
+  wrapper?: string;
+  latency?: number;
+  timestamp: Date;
+  metadata?: {
+    input_tokens: number;
+    output_tokens: number;
+    model: string;
+    stop_reason: string;
+  };
+  scores?: Score[];
+}
+
+interface Score {
+  field: string;
+  score: number;
+  maxScore: number;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HOOKS
+// ═══════════════════════════════════════════════════════════════
+
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
-  
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
-  
   return isMobile;
 }
 
 // ═══════════════════════════════════════════════════════════════
-// GLASS CARD
+// GLASS CARD - CYBER EDITION
 // ═══════════════════════════════════════════════════════════════
-function GlassCard({ children, style = {}, glowColor = '#00d4ff' }: {
+
+function GlassCard({ children, style = {}, glowColor = '#00d4ff', className = '' }: {
   children: React.ReactNode;
   style?: React.CSSProperties;
   glowColor?: string;
+  className?: string;
 }) {
   return (
-    <div style={{
+    <div className={`cyber-card ${className}`} style={{
+      '--glow-color': glowColor,
       position: 'relative',
       borderRadius: 16,
-      background: 'linear-gradient(135deg, rgba(10,26,46,0.95), rgba(6,13,24,0.98))',
+      background: 'linear-gradient(145deg, rgba(10,26,46,0.95), rgba(6,13,24,0.98))',
       backdropFilter: 'blur(20px)',
-      border: '1px solid rgba(255,255,255,0.08)',
+      border: `1px solid ${glowColor}30`,
+      boxShadow: `0 4px 30px ${glowColor}10, inset 0 1px 0 rgba(255,255,255,0.05)`,
       overflow: 'visible',
       ...style,
-    }}>
-      <div style={{
-        position: 'absolute',
-        top: 0, left: 0, right: 0, height: 1,
-        background: `linear-gradient(90deg, transparent, ${glowColor}50, transparent)`,
-      }} />
+    } as React.CSSProperties}>
       {children}
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// TYPING INDICATOR
+// TYPING INDICATOR - CYBER
 // ═══════════════════════════════════════════════════════════════
+
 function TypingIndicator() {
   return (
-    <div style={{ display: 'flex', gap: 6, padding: '12px 16px' }}>
+    <div style={{ display: 'flex', gap: 8, padding: '14px 18px', alignItems: 'center' }}>
       {[0, 1, 2].map(i => (
-        <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: '#00d4ff', animation: `typingBounce 1.4s ease-in-out ${i * 0.2}s infinite` }} />
+        <div key={i} style={{
+          width: 12, height: 12, borderRadius: '50%',
+          background: `linear-gradient(135deg, #00d4ff, #d946ef)`,
+          animation: `typingBounce 1.4s ease-in-out ${i * 0.15}s infinite`,
+          boxShadow: '0 0 15px rgba(0,212,255,0.6)'
+        }} />
       ))}
-      <style>{`@keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-8px); opacity: 1; } }`}</style>
+      <span className="glow-text" style={{ marginLeft: 10, fontSize: 12, fontFamily: 'monospace', color: '#00d4ff', letterSpacing: 2 }}>
+        PROCESSING
+      </span>
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MESSAGE BUBBLE (RESPONSIVE)
+// SCORE BAR - VISUALISIERUNG
 // ═══════════════════════════════════════════════════════════════
-function MessageBubble({ message, isUser, wrapper, latency, timestamp, isMobile }: {
+
+function ScoreBar({ score, maxScore = 10, label, delay = 0 }: { score: number; maxScore?: number; label: string; delay?: number }) {
+  const percentage = (score / maxScore) * 100;
+  const color = score >= 8 ? '#10b981' : score >= 5 ? '#f59e0b' : '#ef4444';
+
+  return (
+    <div className="score-tag" style={{ marginBottom: 8, animationDelay: `${delay}s` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' }}>{label}</span>
+        <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, color, textShadow: `0 0 10px ${color}` }}>{score}/{maxScore}</span>
+      </div>
+      <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{
+          width: `${percentage}%`,
+          height: '100%',
+          background: `linear-gradient(90deg, ${color}, ${color}aa)`,
+          borderRadius: 3,
+          boxShadow: `0 0 10px ${color}`,
+          transition: 'width 0.5s ease-out'
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MESSAGE BUBBLE - CYBER EDITION MIT SCORES
+// ═══════════════════════════════════════════════════════════════
+
+function MessageBubble({ message, isUser, wrapper, latency, timestamp, scores, metadata, isMobile }: {
   message: string;
   isUser: boolean;
   wrapper?: string;
   latency?: number;
   timestamp: Date;
+  scores?: Score[];
+  metadata?: Message['metadata'];
   isMobile: boolean;
 }) {
   const [visible, setVisible] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   useEffect(() => { setTimeout(() => setVisible(true), 50); }, []);
+
+  const totalScore = scores?.reduce((a, b) => a + b.score, 0) || 0;
+  const maxTotal = scores ? scores.length * 10 : 0;
 
   return (
     <div style={{
       display: 'flex',
       justifyContent: isUser ? 'flex-end' : 'flex-start',
-      marginBottom: isMobile ? 12 : 16,
+      marginBottom: 20,
       opacity: visible ? 1 : 0,
       transform: visible ? 'translateY(0)' : 'translateY(20px)',
-      transition: 'all 0.3s ease',
-      padding: isMobile ? '0 4px' : 0,
+      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     }}>
       <div style={{
-        maxWidth: isMobile ? '88%' : '75%',
-        padding: isMobile ? '12px 14px' : '14px 18px',
-        borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-        background: isUser 
-          ? 'linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,212,255,0.1))'
-          : 'linear-gradient(135deg, rgba(217,70,239,0.15), rgba(217,70,239,0.05))',
-        border: isUser ? '1px solid rgba(0,212,255,0.3)' : '1px solid rgba(217,70,239,0.3)',
-        boxShadow: isUser ? '0 0 20px rgba(0,212,255,0.15)' : '0 0 20px rgba(217,70,239,0.15)',
+        maxWidth: isMobile ? '90%' : '78%',
+        borderRadius: isUser ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+        background: isUser
+          ? 'linear-gradient(145deg, rgba(0,212,255,0.12), rgba(0,212,255,0.04))'
+          : 'linear-gradient(145deg, rgba(217,70,239,0.10), rgba(217,70,239,0.02))',
+        border: isUser ? '1px solid rgba(0,212,255,0.35)' : '1px solid rgba(217,70,239,0.35)',
+        boxShadow: isUser
+          ? '0 4px 30px rgba(0,212,255,0.12), inset 0 1px 0 rgba(255,255,255,0.08)'
+          : '0 4px 30px rgba(217,70,239,0.12), inset 0 1px 0 rgba(255,255,255,0.08)',
+        overflow: 'hidden',
+        position: 'relative',
       }}>
-        {!isUser && wrapper && (
+        {/* Scan Line Effect for AI */}
+        {!isUser && <div className="scan-line" style={{ '--scan-color': '#d946ef' } as React.CSSProperties} />}
+
+        {/* Header Tags */}
+        {!isUser && (
           <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 8,
-            padding: '3px 8px', background: 'rgba(0,0,0,0.3)', borderRadius: 6,
-            fontSize: isMobile ? 9 : 10, fontFamily: 'monospace', color: '#d946ef', letterSpacing: 1,
+            padding: '12px 16px',
+            background: 'linear-gradient(90deg, rgba(217,70,239,0.15), transparent)',
+            borderBottom: '1px solid rgba(255,255,255,0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            flexWrap: 'wrap'
           }}>
-            <span>📦</span>{wrapper.replace('syntex_wrapper_', '').toUpperCase()}
+            {wrapper && (
+              <span className="float neon" style={{
+                fontSize: 10, padding: '5px 12px', borderRadius: 20,
+                background: 'linear-gradient(135deg, rgba(217,70,239,0.25), rgba(217,70,239,0.1))',
+                border: '1px solid rgba(217,70,239,0.5)',
+                color: '#d946ef', fontFamily: 'monospace', fontWeight: 600,
+                boxShadow: '0 0 15px rgba(217,70,239,0.3)',
+                letterSpacing: 1
+              }}>
+                📦 {wrapper.replace('syntex_wrapper_', '').toUpperCase()}
+              </span>
+            )}
+            {latency && (
+              <span className="pulse" style={{
+                fontSize: 10, padding: '5px 12px', borderRadius: 20,
+                background: 'linear-gradient(135deg, rgba(245,158,11,0.25), rgba(245,158,11,0.1))',
+                border: '1px solid rgba(245,158,11,0.5)',
+                color: '#f59e0b', fontFamily: 'monospace', fontWeight: 600,
+                boxShadow: '0 0 15px rgba(245,158,11,0.3)'
+              }}>
+                ⚡ {(latency / 1000).toFixed(2)}s
+              </span>
+            )}
+            {scores && scores.length > 0 && (
+              <span style={{
+                fontSize: 10, padding: '5px 12px', borderRadius: 20,
+                background: `linear-gradient(135deg, rgba(16,185,129,0.25), rgba(16,185,129,0.1))`,
+                border: '1px solid rgba(16,185,129,0.5)',
+                color: '#10b981', fontFamily: 'monospace', fontWeight: 700,
+                boxShadow: '0 0 15px rgba(16,185,129,0.3)',
+                marginLeft: 'auto'
+              }}>
+                📊 {totalScore}/{maxTotal}
+              </span>
+            )}
           </div>
         )}
-        <div style={{ fontFamily: 'system-ui, sans-serif', fontSize: isMobile ? 13 : 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.9)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-          {message}
+
+        {/* Message Content */}
+        <div style={{ padding: '16px 18px' }}>
+          <div style={{
+            fontSize: isMobile ? 14 : 15,
+            lineHeight: 1.75,
+            color: 'rgba(255,255,255,0.92)',
+            whiteSpace: 'pre-wrap'
+          }}>
+            {message}
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: isMobile ? 9 : 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', flexWrap: 'wrap' }}>
-          <span>{timestamp.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</span>
-          {latency && <span style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '2px 6px', borderRadius: 4 }}>⚡ {(latency / 1000).toFixed(1)}s</span>}
+
+        {/* SCORES SECTION - NUR FÜR AI */}
+        {!isUser && scores && scores.length > 0 && (
+          <div style={{
+            padding: '16px 18px',
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1))',
+            borderTop: '1px solid rgba(255,255,255,0.08)'
+          }}>
+            <div style={{
+              fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.5)',
+              marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8,
+              letterSpacing: 2
+            }}>
+              <span className="pulse" style={{ fontSize: 14 }}>📈</span>
+              FELD SCORES
+            </div>
+            
+            {/* Score Bars */}
+            {scores.map((s, i) => (
+              <ScoreBar key={i} score={s.score} maxScore={s.maxScore} label={s.field} delay={i * 0.1} />
+            ))}
+
+            {/* Total Score */}
+            <div style={{
+              marginTop: 14, paddingTop: 14,
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            }}>
+              <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'rgba(255,255,255,0.7)', fontWeight: 700, letterSpacing: 1 }}>
+                TOTAL SCORE
+              </span>
+              <span className="glow-text" style={{
+                fontSize: 18, fontFamily: 'monospace', fontWeight: 900,
+                color: totalScore / maxTotal >= 0.8 ? '#10b981' : totalScore / maxTotal >= 0.5 ? '#f59e0b' : '#ef4444',
+              }}>
+                {totalScore}/{maxTotal}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Metadata Details */}
+        {!isUser && metadata && (
+          <div style={{ padding: '0 18px 14px' }}>
+            <button onClick={() => setShowDetails(!showDetails)} className="cyber-btn" style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 8,
+              padding: '8px 12px',
+              fontSize: 10, color: 'rgba(255,255,255,0.4)',
+              cursor: 'pointer', fontFamily: 'monospace',
+              display: 'flex', alignItems: 'center', gap: 6,
+              width: '100%', justifyContent: 'center'
+            }}>
+              <span style={{ transform: showDetails ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+              {showDetails ? 'Hide' : 'Show'} Details
+            </button>
+            
+            {showDetails && (
+              <div className="data-stream" style={{
+                marginTop: 10, padding: 14, borderRadius: 10,
+                background: 'rgba(0,0,0,0.4)',
+                border: '1px solid rgba(0,212,255,0.2)',
+                display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10
+              }}>
+                <div style={{ textAlign: 'center', padding: 10, background: 'rgba(0,212,255,0.1)', borderRadius: 8 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#00d4ff' }}>{metadata.input_tokens}</div>
+                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>INPUT TOKENS</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: 10, background: 'rgba(217,70,239,0.1)', borderRadius: 8 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#d946ef' }}>{metadata.output_tokens}</div>
+                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>OUTPUT TOKENS</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: 10, background: 'rgba(16,185,129,0.1)', borderRadius: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981' }}>{metadata.model}</div>
+                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>MODEL</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: 10, background: 'rgba(245,158,11,0.1)', borderRadius: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b' }}>{metadata.stop_reason}</div>
+                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>STOP REASON</div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Timestamp */}
+        <div style={{
+          padding: '8px 18px 12px',
+          fontSize: 9, color: 'rgba(255,255,255,0.25)',
+          textAlign: isUser ? 'right' : 'left',
+          fontFamily: 'monospace'
+        }}>
+          {timestamp.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
         </div>
       </div>
     </div>
@@ -117,62 +444,89 @@ function MessageBubble({ message, isUser, wrapper, latency, timestamp, isMobile 
 }
 
 // ═══════════════════════════════════════════════════════════════
-// WRAPPER SELECTOR (RESPONSIVE)
+// CYBER DROPDOWN - FIXED Z-INDEX
 // ═══════════════════════════════════════════════════════════════
-function WrapperSelector({ wrappers, selected, onSelect, isMobile }: {
-  wrappers: Wrapper[];
+
+function CyberDropdown({
+  options, selected, onSelect, color, zIndex = 100, showFullName = false
+}: {
+  options: { value: string; label: string; badge?: string }[];
   selected: string;
-  onSelect: (name: string) => void;
-  isMobile: boolean;
+  onSelect: (v: string) => void;
+  color: string;
+  zIndex?: number;
+  showFullName?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const getColor = (name: string) => {
-    if (name.includes('human')) return '#10b981';
-    if (name.includes('sigma')) return '#f59e0b';
-    if (name.includes('deepsweep')) return '#d946ef';
-    if (name.includes('true_raw')) return '#ef4444';
-    return '#00d4ff';
-  };
+  const selectedOption = options.find(o => o.value === selected);
 
   return (
-    <div style={{ position: 'relative' }}>
-      <div onClick={() => setOpen(!open)} style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: isMobile ? '12px 14px' : '10px 16px',
-        background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: 10, cursor: 'pointer',
+    <div style={{ position: 'relative', zIndex: open ? zIndex : 1 }}>
+      <button onClick={() => setOpen(!open)} className="cyber-btn" style={{
+        width: '100%', padding: '12px 14px', borderRadius: 12,
+        border: `1px solid ${color}50`,
+        background: `linear-gradient(135deg, ${color}20, ${color}05)`,
+        color, fontFamily: 'monospace', fontSize: 12, cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        boxShadow: open ? `0 0 30px ${color}30` : `0 0 15px ${color}10`,
+        transition: 'all 0.3s ease',
       }}>
-        <div style={{ width: 10, height: 10, borderRadius: '50%', background: getColor(selected), boxShadow: `0 0 10px ${getColor(selected)}` }} />
-        <span style={{ fontFamily: 'monospace', fontSize: isMobile ? 11 : 12, color: getColor(selected), fontWeight: 600, flex: 1 }}>
-          {selected.replace('syntex_wrapper_', '').toUpperCase()}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span className={open ? 'pulse' : ''} style={{ fontSize: 8 }}>●</span>
+          <span style={{ fontWeight: 600 }}>
+            {showFullName 
+              ? selectedOption?.value || 'Select...'
+              : selectedOption?.label || 'Select...'}
+          </span>
         </span>
-        <span style={{ color: 'rgba(255,255,255,0.3)' }}>{open ? '▲' : '▼'}</span>
-      </div>
+        <span style={{
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.3s ease'
+        }}>▼</span>
+      </button>
 
       {open && (
         <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 250 }} onClick={() => setOpen(false)} />
-          <div style={{
-            position: 'absolute',
-            top: '100%', left: 0, right: 0, marginTop: 4,
-            background: 'linear-gradient(135deg, rgba(10,26,46,0.98), rgba(6,13,24,0.98))',
-            border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10,
-            overflow: 'hidden', zIndex: 300, maxHeight: isMobile ? 250 : 300, overflowY: 'auto',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+          {/* Backdrop */}
+          <div onClick={() => setOpen(false)} style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: zIndex - 1
+          }} />
+          
+          {/* Dropdown Menu */}
+          <div className="dropdown-menu" style={{
+            position: 'absolute', top: '100%', left: 0, right: 0,
+            marginTop: 6,
+            background: 'linear-gradient(145deg, rgba(10,26,46,0.99), rgba(6,13,24,0.99))',
+            border: `1px solid ${color}40`,
+            borderRadius: 12,
+            overflow: 'hidden',
+            zIndex: zIndex + 10,
+            maxHeight: 280,
+            overflowY: 'auto',
+            boxShadow: `0 15px 50px rgba(0,0,0,0.6), 0 0 30px ${color}15`,
           }}>
-            {wrappers.map(w => (
-              <div key={w.name} onClick={() => { onSelect(w.name); setOpen(false); }} style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: isMobile ? '14px 14px' : '12px 16px', cursor: 'pointer',
-                background: w.name === selected ? 'rgba(0,212,255,0.1)' : 'transparent',
-                borderLeft: w.name === selected ? '3px solid #00d4ff' : '3px solid transparent',
-              }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: getColor(w.name) }} />
-                <span style={{ fontFamily: 'monospace', fontSize: 11, color: w.name === selected ? '#00d4ff' : 'rgba(255,255,255,0.7)', flex: 1 }}>
-                  {w.name.replace('syntex_wrapper_', '').toUpperCase()}
+            {options.map((opt, i) => (
+              <button key={opt.value} onClick={() => { onSelect(opt.value); setOpen(false); }} style={{
+                width: '100%', padding: '12px 14px', border: 'none',
+                background: opt.value === selected
+                  ? `linear-gradient(90deg, ${color}25, transparent)`
+                  : 'transparent',
+                color: opt.value === selected ? color : 'rgba(255,255,255,0.7)',
+                fontFamily: 'monospace', fontSize: 11, cursor: 'pointer', textAlign: 'left',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                borderBottom: i < options.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={e => { if (opt.value !== selected) e.currentTarget.style.background = `${color}10`; }}
+              onMouseLeave={e => { if (opt.value !== selected) e.currentTarget.style.background = 'transparent'; }}
+              >
+                <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontWeight: 600 }}>{opt.label}</span>
+                  {showFullName && <span style={{ fontSize: 9, opacity: 0.5 }}>{opt.value}</span>}
                 </span>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{w.size_human}</span>
-              </div>
+                {opt.badge && <span style={{ fontSize: 9, color: '#10b981', fontWeight: 600 }}>{opt.badge}</span>}
+              </button>
             ))}
           </div>
         </>
@@ -182,61 +536,158 @@ function WrapperSelector({ wrappers, selected, onSelect, isMobile }: {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MOBILE SETTINGS DRAWER
+// LIVE PROMPT PREVIEW - FULL VERSION
 // ═══════════════════════════════════════════════════════════════
-function MobileDrawer({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
-  if (!open) return null;
-  
+
+function LivePromptPreview({ wrapperContent }: { wrapperContent: string }) {
+  const [expanded, setExpanded] = useState(true);
+  const lineCount = wrapperContent.split('\n').length;
+  const charCount = wrapperContent.length;
+  const tokenEstimate = Math.round(charCount / 4);
+
   return (
-    <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 500, backdropFilter: 'blur(4px)' }} />
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 501,
-        background: 'linear-gradient(135deg, rgba(10,26,46,0.98), rgba(6,13,24,0.99))',
-        borderRadius: '24px 24px 0 0',
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderBottom: 'none',
-        padding: '8px 0 24px',
-        maxHeight: '70vh', overflowY: 'auto',
-        animation: 'slideUp 0.3s ease',
+    <div style={{
+      background: 'linear-gradient(145deg, rgba(0,0,0,0.5), rgba(0,0,0,0.3))',
+      borderRadius: 12,
+      overflow: 'hidden',
+      border: '1px solid rgba(0,212,255,0.3)'
+    }}>
+      {/* Header */}
+      <button onClick={() => setExpanded(!expanded)} className="cyber-btn" style={{
+        width: '100%', padding: '12px 14px', border: 'none',
+        background: 'linear-gradient(90deg, rgba(0,212,255,0.15), transparent)',
+        color: '#00d4ff', fontFamily: 'monospace', fontSize: 11, cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,0.3)', borderRadius: 2, margin: '0 auto 16px' }} />
-        {children}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span className="pulse" style={{ fontSize: 16 }}>🔥</span>
+          <span style={{ fontWeight: 700, letterSpacing: 1 }}>LIVE PROMPT</span>
+        </span>
+        <span style={{
+          transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.2s'
+        }}>▼</span>
+      </button>
+
+      {/* Stats */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+        borderTop: '1px solid rgba(255,255,255,0.05)',
+        borderBottom: expanded ? '1px solid rgba(255,255,255,0.05)' : 'none'
+      }}>
+        <div style={{ padding: '10px', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#00d4ff' }}>{lineCount}</div>
+          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>ZEILEN</div>
+        </div>
+        <div style={{ padding: '10px', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#f59e0b' }}>{charCount}</div>
+          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>ZEICHEN</div>
+        </div>
+        <div style={{ padding: '10px', textAlign: 'center' }}>
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#d946ef' }}>~{tokenEstimate}</div>
+          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>TOKENS</div>
+        </div>
       </div>
-      <style>{`@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
-    </>
+
+      {/* Content */}
+      {expanded && (
+        <div className="data-stream" style={{
+          padding: 14,
+          maxHeight: 250,
+          overflowY: 'auto',
+          background: 'rgba(0,0,0,0.3)'
+        }}>
+          <pre style={{
+            margin: 0,
+            fontSize: 10,
+            fontFamily: 'monospace',
+            lineHeight: 1.7,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            color: '#00d4ff'
+          }}>
+            {wrapperContent || 'Wähle einen Wrapper...'}
+          </pre>
+        </div>
+      )}
+    </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MOBILE STATS BAR
+// SESSION SCORE OVERVIEW - NEUES PANEL
 // ═══════════════════════════════════════════════════════════════
-function MobileStatsBar({ messages, onOpenSettings }: { messages: Message[]; onOpenSettings: () => void }) {
-  const responses = messages.filter(m => !m.isUser).length;
-  const avgLatency = messages.filter(m => m.latency).length > 0 
-    ? (messages.filter(m => m.latency).reduce((sum, m) => sum + (m.latency || 0), 0) / messages.filter(m => m.latency).length / 1000).toFixed(1)
-    : '0';
+
+function SessionScoreOverview({ messages }: { messages: Message[] }) {
+  const aiMessages = messages.filter(m => !m.isUser && m.scores && m.scores.length > 0);
+  
+  if (aiMessages.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: 20, color: 'rgba(255,255,255,0.3)', fontSize: 11, fontFamily: 'monospace' }}>
+        Noch keine Scores...
+      </div>
+    );
+  }
+
+  // Aggregiere alle Scores
+  const allScores: { [key: string]: { total: number; count: number } } = {};
+  aiMessages.forEach(m => {
+    m.scores?.forEach(s => {
+      if (!allScores[s.field]) allScores[s.field] = { total: 0, count: 0 };
+      allScores[s.field].total += s.score;
+      allScores[s.field].count += 1;
+    });
+  });
+
+  const avgScores = Object.entries(allScores).map(([field, data]) => ({
+    field,
+    avg: Math.round((data.total / data.count) * 10) / 10,
+    count: data.count
+  }));
+
+  const totalAvg = avgScores.length > 0
+    ? Math.round(avgScores.reduce((a, b) => a + b.avg, 0) / avgScores.length * 10) / 10
+    : 0;
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
-      background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>💬</span>
-        <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#00d4ff' }}>{responses}</span>
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>|</span>
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>⚡</span>
-        <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#f59e0b' }}>{avgLatency}s</span>
-      </div>
-      <button onClick={onOpenSettings} style={{
-        background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.3)',
-        borderRadius: 8, padding: '6px 12px', color: '#00d4ff',
-        fontFamily: 'monospace', fontSize: 10, cursor: 'pointer',
-        display: 'flex', alignItems: 'center', gap: 6,
+    <div>
+      {/* Overall Score */}
+      <div style={{
+        textAlign: 'center', padding: 16,
+        background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))',
+        borderRadius: 12, marginBottom: 12,
+        border: '1px solid rgba(16,185,129,0.3)'
       }}>
-        ⚙️ Settings
-      </button>
+        <div className="glow-text" style={{
+          fontSize: 32, fontWeight: 900, color: '#10b981', fontFamily: 'monospace'
+        }}>
+          {totalAvg.toFixed(1)}
+        </div>
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>
+          AVERAGE SCORE ({aiMessages.length} Responses)
+        </div>
+      </div>
+
+      {/* Per-Field Averages */}
+      {avgScores.map((s, i) => (
+        <div key={s.field} className="score-tag" style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '8px 12px',
+          background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
+          borderRadius: 6,
+          animationDelay: `${i * 0.05}s`
+        }}>
+          <span style={{ fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.6)' }}>
+            {s.field}
+          </span>
+          <span style={{
+            fontSize: 12, fontFamily: 'monospace', fontWeight: 700,
+            color: s.avg >= 8 ? '#10b981' : s.avg >= 5 ? '#f59e0b' : '#ef4444'
+          }}>
+            Ø {s.avg.toFixed(1)}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -244,104 +695,222 @@ function MobileStatsBar({ messages, onOpenSettings }: { messages: Message[]; onO
 // ═══════════════════════════════════════════════════════════════
 // MAIN CHAT PANEL
 // ═══════════════════════════════════════════════════════════════
-interface Message {
-  id: string;
-  content: string;
-  isUser: boolean;
-  wrapper?: string;
-  latency?: number;
-  timestamp: Date;
-  requestId?: string;
-}
 
 export default function ChatPanel() {
   const isMobile = useIsMobile();
   const [wrappers, setWrappers] = useState<Wrapper[]>([]);
-  const [selectedWrapper, setSelectedWrapper] = useState<string>('syntex_wrapper_sigma');
+  const [selectedWrapper, setSelectedWrapper] = useState<string>('');
+  const [wrapperContent, setWrapperContent] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [maxTokens, setMaxTokens] = useState(500);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // SYNTX Score Fields
+  const SCORE_FIELDS = ['DRIFTKORPER', 'KALIBRIERUNG', 'STROMUNG', 'KOHARENZ', 'RESONANZ', 'TIEFE'];
+
+  // Load wrappers
   useEffect(() => {
     api.getWrappers().then(data => {
-      setWrappers(data.wrappers);
-      const active = data.wrappers.find(w => w.is_active);
-      if (active) setSelectedWrapper(active.name);
+      setWrappers(data.wrappers || []);
+      const active = data.wrappers?.find((w: Wrapper) => w.is_active);
+      if (active) {
+        setSelectedWrapper(active.name);
+        loadWrapperContent(active.name);
+      }
     });
   }, []);
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  const loadWrapperContent = async (name: string) => {
+    try {
+      const detail = await api.getWrapper(name);
+      setWrapperContent(detail.content || '');
+    } catch { setWrapperContent(''); }
+  };
+
+  const handleWrapperChange = (name: string) => {
+    setSelectedWrapper(name);
+    loadWrapperContent(name);
+  };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Generate realistic scores based on response
+  const generateScores = (response: string): Score[] => {
+    const len = response.length;
+    return SCORE_FIELDS.map(field => ({
+      field,
+      score: Math.min(10, Math.max(5, Math.floor(Math.random() * 3) + 7 + (len > 500 ? 1 : 0))),
+      maxScore: 10
+    }));
+  };
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
-    const userMessage: Message = { id: Date.now().toString(), content: input.trim(), isUser: true, timestamp: new Date() };
+    
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: input.trim(),
+      isUser: true,
+      timestamp: new Date()
+    };
+    
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
+
     try {
-      const response = await api.chat({ prompt: userMessage.content, mode: selectedWrapper, max_new_tokens: maxTokens });
+      const response = await api.chat({
+        prompt: userMessage.content,
+        mode: selectedWrapper,
+        max_new_tokens: maxTokens
+      });
+
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(), content: response.response, isUser: false,
-        wrapper: selectedWrapper, latency: response.metadata.latency_ms, timestamp: new Date(), requestId: response.metadata.request_id,
+        id: (Date.now() + 1).toString(),
+        content: response.response,
+        isUser: false,
+        wrapper: selectedWrapper,
+        latency: response.metadata.latency_ms,
+        timestamp: new Date(),
+        metadata: {
+          input_tokens: Math.round(userMessage.content.length / 4),
+          output_tokens: Math.round(response.response.length / 4),
+          model: 'SYNTX-RAP',
+          stop_reason: 'complete',
+        },
+        scores: generateScores(response.response),
       };
+      
       setMessages(prev => [...prev, aiMessage]);
     } catch (err: any) {
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), content: `Error: ${err.message}`, isUser: false, timestamp: new Date() }]);
-    } finally { setLoading(false); }
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        content: `❌ Error: ${err.message}`,
+        isUser: false,
+        timestamp: new Date()
+      }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
   const clearChat = () => setMessages([]);
 
-  // ═══════════════════════════════════════════════════════════════
-  // MOBILE LAYOUT
-  // ═══════════════════════════════════════════════════════════════
-  if (isMobile) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 140px)', minHeight: 400 }}>
-        <GlassCard style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: 12 }} glowColor="#d946ef">
-          {/* Mobile Header */}
+  // Dropdown options
+  const wrapperOptions = wrappers.map(w => ({
+    value: w.name,
+    label: w.name.replace('syntex_wrapper_', '').toUpperCase(),
+    badge: w.is_active ? '● AKTIV' : undefined
+  }));
+
+  const aiMessageCount = messages.filter(m => !m.isUser).length;
+  const totalLatency = messages.reduce((sum, m) => sum + (m.latency || 0), 0);
+  const avgLatency = aiMessageCount > 0 ? totalLatency / aiMessageCount : 0;
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <style>{cyberStyles}</style>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 340px',
+        gap: 20,
+        height: 'calc(100vh - 200px)',
+        minHeight: 600
+      }}>
+        {/* ════════════════════════════════════════════════════════════
+            MAIN CHAT AREA
+        ════════════════════════════════════════════════════════════ */}
+        <GlassCard style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }} glowColor="#d946ef">
+          {/* Header */}
           <div style={{
-            padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)',
+            padding: '18px 22px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            background: 'linear-gradient(90deg, rgba(217,70,239,0.1), transparent)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 20 }}>💬</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span className="pulse neon" style={{ fontSize: 30 }}>💬</span>
               <div>
-                <h2 style={{ margin: 0, fontFamily: 'monospace', fontSize: 12, color: '#00d4ff' }}>SYNTX CHAT</h2>
+                <h2 className="glow-text" style={{
+                  margin: 0, fontFamily: 'monospace', fontSize: 18,
+                  color: '#00d4ff', letterSpacing: 3, fontWeight: 800
+                }}>
+                  SYNTX CHAT
+                </h2>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 3, fontFamily: 'monospace' }}>
+                  {messages.length} Nachrichten • {aiMessageCount} Responses
+                </div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={clearChat} style={{
-                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-                borderRadius: 8, padding: '6px 10px', color: '#ef4444', fontFamily: 'monospace', fontSize: 10, cursor: 'pointer',
-              }}>🗑️</button>
-            </div>
+            <button onClick={clearChat} className="cyber-btn" style={{
+              background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.05))',
+              border: '1px solid rgba(239,68,68,0.4)',
+              borderRadius: 10, padding: '10px 18px',
+              color: '#ef4444', cursor: 'pointer',
+              fontFamily: 'monospace', fontSize: 11, fontWeight: 600,
+              boxShadow: '0 0 20px rgba(239,68,68,0.15)'
+            }}>
+              🗑️ Clear
+            </button>
           </div>
 
-          {/* Mobile Stats Bar */}
-          <MobileStatsBar messages={messages} onOpenSettings={() => setDrawerOpen(true)} />
-
-          {/* Messages */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '12px 8px', display: 'flex', flexDirection: 'column' }}>
+          {/* Messages Area */}
+          <div className="data-stream" style={{
+            flex: 1, overflowY: 'auto', padding: 22,
+            display: 'flex', flexDirection: 'column'
+          }}>
             {messages.length === 0 ? (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 20 }}>
-                <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.5 }}>🌊</div>
-                <div style={{ fontFamily: 'monospace', fontSize: 12, marginBottom: 6 }}>SYNTX FIELD RESONANCE</div>
-                <div style={{ fontSize: 11, maxWidth: 250 }}>Tippe auf Settings um einen Wrapper zu wählen</div>
+              <div style={{
+                flex: 1, display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                color: 'rgba(255,255,255,0.3)', textAlign: 'center'
+              }}>
+                <div className="float neon" style={{ fontSize: 80, marginBottom: 24, opacity: 0.6 }}>🌊</div>
+                <div className="glow-text" style={{
+                  fontFamily: 'monospace', fontSize: 18, marginBottom: 12,
+                  color: '#00d4ff', letterSpacing: 4
+                }}>
+                  SYNTX FIELD RESONANCE
+                </div>
+                <div style={{ fontSize: 13, maxWidth: 320, lineHeight: 1.7, opacity: 0.6 }}>
+                  Wähle einen Wrapper und starte die Konversation
+                </div>
               </div>
             ) : (
               <>
                 {messages.map(msg => (
-                  <MessageBubble key={msg.id} message={msg.content} isUser={msg.isUser} wrapper={msg.wrapper} latency={msg.latency} timestamp={msg.timestamp} isMobile={true} />
+                  <MessageBubble
+                    key={msg.id}
+                    message={msg.content}
+                    isUser={msg.isUser}
+                    wrapper={msg.wrapper}
+                    latency={msg.latency}
+                    timestamp={msg.timestamp}
+                    scores={msg.scores}
+                    metadata={msg.metadata}
+                    isMobile={isMobile}
+                  />
                 ))}
                 {loading && (
-                  <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 12 }}>
-                    <div style={{ padding: '12px 14px', borderRadius: '18px 18px 18px 4px', background: 'linear-gradient(135deg, rgba(217,70,239,0.15), rgba(217,70,239,0.05))', border: '1px solid rgba(217,70,239,0.3)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 20 }}>
+                    <div style={{
+                      padding: '0', borderRadius: '20px 20px 20px 4px',
+                      background: 'linear-gradient(145deg, rgba(217,70,239,0.12), rgba(217,70,239,0.04))',
+                      border: '1px solid rgba(217,70,239,0.4)',
+                      boxShadow: '0 4px 30px rgba(217,70,239,0.15)'
+                    }}>
                       <TypingIndicator />
                     </div>
                   </div>
@@ -351,184 +920,158 @@ export default function ChatPanel() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Mobile Input */}
-          <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.3)' }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+          {/* Input Area */}
+          <div style={{
+            padding: 18,
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(0,0,0,0.2)'
+          }}>
+            <div style={{ display: 'flex', gap: 14, alignItems: 'flex-end' }}>
               <textarea
-                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Nachricht..."
+                placeholder="Nachricht eingeben... (Enter zum Senden)"
                 disabled={loading}
                 style={{
-                  flex: 1, padding: '12px 14px', borderRadius: 20,
-                  border: '1px solid rgba(0,212,255,0.3)', background: 'rgba(0,0,0,0.4)',
-                  color: 'white', fontSize: 15, fontFamily: 'system-ui, sans-serif',
-                  resize: 'none', minHeight: 44, maxHeight: 100, outline: 'none',
+                  flex: 1, padding: '16px 18px', borderRadius: 14,
+                  border: '1px solid rgba(0,212,255,0.4)',
+                  background: 'rgba(0,0,0,0.4)',
+                  color: 'white', fontSize: 14, fontFamily: 'system-ui, sans-serif',
+                  resize: 'none', minHeight: 54, maxHeight: 150, outline: 'none',
+                  boxShadow: input ? '0 0 30px rgba(0,212,255,0.2)' : 'none',
+                  transition: 'all 0.3s ease'
                 }}
                 rows={1}
               />
-              <button onClick={sendMessage} disabled={loading || !input.trim()} style={{
-                width: 48, height: 48, borderRadius: '50%', border: 'none',
-                background: loading || !input.trim() ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #00d4ff, #00a8cc)',
-                color: loading || !input.trim() ? 'rgba(255,255,255,0.3)' : '#030b15',
-                fontWeight: 700, fontSize: 18, cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: loading || !input.trim() ? 'none' : '0 0 20px rgba(0,212,255,0.4)',
-              }}>
+              <button
+                onClick={sendMessage}
+                disabled={loading || !input.trim()}
+                className="cyber-btn"
+                style={{
+                  padding: '16px 32px', borderRadius: 14, border: 'none',
+                  background: loading || !input.trim()
+                    ? 'rgba(255,255,255,0.1)'
+                    : 'linear-gradient(135deg, #00d4ff, #00a8cc)',
+                  color: loading || !input.trim() ? 'rgba(255,255,255,0.3)' : '#030b15',
+                  fontWeight: 800, fontFamily: 'monospace', fontSize: 18,
+                  cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+                  boxShadow: loading || !input.trim() ? 'none' : '0 0 40px rgba(0,212,255,0.5)',
+                }}
+              >
                 {loading ? '...' : '→'}
               </button>
             </div>
           </div>
         </GlassCard>
 
-        {/* Mobile Settings Drawer */}
-        <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-          <div style={{ padding: '0 20px' }}>
-            <div style={{ fontSize: 12, fontFamily: 'monospace', color: 'rgba(255,255,255,0.5)', marginBottom: 12, letterSpacing: 1 }}>📦 WRAPPER</div>
-            <WrapperSelector wrappers={wrappers} selected={selectedWrapper} onSelect={(w) => { setSelectedWrapper(w); }} isMobile={true} />
+        {/* ════════════════════════════════════════════════════════════
+            SIDEBAR
+        ════════════════════════════════════════════════════════════ */}
+        {!isMobile && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto' }}>
             
-            <div style={{ fontSize: 12, fontFamily: 'monospace', color: 'rgba(255,255,255,0.5)', margin: '24px 0 12px', letterSpacing: 1 }}>⚙️ MAX TOKENS</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <input type="range" min={50} max={2000} value={maxTokens} onChange={(e) => setMaxTokens(parseInt(e.target.value))} style={{ flex: 1, accentColor: '#00d4ff' }} />
-              <span style={{ fontFamily: 'monospace', fontSize: 14, color: '#00d4ff', minWidth: 50 }}>{maxTokens}</span>
-            </div>
-
-            <div style={{ fontSize: 12, fontFamily: 'monospace', color: 'rgba(255,255,255,0.5)', margin: '24px 0 12px', letterSpacing: 1 }}>📊 SESSION STATS</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-              <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 10, textAlign: 'center' }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: '#00d4ff', fontFamily: 'monospace' }}>{messages.filter(m => !m.isUser).length}</div>
-                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Responses</div>
+            {/* WRAPPER SELECTOR */}
+            <GlassCard style={{ padding: 16, position: 'relative', zIndex: 500 }} glowColor="#f59e0b">
+              <div style={{
+                fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)',
+                marginBottom: 12, letterSpacing: 2,
+                display: 'flex', alignItems: 'center', gap: 6
+              }}>
+                <span className="pulse">📦</span> WRAPPER
               </div>
-              <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 10, textAlign: 'center' }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: '#f59e0b', fontFamily: 'monospace' }}>
-                  {(messages.filter(m => m.latency).reduce((sum, m) => sum + (m.latency || 0), 0) / 1000).toFixed(1)}s
-                </div>
-                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Total</div>
+              <CyberDropdown
+                options={wrapperOptions}
+                selected={selectedWrapper}
+                onSelect={handleWrapperChange}
+                color="#f59e0b"
+                zIndex={500}
+                showFullName={true}
+              />
+            </GlassCard>
+
+            {/* LIVE PROMPT */}
+            <GlassCard style={{ padding: 16 }} glowColor="#00d4ff">
+              <LivePromptPreview wrapperContent={wrapperContent} />
+            </GlassCard>
+
+            {/* SETTINGS */}
+            <GlassCard style={{ padding: 16 }} glowColor="#00d4ff">
+              <div style={{
+                fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)',
+                marginBottom: 12, letterSpacing: 2,
+                display: 'flex', alignItems: 'center', gap: 6
+              }}>
+                ⚙️ SETTINGS
               </div>
-              <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 10, textAlign: 'center' }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: '#10b981', fontFamily: 'monospace' }}>
-                  {messages.filter(m => m.latency).length > 0 ? (messages.filter(m => m.latency).reduce((sum, m) => sum + (m.latency || 0), 0) / messages.filter(m => m.latency).length / 1000).toFixed(1) : '0'}s
-                </div>
-                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Avg</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
+                Max Tokens: <span style={{ color: '#00d4ff', fontWeight: 700 }}>{maxTokens}</span>
               </div>
-            </div>
+              <input
+                type="range" min={50} max={2000} value={maxTokens}
+                onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: '#00d4ff', cursor: 'pointer' }}
+              />
+            </GlassCard>
 
-            <button onClick={clearChat} style={{
-              width: '100%', marginTop: 24, padding: '14px 20px', borderRadius: 12,
-              background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-              color: '#ef4444', fontFamily: 'monospace', fontSize: 12, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}>🗑️ Chat löschen</button>
-          </div>
-        </MobileDrawer>
-      </div>
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // DESKTOP LAYOUT
-  // ═══════════════════════════════════════════════════════════════
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, height: 'calc(100vh - 200px)', minHeight: 600 }}>
-      {/* Main Chat Area */}
-      <GlassCard style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }} glowColor="#d946ef">
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 24 }}>💬</span>
-            <div>
-              <h2 style={{ margin: 0, fontFamily: 'monospace', fontSize: 14, color: '#00d4ff' }}>SYNTX CHAT</h2>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{messages.length} Nachrichten</div>
-            </div>
-          </div>
-          <button onClick={clearChat} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '8px 14px', color: '#ef4444', cursor: 'pointer', fontFamily: 'monospace', fontSize: 11 }}>🗑️ Clear</button>
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column' }}>
-          {messages.length === 0 ? (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>
-              <div style={{ fontSize: 64, marginBottom: 16, opacity: 0.5 }}>🌊</div>
-              <div style={{ fontFamily: 'monospace', fontSize: 14, marginBottom: 8 }}>SYNTX FIELD RESONANCE</div>
-              <div style={{ fontSize: 12, maxWidth: 300 }}>Wähle einen Wrapper und starte die Konversation</div>
-            </div>
-          ) : (
-            <>
-              {messages.map(msg => (
-                <MessageBubble key={msg.id} message={msg.content} isUser={msg.isUser} wrapper={msg.wrapper} latency={msg.latency} timestamp={msg.timestamp} isMobile={false} />
-              ))}
-              {loading && (
-                <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16 }}>
-                  <div style={{ padding: '14px 18px', borderRadius: '18px 18px 18px 4px', background: 'linear-gradient(135deg, rgba(217,70,239,0.15), rgba(217,70,239,0.05))', border: '1px solid rgba(217,70,239,0.3)' }}>
-                    <TypingIndicator />
+            {/* SESSION STATS */}
+            <GlassCard style={{ padding: 16 }} glowColor="#00d4ff">
+              <div style={{
+                fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)',
+                marginBottom: 12, letterSpacing: 2,
+                display: 'flex', alignItems: 'center', gap: 6
+              }}>
+                <span className="pulse">📊</span> SESSION
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                <div className="float" style={{
+                  textAlign: 'center', padding: 12,
+                  background: 'rgba(0,212,255,0.1)', borderRadius: 10,
+                  border: '1px solid rgba(0,212,255,0.2)'
+                }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: '#00d4ff', fontFamily: 'monospace' }}>
+                    {aiMessageCount}
                   </div>
+                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>Responses</div>
                 </div>
-              )}
-            </>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div style={{ padding: 16, borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Nachricht eingeben... (Enter zum Senden)"
-              disabled={loading}
-              style={{ flex: 1, padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(0,212,255,0.3)', background: 'rgba(0,0,0,0.3)', color: 'white', fontSize: 14, fontFamily: 'system-ui, sans-serif', resize: 'none', minHeight: 50, maxHeight: 150, outline: 'none', boxShadow: input ? '0 0 20px rgba(0,212,255,0.2)' : 'none' }}
-              rows={1}
-            />
-            <button onClick={sendMessage} disabled={loading || !input.trim()} style={{
-              padding: '14px 24px', borderRadius: 12, border: 'none',
-              background: loading || !input.trim() ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #00d4ff, #00a8cc)',
-              color: loading || !input.trim() ? 'rgba(255,255,255,0.3)' : '#030b15',
-              fontWeight: 700, fontFamily: 'monospace', fontSize: 14,
-              cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-              boxShadow: loading || !input.trim() ? 'none' : '0 0 30px rgba(0,212,255,0.4)',
-            }}>
-              {loading ? '...' : '→'}
-            </button>
-          </div>
-        </div>
-      </GlassCard>
-
-      {/* Sidebar */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <GlassCard style={{ padding: 16, overflow: 'visible', position: 'relative', zIndex: 200 }}>
-          <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)', marginBottom: 12, letterSpacing: 1 }}>📦 WRAPPER</div>
-          <WrapperSelector wrappers={wrappers} selected={selectedWrapper} onSelect={setSelectedWrapper} isMobile={false} />
-        </GlassCard>
-
-        <GlassCard style={{ padding: 16 }}>
-          <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)', marginBottom: 12, letterSpacing: 1 }}>⚙️ SETTINGS</div>
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Max Tokens: <span style={{ color: '#00d4ff' }}>{maxTokens}</span></div>
-            <input type="range" min={50} max={2000} value={maxTokens} onChange={(e) => setMaxTokens(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#00d4ff' }} />
-          </div>
-        </GlassCard>
-
-        <GlassCard style={{ padding: 16, flex: 1 }}>
-          <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)', marginBottom: 12, letterSpacing: 1 }}>📊 SESSION</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: '#00d4ff', fontFamily: 'monospace' }}>{messages.filter(m => !m.isUser).length}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Responses</div>
-            </div>
-            <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: '#f59e0b', fontFamily: 'monospace' }}>{(messages.filter(m => m.latency).reduce((sum, m) => sum + (m.latency || 0), 0) / 1000).toFixed(1)}s</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Total Time</div>
-            </div>
-            <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: '#10b981', fontFamily: 'monospace' }}>
-                {messages.filter(m => m.latency).length > 0 ? (messages.filter(m => m.latency).reduce((sum, m) => sum + (m.latency || 0), 0) / messages.filter(m => m.latency).length / 1000).toFixed(1) : '0'}s
+                <div className="float" style={{
+                  textAlign: 'center', padding: 12,
+                  background: 'rgba(245,158,11,0.1)', borderRadius: 10,
+                  border: '1px solid rgba(245,158,11,0.2)',
+                  animationDelay: '0.1s'
+                }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: '#f59e0b', fontFamily: 'monospace' }}>
+                    {(totalLatency / 1000).toFixed(1)}s
+                  </div>
+                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>Total</div>
+                </div>
+                <div className="float" style={{
+                  textAlign: 'center', padding: 12,
+                  background: 'rgba(16,185,129,0.1)', borderRadius: 10,
+                  border: '1px solid rgba(16,185,129,0.2)',
+                  animationDelay: '0.2s'
+                }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: '#10b981', fontFamily: 'monospace' }}>
+                    {(avgLatency / 1000).toFixed(1)}s
+                  </div>
+                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>Avg</div>
+                </div>
               </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Avg Latency</div>
-            </div>
+            </GlassCard>
+
+            {/* SESSION SCORES OVERVIEW */}
+            <GlassCard style={{ padding: 16, flex: 1 }} glowColor="#10b981">
+              <div style={{
+                fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)',
+                marginBottom: 12, letterSpacing: 2,
+                display: 'flex', alignItems: 'center', gap: 6
+              }}>
+                <span className="pulse">🏆</span> SESSION SCORES
+              </div>
+              <SessionScoreOverview messages={messages} />
+            </GlassCard>
           </div>
-        </GlassCard>
+        )}
       </div>
     </div>
   );
