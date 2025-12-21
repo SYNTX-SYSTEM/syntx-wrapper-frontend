@@ -22,13 +22,10 @@
 
 export interface HealthResponse {
   status: string;
-  service: string;
-  version: string;
-  last_response?: {
-    response: string;
-    latency_ms: number;
-    timestamp: string;
-  };
+  api_version: string;
+  timestamp: string;
+  queue_accessible: boolean;
+  modules: string[];
 }
 
 export interface ResonanzHealthResponse {
