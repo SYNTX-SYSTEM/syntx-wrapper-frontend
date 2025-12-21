@@ -72,8 +72,8 @@ async function runTests() {
   await test('getWrappers', 'GET', '/resonanz/wrappers');
   await test('getWrappersFull', 'GET', '/resonanz/wrappers/full');
   await test('getActiveWrapper', 'GET', '/resonanz/wrappers?active=true');
-  await test('getWrapper', 'GET', '/resonanz/wrapper/init');
-  await test('getWrapperMeta', 'GET', '/resonanz/wrapper/init/meta');
+  await test('getWrapper', 'GET', '/resonanz/wrapper/syntex_system');
+  await test('getWrapperMeta', 'GET', '/resonanz/wrapper/syntex_system/meta');
 
   // ═══════════════════════════════════════════════════════════════════════
   // 📊 STATS & ANALYTICS
@@ -81,7 +81,7 @@ async function runTests() {
   console.log('');
   console.log('─── 📊 STATS & ANALYTICS ───');
   await test('getStats', 'GET', '/resonanz/stats');
-  await test('getWrapperStats', 'GET', '/resonanz/stats/wrapper/init');
+  await test('getWrapperStats', 'GET', '/resonanz/stats/wrapper/syntex_system');
   await test('getStream', 'GET', '/resonanz/strom?limit=5');
   await test('getTraining', 'GET', '/resonanz/training?limit=5');
 
@@ -90,7 +90,7 @@ async function runTests() {
   // ═══════════════════════════════════════════════════════════════════════
   console.log('');
   console.log('─── 💬 CHAT ───');
-  await test('chat', 'POST', '/resonanz/chat', { prompt: 'Test vom Frontend', mode: 'init' });
+  await test('chat', 'POST', '/resonanz/chat', { prompt: 'Test vom Frontend', mode: 'syntex_system' });
 
   // ═══════════════════════════════════════════════════════════════════════
   // 📄 FORMAT
@@ -98,7 +98,7 @@ async function runTests() {
   console.log('');
   console.log('─── 📄 FORMAT ───');
   await test('getFormats', 'GET', '/resonanz/formats');
-  await test('getFormat', 'GET', '/resonanz/formats/syntx-standard');
+  await test('getFormat', 'GET', '/resonanz/formats/syntex_system');
 
   // ═══════════════════════════════════════════════════════════════════════
   // 🔀 DIFF (v3.3)
@@ -107,7 +107,7 @@ async function runTests() {
   console.log('─── 🔀 DIFF (v3.3) ───');
   await test('diff', 'POST', '/resonanz/chat/diff', { 
     prompt: 'Was ist SYNTX?', 
-    wrappers: ['init', 'syntx-core'] 
+    wrappers: ['syntex_system', 'naxixam'] 
   });
 
   // ═══════════════════════════════════════════════════════════════════════
