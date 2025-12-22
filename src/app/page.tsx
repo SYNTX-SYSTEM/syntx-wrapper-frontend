@@ -6,6 +6,7 @@ import CreateWrapperModal from "@/components/wrappers/CreateWrapperModal";
 import StatsPanel from "@/components/analytics/StatsPanel";
 import FlowPanel from "@/components/flow/FlowPanel";
 import AlchemyPanel from "@/components/alchemy/AlchemyPanel";
+import DiffPanel from "@/components/diff/DiffPanel";
 import ChatPanel from "@/components/chat/ChatPanel";
 import GraphsPanel from "@/components/graphs/GraphsPanel";
 import SystemPanel from "@/components/system/SystemPanel";
@@ -16,7 +17,7 @@ import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { useRealtime, useRealtimeHealth } from "@/hooks/useRealtime";
 import { api } from "@/lib/api";
 
-type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy";
+type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff";
 
 const TABS = [
   { id: "data", label: "DATA", icon: "📊", color: "#8b5cf6" },
@@ -28,6 +29,7 @@ const TABS = [
   { id: "analytics", label: "ANALYTICS", icon: "📊", color: "#00d4ff" },
   { id: "flow", label: "FLOW", icon: "🌊", color: "#10b981" },
   { id: "alchemy", label: "ALCHEMY", icon: "⚗️", color: "#d946ef" },
+  { id: "diff", label: "DIFF", icon: "🔀", color: "#8b5cf6" },
 ] as const;
 
 function HeroSection({ onEnter }: { onEnter: () => void }) {
@@ -267,6 +269,7 @@ function Dashboard() {
         {activeTab === "analytics" && <StatsPanel />}
         {activeTab === "flow" && <FlowPanel />}
         {activeTab === "alchemy" && <AlchemyPanel />}
+        {activeTab === "diff" && <DiffPanel />}
       </section>
 
       <CreateWrapperModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleCreateWrapper} />
