@@ -29,6 +29,8 @@ export default function WrapperPanel() {
 
   const [editWrapper, setEditWrapper] = useState<WrapperDetail | null>(null);
   const [editSaving, setEditSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [statsWrapper, setStatsWrapper] = useState<Wrapper | null>(null);
   const [statsData, setStatsData] = useState<WrapperStats | null>(null);
@@ -43,20 +45,14 @@ export default function WrapperPanel() {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.getWrappers();
-      setWrappers(data.wrappers || []);
+      const data = await api.getWrappersFull();
+      setWrappers((data.wrappers || []).map((w: any) => ({ name: w.name, size_bytes: w.size_bytes, size_human: w.size_human, last_modified: w.last_modified, is_active: w.is_active })));
       setActiveWrapper(data.active_wrapper || '');
       
-      // Simuliere Format-Bindings (später aus Backend)
+      // ECHTE Format-Bindings aus Backend Meta
       const formatBindings: Record<string, string> = {};
-      (data.wrappers || []).forEach((w: Wrapper) => {
-        const name = w.name.toLowerCase();
-        if (name.includes('sigma')) formatBindings[w.name] = 'SIGMA_ANALYSIS';
-        else if (name.includes('human')) formatBindings[w.name] = 'HUMAN_READABLE';
-        else if (name.includes('deepsweep')) formatBindings[w.name] = 'SYNTX_TRUE_RAW';
-        else if (name.includes('backend')) formatBindings[w.name] = 'SYNTEX_SYSTEM';
-        else if (name.includes('true_raw')) formatBindings[w.name] = 'SYNTX_TRUE_RAW';
-        else formatBindings[w.name] = 'UNIVERSAL';
+      (data.wrappers || []).forEach((w: any) => {
+        formatBindings[w.name] = w.meta?.format?.toUpperCase() || "KEIN FORMAT";
       });
       setWrapperFormats(formatBindings);
     } catch (err: any) {
@@ -122,13 +118,23 @@ export default function WrapperPanel() {
   };
 
   // 🔄 SAVE EDIT
-  const handleSaveEdit = async (content: string) => {
+  const handleSaveEdit = async (content: string, formatData?: { format: string; fields: { name: string; weight: number; enabled: boolean }[] }) => {
     if (!editWrapper) return;
     setEditSaving(true);
     try {
       await api.updateWrapper(editWrapper.name, { content });
-      setEditWrapper(null);
-      fetchWrappers();
+      if (formatData?.format) {
+        await api.bindFormat(editWrapper.name, formatData.format);
+      }
+      setSuccessMessage(formatData?.format ? "⚡ " + editWrapper.name + " → " + formatData.format : "⚡ " + editWrapper.name + " gespeichert");
+      setShowSuccess(true);
+      setTimeout(() => { setShowSuccess(false); }, 2000);
+      // Formats neu laden ohne Modal zu schließen
+      const freshData = await api.getWrappersFull();
+      const newFormats: Record<string, string> = {};
+      (freshData.wrappers || []).forEach((w: any) => { newFormats[w.name] = w.meta?.format?.toUpperCase() || "KEIN FORMAT"; });
+      setWrapperFormats(newFormats);
+      setWrappers((freshData.wrappers || []).map((w: any) => ({ name: w.name, size_bytes: w.size_bytes, size_human: w.size_human, last_modified: w.last_modified, is_active: w.is_active })));
     } catch (err: any) {
       alert('Save failed: ' + err.message);
     } finally {
@@ -316,6 +322,14 @@ export default function WrapperPanel() {
       <EditModal wrapper={editWrapper} onClose={() => setEditWrapper(null)} onSave={handleSaveEdit} saving={editSaving} />
       <StatsModal wrapper={statsWrapper} stats={statsData} loading={statsLoading} error={statsError} onClose={() => { setStatsWrapper(null); setStatsData(null); }} />
       <DeleteModal wrapper={deleteWrapper} onClose={() => setDeleteWrapper(null)} onDelete={handleDelete} deleting={deleting} />
+      {/* SUCCESS TOAST */}
+      {showSuccess && (
+        <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", background: "linear-gradient(135deg, rgba(16,185,129,0.98), rgba(6,78,59,0.98))", border: "2px solid #10b981", borderRadius: 20, padding: "40px 60px", zIndex: 2000, boxShadow: "0 0 80px rgba(16,185,129,0.6), 0 0 160px rgba(16,185,129,0.3)", textAlign: "center" }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>⚡</div>
+          <div style={{ fontFamily: "monospace", fontSize: 24, color: "#fff", fontWeight: 900, letterSpacing: 4, textTransform: "uppercase" }}>MODULIERT</div>
+          <div style={{ fontFamily: "monospace", fontSize: 13, color: "rgba(255,255,255,0.8)", marginTop: 12 }}>{successMessage}</div>
+        </div>
+      )}
     </div>
   );
 }

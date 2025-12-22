@@ -19,7 +19,7 @@ interface FormatField {
 interface EditModalProps {
   wrapper: WrapperDetail | null;
   onClose: () => void;
-  onSave: (content: string) => Promise<void>;
+  onSave: (content: string, formatData?: { format: string; fields: { name: string; weight: number; enabled: boolean }[] }) => Promise<void>;
   saving: boolean;
 }
 
@@ -29,8 +29,11 @@ export default function EditModal({ wrapper, onClose, onSave, saving }: EditModa
   // FORMAT INTEGRATION
   const [formats, setFormats] = useState<FormatOption[]>([]);
   const [selectedFormat, setSelectedFormat] = useState<string>('');
+  const [originalFormat, setOriginalFormat] = useState<string>('');
   const [formatFields, setFormatFields] = useState<FormatField[]>([]);
+  const [originalFormatFields, setOriginalFormatFields] = useState<FormatField[]>([]);
   const [loadingFormats, setLoadingFormats] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   
   // VIEW MODE
   const [previewMode, setPreviewMode] = useState<'wrapper' | 'format' | 'combined'>('combined');
@@ -49,7 +52,13 @@ export default function EditModal({ wrapper, onClose, onSave, saving }: EditModa
       setFormats((data.formats || []).map((f: any) => ({ name: f.name, fields_count: f.fields_count || f.fields?.length || 0, description: f.description })));
       if (data.formats?.length > 0) {
         setSelectedFormat(data.formats[0].name);
+        setOriginalFormat(data.formats[0].name);
         await loadFormatFields(data.formats[0].name);
+        // Jetzt originalFormatFields setzen (nur einmal beim Init)
+        const initDetail = await api.getFormat(data.formats[0].name);
+        const initFormat = (initDetail as any).format || initDetail;
+        const initFields = (initFormat.fields || []).map((f: any) => ({ name: f.name, weight: f.weight || 17, enabled: true }));
+        setOriginalFormatFields(initFields);
       }
     } catch (err) {
       console.error('Failed to load formats:', err);
@@ -62,11 +71,13 @@ export default function EditModal({ wrapper, onClose, onSave, saving }: EditModa
     try {
       const detail = await api.getFormat(formatName);
       const format = (detail as any).format || detail;
-      setFormatFields((format.fields || []).map((f: any) => ({
+      const fields = (format.fields || []).map((f: any) => ({
         name: f.name,
         weight: f.weight || 17,
         enabled: true
-      })));
+      }));
+      setFormatFields(fields);
+      // originalFormatFields wird nur beim ersten Load gesetzt, nicht bei Format-Wechsel
     } catch (err) {
       console.error('Failed to load format:', err);
       setFormatFields([]);
@@ -93,7 +104,10 @@ export default function EditModal({ wrapper, onClose, onSave, saving }: EditModa
   if (!wrapper) return null;
   const color = getWrapperColor(wrapper.name);
   const estimatedSize = new Blob([content]).size;
-  const hasChanges = content !== wrapper.content;
+  const formatChanged = selectedFormat !== originalFormat;
+  const formatFieldsChanged = JSON.stringify(formatFields) !== JSON.stringify(originalFormatFields);
+  const hasChanges = content !== wrapper.content || formatFieldsChanged || formatChanged;
+  console.log("DEBUG:", { selectedFormat, originalFormat, formatChanged, formatFieldsChanged, hasChanges });
   const enabledFields = formatFields.filter(f => f.enabled);
 
   // 🔥 GENERATE COMBINED PROMPT PREVIEW
@@ -173,21 +187,80 @@ export default function EditModal({ wrapper, onClose, onSave, saving }: EditModa
               <span style={{ width: 6, height: 6, background: COLORS.magenta, borderRadius: 2 }} />
               📋 FORMAT INJECTION
             </label>
-            
-            {/* FORMAT SELECTOR */}
-            <select 
-              value={selectedFormat} 
-              onChange={e => handleFormatChange(e.target.value)}
-              disabled={loadingFormats}
-              style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid rgba(217,70,239,0.3)', background: 'rgba(0,0,0,0.4)', color: 'white', fontFamily: 'monospace', fontSize: 12, outline: 'none', marginBottom: 16, cursor: 'pointer' }}
-            >
-              <option value="">-- Kein Format --</option>
-              {formats.map(f => (
-                <option key={f.name} value={f.name}>{f.name.toUpperCase()} ({f.fields_count} Felder)</option>
-              ))}
-            </select>
+            {/* FORMAT SELECTOR - CYBER DROPDOWN */}
+            <div style={{ position: 'relative', marginBottom: 16 }}>
+              <div 
+                onClick={() => !loadingFormats && setDropdownOpen(!dropdownOpen)}
+                style={{ 
+                  width: '100%', 
+                  padding: '14px 16px', 
+                  borderRadius: 12, 
+                  border: '1px solid rgba(217,70,239,0.4)', 
+                  background: 'linear-gradient(135deg, rgba(217,70,239,0.15), rgba(0,0,0,0.4))',
+                  color: selectedFormat ? COLORS.magenta : 'rgba(255,255,255,0.5)', 
+                  fontFamily: 'monospace', 
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: loadingFormats ? 'wait' : 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  boxShadow: dropdownOpen ? '0 0 20px rgba(217,70,239,0.3)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <span>{selectedFormat ? selectedFormat.toUpperCase() : '📋 Format wählen...'}</span>
+                <span style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>▼</span>
+              </div>
+              {dropdownOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: 4,
+                  background: 'linear-gradient(145deg, rgba(10,26,46,0.98), rgba(6,13,24,0.98))',
+                  border: '1px solid rgba(217,70,239,0.4)',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  zIndex: 100,
+                  boxShadow: '0 10px 40px rgba(0,0,0,0.5), 0 0 30px rgba(217,70,239,0.2)',
+                  maxHeight: 250,
+                  overflowY: 'auto'
+                }}>
+                  <div 
+                    onClick={() => { handleFormatChange(''); setDropdownOpen(false); }}
+                    style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', fontSize: 12, transition: 'background 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(217,70,239,0.1)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    ❌ Kein Format
+                  </div>
+                  {formats.map(f => (
+                    <div 
+                      key={f.name}
+                      onClick={() => { handleFormatChange(f.name); setDropdownOpen(false); }}
+                      style={{ 
+                        padding: '12px 16px', 
+                        cursor: 'pointer', 
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        background: selectedFormat === f.name ? 'rgba(217,70,239,0.2)' : 'transparent',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        transition: 'background 0.15s'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(217,70,239,0.15)'}
+                      onMouseLeave={e => e.currentTarget.style.background = selectedFormat === f.name ? 'rgba(217,70,239,0.2)' : 'transparent'}
+                    >
+                      <span style={{ color: COLORS.magenta, fontFamily: 'monospace', fontSize: 12, fontWeight: 700 }}>{f.name.toUpperCase()}</span>
+                      <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>{f.fields_count} Felder</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            {/* FIELDS LIST */}
             <div style={{ flex: 1, overflow: 'auto' }}>
               <div style={{ fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>
                 🎯 FELDER ({enabledFields.length}/{formatFields.length} aktiv)
@@ -306,7 +379,7 @@ export default function EditModal({ wrapper, onClose, onSave, saving }: EditModa
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
             <button onClick={onClose} className="cyber-btn" style={{ padding: '12px 24px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace', fontSize: 12, cursor: 'pointer' }}>ABBRECHEN</button>
-            <button onClick={() => onSave(content)} disabled={saving || !hasChanges} className="cyber-btn" style={{ padding: '12px 32px', borderRadius: 10, border: 'none', background: hasChanges && !saving ? `linear-gradient(135deg, ${color}, ${color}cc)` : 'rgba(255,255,255,0.1)', color: '#030b15', fontFamily: 'monospace', fontSize: 12, fontWeight: 800, cursor: hasChanges && !saving ? 'pointer' : 'not-allowed' }}>
+            <button onClick={() => onSave(content, selectedFormat ? { format: selectedFormat, fields: formatFields } : undefined)} disabled={saving || !hasChanges} className="cyber-btn" style={{ padding: '12px 32px', borderRadius: 10, border: 'none', background: hasChanges && !saving ? `linear-gradient(135deg, ${color}, ${color}cc)` : 'rgba(255,255,255,0.1)', color: '#030b15', fontFamily: 'monospace', fontSize: 12, fontWeight: 800, cursor: hasChanges && !saving ? 'pointer' : 'not-allowed' }}>
               {saving ? '⏳ MODULIERT...' : '🔄 MODULIEREN'}
             </button>
           </div>
