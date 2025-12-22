@@ -45,14 +45,20 @@ export default function WrapperPanel() {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.getWrappersFull();
-      setWrappers((data.wrappers || []).map((w: any) => ({ name: w.name, size_bytes: w.size_bytes, size_human: w.size_human, last_modified: w.last_modified, is_active: w.is_active })));
-      setActiveWrapper((data as any).active_wrapper || "");
+      const data = await api.getWrappers();
+      setWrappers(data.wrappers || []);
+      setActiveWrapper(data.active_wrapper || '');
       
-      // ECHTE Format-Bindings aus Backend Meta
+      // Simuliere Format-Bindings (später aus Backend)
       const formatBindings: Record<string, string> = {};
-      (data.wrappers || []).forEach((w: any) => {
-        formatBindings[w.name] = w.meta?.format?.toUpperCase() || "KEIN FORMAT";
+      (data.wrappers || []).forEach((w: Wrapper) => {
+        const name = w.name.toLowerCase();
+        if (name.includes('sigma')) formatBindings[w.name] = 'SIGMA_ANALYSIS';
+        else if (name.includes('human')) formatBindings[w.name] = 'HUMAN_READABLE';
+        else if (name.includes('deepsweep')) formatBindings[w.name] = 'SYNTX_TRUE_RAW';
+        else if (name.includes('backend')) formatBindings[w.name] = 'SYNTEX_SYSTEM';
+        else if (name.includes('true_raw')) formatBindings[w.name] = 'SYNTX_TRUE_RAW';
+        else formatBindings[w.name] = 'UNIVERSAL';
       });
       setWrapperFormats(formatBindings);
     } catch (err: any) {
@@ -128,13 +134,7 @@ export default function WrapperPanel() {
       }
       setSuccessMessage(formatData?.format ? "⚡ " + editWrapper.name + " → " + formatData.format : "⚡ " + editWrapper.name + " gespeichert");
       setShowSuccess(true);
-      setTimeout(() => { setShowSuccess(false); }, 2000);
-      // Formats neu laden ohne Modal zu schließen
-      const freshData = await api.getWrappersFull();
-      const newFormats: Record<string, string> = {};
-      (freshData.wrappers || []).forEach((w: any) => { newFormats[w.name] = w.meta?.format?.toUpperCase() || "KEIN FORMAT"; });
-      setWrapperFormats(newFormats);
-      setWrappers((freshData.wrappers || []).map((w: any) => ({ name: w.name, size_bytes: w.size_bytes, size_human: w.size_human, last_modified: w.last_modified, is_active: w.is_active })));
+      setTimeout(() => { setShowSuccess(false); setEditWrapper(null); fetchWrappers(); }, 2000);
     } catch (err: any) {
       alert('Save failed: ' + err.message);
     } finally {

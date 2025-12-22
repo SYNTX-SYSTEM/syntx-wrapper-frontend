@@ -5,6 +5,7 @@ import { WrapperPanel as WrapperControl } from "@/components/wrappers";
 import CreateWrapperModal from "@/components/wrappers/CreateWrapperModal";
 import StatsPanel from "@/components/analytics/StatsPanel";
 import FlowPanel from "@/components/flow/FlowPanel";
+import AlchemyPanel from "@/components/alchemy/AlchemyPanel";
 import ChatPanel from "@/components/chat/ChatPanel";
 import GraphsPanel from "@/components/graphs/GraphsPanel";
 import SystemPanel from "@/components/system/SystemPanel";
@@ -15,7 +16,7 @@ import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { useRealtime, useRealtimeHealth } from "@/hooks/useRealtime";
 import { api } from "@/lib/api";
 
-type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow";
+type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy";
 
 const TABS = [
   { id: "data", label: "DATA", icon: "📊", color: "#8b5cf6" },
@@ -26,6 +27,7 @@ const TABS = [
   { id: "formats", label: "FORMATS", icon: "📋", color: "#14b8a6" },
   { id: "analytics", label: "ANALYTICS", icon: "📊", color: "#00d4ff" },
   { id: "flow", label: "FLOW", icon: "🌊", color: "#10b981" },
+  { id: "alchemy", label: "ALCHEMY", icon: "⚗️", color: "#d946ef" },
 ] as const;
 
 function HeroSection({ onEnter }: { onEnter: () => void }) {
@@ -264,6 +266,7 @@ function Dashboard() {
         {activeTab === "formats" && <FormatPanel />}
         {activeTab === "analytics" && <StatsPanel />}
         {activeTab === "flow" && <FlowPanel />}
+        {activeTab === "alchemy" && <AlchemyPanel />}
       </section>
 
       <CreateWrapperModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleCreateWrapper} />
