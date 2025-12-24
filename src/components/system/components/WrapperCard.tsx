@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Wrapper } from '@/lib/api';
 
 // ═══════════════════════════════════════════════════════════════
-// 🌊 WRAPPER CARD - ULTRA CYBER EDITION v2.0
+// 🌊 WRAPPER CARD - ULTRA CYBER EDITION v2.1 (Badge Logic Fixed)
 // ═══════════════════════════════════════════════════════════════
 
 interface WrapperStats {
@@ -163,6 +163,14 @@ export function WrapperCard({
           90% { opacity: 0.5; }
           100% { transform: translateY(100%); opacity: 0; }
         }
+        @keyframes shimmer {
+          0% { left: -100%; }
+          100% { left: 100%; }
+        }
+        @keyframes badgePulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.8; }
+        }
       `}</style>
       
       {/* Scan line effect */}
@@ -258,6 +266,16 @@ export function WrapperCard({
               animation: 'statusRing 2s ease-in-out infinite'
             }} />
           )}
+          <style>{`
+            @keyframes pulse {
+              0%, 100% { opacity: 1; transform: scale(1); }
+              50% { opacity: 0.7; transform: scale(0.95); }
+            }
+            @keyframes statusRing {
+              0%, 100% { transform: scale(1); opacity: 0.3; }
+              50% { transform: scale(1.4); opacity: 0; }
+            }
+          `}</style>
         </div>
         
         <span style={{
@@ -273,8 +291,38 @@ export function WrapperCard({
           {displayName}
         </span>
         
-        {/* Badges with MEGA styling */}
-        {isDefault && (
+        {/* Badges - SMART LOGIC: Combined badge if BOTH Default AND Active */}
+        {isDefault && wrapper.is_active ? (
+          // BOTH Default AND Active - Combined Badge
+          <span style={{
+            padding: '5px 12px',
+            borderRadius: 10,
+            fontSize: 9,
+            fontFamily: 'monospace',
+            background: 'linear-gradient(135deg, rgba(0,212,255,0.3), rgba(16,185,129,0.3))',
+            color: '#00d4ff',
+            border: '1px solid rgba(0,212,255,0.5)',
+            fontWeight: 700,
+            letterSpacing: 0.8,
+            textShadow: '0 0 10px rgba(0,212,255,0.8)',
+            boxShadow: '0 0 15px rgba(0,212,255,0.3)',
+            position: 'relative',
+            overflow: 'hidden',
+            animation: 'badgePulse 2s ease-in-out infinite'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: '-100%',
+              width: '100%',
+              height: '100%',
+              background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.4), transparent)',
+              animation: 'shimmer 2s infinite'
+            }} />
+            <span style={{ position: 'relative', zIndex: 1 }}>📦⚡ DEFAULT+ACTIVE</span>
+          </span>
+        ) : isDefault ? (
+          // Only Default
           <span style={{
             padding: '5px 12px',
             borderRadius: 10,
@@ -300,16 +348,9 @@ export function WrapperCard({
               animation: 'shimmer 2s infinite'
             }} />
             <span style={{ position: 'relative', zIndex: 1 }}>📦 DEFAULT</span>
-            <style>{`
-              @keyframes shimmer {
-                0% { left: -100%; }
-                100% { left: 100%; }
-              }
-            `}</style>
           </span>
-        )}
-        
-        {wrapper.is_active && (
+        ) : wrapper.is_active ? (
+          // Only Active
           <span style={{
             padding: '5px 12px',
             borderRadius: 10,
@@ -325,14 +366,8 @@ export function WrapperCard({
             animation: 'badgePulse 2s ease-in-out infinite'
           }}>
             ⚡ ACTIVE
-            <style>{`
-              @keyframes badgePulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.7; }
-              }
-            `}</style>
           </span>
-        )}
+        ) : null}
         
         {isCriticalLatency && (
           <span style={{
@@ -354,14 +389,6 @@ export function WrapperCard({
               @keyframes criticalPulse {
                 0%, 100% { transform: scale(1); opacity: 1; }
                 50% { transform: scale(1.05); opacity: 0.8; }
-              }
-              @keyframes pulse {
-                0%, 100% { opacity: 1; transform: scale(1); }
-                50% { opacity: 0.7; transform: scale(0.95); }
-              }
-              @keyframes statusRing {
-                0%, 100% { transform: scale(1); opacity: 0.3; }
-                50% { transform: scale(1.4); opacity: 0; }
               }
             `}</style>
           </span>
@@ -386,7 +413,7 @@ export function WrapperCard({
         )}
       </div>
 
-      {/* Stats Grid with ULTRA effects */}
+      {/* Stats Grid - SAME AS BEFORE */}
       {loading ? (
         <div style={{
           color: 'rgba(255,255,255,0.3)',
@@ -621,7 +648,7 @@ export function WrapperCard({
         </div>
       )}
 
-      {/* Set Default Button - MEGA CYBER */}
+      {/* Set Default Button */}
       {!isDefault && (
         <button
           onClick={onSetDefault}
@@ -657,7 +684,6 @@ export function WrapperCard({
             e.currentTarget.style.borderColor = `${color}50`;
           }}
         >
-          {/* Button shimmer effect */}
           <div style={{
             position: 'absolute',
             top: 0,
