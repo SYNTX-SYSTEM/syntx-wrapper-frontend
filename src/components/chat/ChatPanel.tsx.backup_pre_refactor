@@ -1,10 +1,7 @@
 "use client";
 
-import Image from 'next/image';
 import React, { useState, useEffect, useRef } from 'react';
 import { api, Wrapper } from '@/lib/api';
-import { ChatHeader } from './components';
-import { useHealthCheck } from './hooks';
 
 // ═══════════════════════════════════════════════════════════════
 // 🎨 CYBER STYLES - MAXIMUM MOVEMENT
@@ -446,8 +443,6 @@ function MessageBubble({ message, isUser, wrapper, latency, timestamp, scores, m
   );
 }
 
-// [REST OF THE COMPONENTS CONTINUE IN NEXT MESSAGE...]
-
 // ═══════════════════════════════════════════════════════════════
 // CYBER DROPDOWN - FIXED Z-INDEX
 // ═══════════════════════════════════════════════════════════════
@@ -492,11 +487,13 @@ function CyberDropdown({
 
       {open && (
         <>
+          {/* Backdrop */}
           <div onClick={() => setOpen(false)} style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             zIndex: zIndex - 1
           }} />
           
+          {/* Dropdown Menu */}
           <div className="dropdown-menu" style={{
             position: 'absolute', top: '100%', left: 0, right: 0,
             marginTop: 6,
@@ -555,6 +552,7 @@ function LivePromptPreview({ wrapperContent }: { wrapperContent: string }) {
       overflow: 'hidden',
       border: '1px solid rgba(0,212,255,0.3)'
     }}>
+      {/* Header */}
       <button onClick={() => setExpanded(!expanded)} className="cyber-btn" style={{
         width: '100%', padding: '12px 14px', border: 'none',
         background: 'linear-gradient(90deg, rgba(0,212,255,0.15), transparent)',
@@ -571,6 +569,7 @@ function LivePromptPreview({ wrapperContent }: { wrapperContent: string }) {
         }}>▼</span>
       </button>
 
+      {/* Stats */}
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
         borderTop: '1px solid rgba(255,255,255,0.05)',
@@ -590,6 +589,7 @@ function LivePromptPreview({ wrapperContent }: { wrapperContent: string }) {
         </div>
       </div>
 
+      {/* Content */}
       {expanded && (
         <div className="data-stream" style={{
           padding: 14,
@@ -629,6 +629,7 @@ function SessionScoreOverview({ messages }: { messages: Message[] }) {
     );
   }
 
+  // Aggregiere alle Scores
   const allScores: { [key: string]: { total: number; count: number } } = {};
   aiMessages.forEach(m => {
     m.scores?.forEach(s => {
@@ -650,6 +651,7 @@ function SessionScoreOverview({ messages }: { messages: Message[] }) {
 
   return (
     <div>
+      {/* Overall Score */}
       <div style={{
         textAlign: 'center', padding: 16,
         background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))',
@@ -666,6 +668,7 @@ function SessionScoreOverview({ messages }: { messages: Message[] }) {
         </div>
       </div>
 
+      {/* Per-Field Averages */}
       {avgScores.map((s, i) => (
         <div key={s.field} className="score-tag" style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -695,7 +698,6 @@ function SessionScoreOverview({ messages }: { messages: Message[] }) {
 
 export default function ChatPanel() {
   const isMobile = useIsMobile();
-  const { isHealthy } = useHealthCheck();  // ← HEALTH CHECK HOOK!
   const [wrappers, setWrappers] = useState<Wrapper[]>([]);
   const [selectedWrapper, setSelectedWrapper] = useState<string>('');
   const [wrapperContent, setWrapperContent] = useState<string>('');
@@ -705,8 +707,10 @@ export default function ChatPanel() {
   const [maxTokens, setMaxTokens] = useState(500);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // SYNTX Score Fields
   const SCORE_FIELDS = ['DRIFTKORPER', 'KALIBRIERUNG', 'STROMUNG', 'KOHARENZ', 'RESONANZ', 'TIEFE'];
 
+  // Load wrappers
   useEffect(() => {
     api.getWrappers().then(data => {
       setWrappers(data.wrappers || []);
@@ -734,6 +738,7 @@ export default function ChatPanel() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Generate realistic scores based on response
   const generateScores = (response: string): Score[] => {
     const len = response.length;
     return SCORE_FIELDS.map(field => ({
@@ -802,6 +807,7 @@ export default function ChatPanel() {
 
   const clearChat = () => setMessages([]);
 
+  // Dropdown options
   const wrapperOptions = wrappers.map(w => ({
     value: w.name,
     label: w.name.replace('syntex_wrapper_', '').toUpperCase(),
@@ -823,16 +829,42 @@ export default function ChatPanel() {
         height: 'calc(100vh - 200px)',
         minHeight: 600
       }}>
-        {/* MAIN CHAT AREA */}
+        {/* ════════════════════════════════════════════════════════════
+            MAIN CHAT AREA
+        ════════════════════════════════════════════════════════════ */}
         <GlassCard style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }} glowColor="#d946ef">
-          
-          {/* ← NEUE CHAT HEADER COMPONENT! */}
-          <ChatHeader 
-            messageCount={messages.length}
-            responseCount={aiMessageCount}
-            isHealthy={isHealthy}
-            onClear={clearChat}
-          />
+          {/* Header */}
+          <div style={{
+            padding: '18px 22px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            background: 'linear-gradient(90deg, rgba(217,70,239,0.1), transparent)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span className="pulse neon" style={{ fontSize: 30 }}>💬</span>
+              <div>
+                <h2 className="glow-text" style={{
+                  margin: 0, fontFamily: 'monospace', fontSize: 18,
+                  color: '#00d4ff', letterSpacing: 3, fontWeight: 800
+                }}>
+                  SYNTX CHAT
+                </h2>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 3, fontFamily: 'monospace' }}>
+                  {messages.length} Nachrichten • {aiMessageCount} Responses
+                </div>
+              </div>
+            </div>
+            <button onClick={clearChat} className="cyber-btn" style={{
+              background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.05))',
+              border: '1px solid rgba(239,68,68,0.4)',
+              borderRadius: 10, padding: '10px 18px',
+              color: '#ef4444', cursor: 'pointer',
+              fontFamily: 'monospace', fontSize: 11, fontWeight: 600,
+              boxShadow: '0 0 20px rgba(239,68,68,0.15)'
+            }}>
+              🗑️ Clear
+            </button>
+          </div>
 
           {/* Messages Area */}
           <div className="data-stream" style={{
@@ -845,36 +877,7 @@ export default function ChatPanel() {
                 alignItems: 'center', justifyContent: 'center',
                 color: 'rgba(255,255,255,0.3)', textAlign: 'center'
               }}>
-                <div style={{ 
-                  position: 'relative',
-                  width: 120,
-                  height: 120,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: 24
-                }}>
-                  <div className="float" style={{
-                    position: 'absolute',
-                    width: 140,
-                    height: 140,
-                    border: '2px solid transparent',
-                    borderTopColor: '#00d4ff',
-                    borderRightColor: '#d946ef',
-                    borderRadius: '50%',
-                    animation: 'spin 6s linear infinite',
-                    opacity: 0.4
-                  }} />
-                  <div className="pulse" style={{
-                    position: 'absolute',
-                    width: 130,
-                    height: 130,
-                    background: 'radial-gradient(circle, rgba(0,212,255,0.2), transparent 70%)',
-                    borderRadius: '50%'
-                  }} />
-                  <Image src="/Logo1_trans.png" alt="SYNTX" width={100} height={100} className="float neon" style={{ filter: 'drop-shadow(0 0 30px rgba(0,212,255,0.6)) drop-shadow(0 0 60px rgba(217,70,239,0.4))', opacity: 0.8 }} priority />
-                  <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-                </div>
+                <div className="float neon" style={{ fontSize: 80, marginBottom: 24, opacity: 0.6 }}>🌊</div>
                 <div className="glow-text" style={{
                   fontFamily: 'monospace', fontSize: 18, marginBottom: 12,
                   color: '#00d4ff', letterSpacing: 4
@@ -962,10 +965,13 @@ export default function ChatPanel() {
           </div>
         </GlassCard>
 
-        {/* SIDEBAR */}
+        {/* ════════════════════════════════════════════════════════════
+            SIDEBAR
+        ════════════════════════════════════════════════════════════ */}
         {!isMobile && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto' }}>
             
+            {/* WRAPPER SELECTOR */}
             <GlassCard style={{ padding: 16, position: 'relative', zIndex: 500 }} glowColor="#f59e0b">
               <div style={{
                 fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)',
@@ -984,10 +990,12 @@ export default function ChatPanel() {
               />
             </GlassCard>
 
+            {/* LIVE PROMPT */}
             <GlassCard style={{ padding: 16 }} glowColor="#00d4ff">
               <LivePromptPreview wrapperContent={wrapperContent} />
             </GlassCard>
 
+            {/* SETTINGS */}
             <GlassCard style={{ padding: 16 }} glowColor="#00d4ff">
               <div style={{
                 fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)',
@@ -1006,6 +1014,7 @@ export default function ChatPanel() {
               />
             </GlassCard>
 
+            {/* SESSION STATS */}
             <GlassCard style={{ padding: 16 }} glowColor="#00d4ff">
               <div style={{
                 fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)',
@@ -1050,6 +1059,7 @@ export default function ChatPanel() {
               </div>
             </GlassCard>
 
+            {/* SESSION SCORES OVERVIEW */}
             <GlassCard style={{ padding: 16, flex: 1 }} glowColor="#10b981">
               <div style={{
                 fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)',
