@@ -419,6 +419,12 @@ export const api = {
       { method: 'POST' }
     ),
 
+  deleteForbiddenWord: (styleName: string, word: string) =>
+    fetchAPI<{ status: string; message: string }>(
+      `/resonanz/styles/${encodeURIComponent(styleName)}/forbidden/${encodeURIComponent(word)}`,
+      { method: 'DELETE' }
+    ),
+
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
