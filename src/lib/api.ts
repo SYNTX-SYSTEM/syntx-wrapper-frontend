@@ -24,6 +24,7 @@ import type {
   ResonanzHealthResponse,
   WrapperHealthResponse,
   ConfigResponse,
+  RuntimeWrapperResponse,
   Wrapper,
   WrapperListResponse,
   WrapperDetailResponse,
@@ -165,11 +166,19 @@ export const api = {
       `/resonanz/config/default-wrapper?wrapper_name=${encodeURIComponent(wrapperName)}`,
       { method: 'PUT' }
     ),
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // 📦 WRAPPER CRUD (8 Endpoints)
-  // ═══════════════════════════════════════════════════════════════════════
-
+  
+  // ═══════════════════════════════════════════════════════════════
+  // ⚡ RUNTIME WRAPPER ENDPOINTS (NEW - Dec 24, 2024)
+  // ═══════════════════════════════════════════════════════════════
+  
+  getRuntimeWrapper: () => 
+    fetchAPI<RuntimeWrapperResponse>('/resonanz/config/runtime-wrapper'),
+  
+  setRuntimeWrapper: (wrapperName: string) => 
+    fetchAPI<RuntimeWrapperResponse>(
+      `/resonanz/config/runtime-wrapper?wrapper_name=${encodeURIComponent(wrapperName)}`,
+      { method: 'PUT' }
+    ),
   getWrappers: () => 
     fetchAPI<WrapperListResponse>('/resonanz/wrappers'),
 
@@ -447,6 +456,7 @@ export type {
   ResonanzHealthResponse,
   WrapperHealthResponse,
   ConfigResponse,
+  RuntimeWrapperResponse,
   Wrapper,
   WrapperListResponse,
   WrapperDetailResponse,

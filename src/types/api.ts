@@ -63,6 +63,19 @@ export interface ConfigResponse {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// ⚡ RUNTIME WRAPPER - Separated Control (NEW - Dec 24, 2024)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface RuntimeWrapperResponse {
+  runtime_wrapper: string;        // Currently active wrapper (runtime)
+  default_wrapper: string;        // Fallback wrapper (config)
+  is_same: boolean;               // Are they the same?
+  exists: boolean;                // Does runtime wrapper exist?
+  path: string;                   // Path to runtime wrapper file
+  source: 'runtime' | 'default';  // Source of the active wrapper
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // 📦 WRAPPER - Die Resonanz-Träger
 // ═══════════════════════════════════════════════════════════════════════════
 
