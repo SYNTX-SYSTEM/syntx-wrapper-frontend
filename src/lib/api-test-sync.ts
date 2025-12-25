@@ -84,7 +84,7 @@ async function main() {
   // 8. GET /resonanz/formats?domain=psychology
   await test(8, 'GET', '/resonanz/formats?domain=psychology', () => api.getFormats('psychology'));
   
-  // 9. GET /resonanz/formats/sigma
+    api.createFormatQuick({ name: TEST_FORMAT, description_de: 'API Test Format', field_names: ['alpha', 'beta', 'gamma'], wrapper: 'syntex_wrapper_sigma' })
   await test(9, 'GET', '/resonanz/formats/sigma', () => api.getFormat('sigma'));
   
   // 10. GET /resonanz/formats/sigma?language=en
@@ -98,7 +98,7 @@ async function main() {
   
   // 13. POST /resonanz/formats/quick
   await test(13, 'POST', '/resonanz/formats/quick', () => 
-    api.createFormatQuick({ name: `quick_${TEST_ID}`, description_de: 'Quick test', field_names: ['f1', 'f2'] })
+    api.createFormatQuick({ name: `quick_${TEST_ID}`, description_de: 'API Test Format', field_names: ['alpha', 'beta', 'gamma'] })
   );
   
   // 14. DELETE /resonanz/formats/$TEST_FORMAT
