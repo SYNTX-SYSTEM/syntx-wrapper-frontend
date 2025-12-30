@@ -145,7 +145,7 @@ export default function WrapperPanel() {
   // 🎯 ACTIVATE
   const handleActivate = async (name: string) => {
     try {
-      await api.activateWrapper(name);
+      await api.setRuntimeWrapper(name);
       setViewWrapper(null);
       fetchWrappers();
     } catch (err: any) {

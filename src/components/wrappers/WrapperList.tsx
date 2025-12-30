@@ -13,7 +13,7 @@ const FREQUENCY_MAP: Record<string, { label: string; color: string }> = {
 
 export function WrapperList() {
   const { data, loading, refetch } = useApi(() => api.getWrappers(), []);
-  const { mutate: activate, loading: activating } = useMutation(api.activateWrapper);
+  const { mutate: activate, loading: activating } = useMutation(api.setRuntimeWrapper);
 
   const handleActivate = async (name: string) => {
     try {
