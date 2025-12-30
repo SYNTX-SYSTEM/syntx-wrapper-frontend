@@ -301,13 +301,20 @@ async function testHealth() {
 }
 
 async function testConfig() {
-  printSection('⚙️', 'CONFIG', '2 endpoints');
+  printSection('⚙️', 'CONFIG', '3 endpoints');
   await test('getConfig', 'GET', '/resonanz/config/default-wrapper');
   
   if (CRUD_MODE && FIRST_WRAPPER) {
     await test('setConfig', 'PUT', `/resonanz/config/default-wrapper?wrapper_name=${FIRST_WRAPPER}`);
   } else {
     skip('setConfig', '(--crud mode only)');
+  }
+
+  // Runtime Wrapper (v3.3)
+  if (CRUD_MODE && FIRST_WRAPPER) {
+    await test('setRuntimeWrapper', 'PUT', `/resonanz/config/runtime-wrapper?wrapper_name=${FIRST_WRAPPER}`);
+  } else {
+    skip('setRuntimeWrapper', '(--crud mode only)');
   }
 }
 
