@@ -50,12 +50,17 @@ export default function EditModal({ wrapper, onClose, onSave, saving }: EditModa
     try {
       const data = await api.getFormats();
       setFormats((data.formats || []).map((f: any) => ({ name: f.name, fields_count: f.fields_count || f.fields?.length || 0, description: f.description })));
-      if (data.formats?.length > 0) {
-        setSelectedFormat(data.formats[0].name);
-        setOriginalFormat(data.formats[0].name);
-        await loadFormatFields(data.formats[0].name);
+      
+      // Use wrapper's bound format if available, otherwise use first format
+      const boundFormat = wrapper?.meta?.format || wrapper?.format_binding || '';
+      const initialFormat = boundFormat || (data.formats?.length > 0 ? data.formats[0].name : '');
+      
+      if (initialFormat) {
+        setSelectedFormat(initialFormat);
+        setOriginalFormat(initialFormat);
+        await loadFormatFields(initialFormat);
         // Jetzt originalFormatFields setzen (nur einmal beim Init)
-        const initDetail = await api.getFormat(data.formats[0].name);
+        const initDetail = await api.getFormat(initialFormat);
         const initFormat = (initDetail as any).format || initDetail;
         const initFields = (initFormat.fields || []).map((f: any) => ({ name: f.name, weight: f.weight || 17, enabled: true }));
         setOriginalFormatFields(initFields);

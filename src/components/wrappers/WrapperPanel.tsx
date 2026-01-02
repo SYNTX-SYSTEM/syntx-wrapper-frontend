@@ -77,15 +77,28 @@ export default function WrapperPanel() {
     }
   };
 
-  // ✏️ EDIT
+
   const openEdit = async (wrapper: Wrapper) => {
     try {
       const detail = await api.getWrapper(wrapper.name);
-      setEditWrapper(detail);
+      // Load meta separately
+      const metaResponse = await api.getWrapperMeta(wrapper.name);
+      setEditWrapper({
+        ...detail,
+        meta: metaResponse.meta
+      });
     } catch (err) {
       console.error('Failed to load:', err);
     }
   };
+
+
+
+
+
+
+
+
 
   // 📊 STATS
   const openStats = async (wrapper: Wrapper) => {
