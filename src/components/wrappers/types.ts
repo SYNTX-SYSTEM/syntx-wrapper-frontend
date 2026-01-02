@@ -7,6 +7,7 @@ export interface Wrapper {
   size_human: string;
   last_modified: string;
   is_active: boolean;
+  meta?: any;
   description?: string;
   author?: string;
 }
@@ -18,6 +19,7 @@ export interface WrapperDetail {
   size_human: string;
   last_modified: string;
   is_active: boolean;
+  meta?: any;
   description?: string;
   author?: string;
 }

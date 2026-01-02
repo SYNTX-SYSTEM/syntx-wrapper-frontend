@@ -8,6 +8,7 @@ import { useHealthCheck } from './hooks';
 
 // ═══════════════════════════════════════════════════════════════
 // 🎨 CYBER STYLES - MAXIMUM MOVEMENT
+import { FormatCard } from './sidebar/FormatCard';
 // ═══════════════════════════════════════════════════════════════
 
 const cyberStyles = `
@@ -698,6 +699,9 @@ export default function ChatPanel() {
   const { isHealthy } = useHealthCheck();  // ← HEALTH CHECK HOOK!
   const [wrappers, setWrappers] = useState<Wrapper[]>([]);
   const [selectedWrapper, setSelectedWrapper] = useState<string>('');
+  const [selectedFormat, setSelectedFormat] = useState<string>('');
+  const [formatDetails, setFormatDetails] = useState<any>(null);
+  const [formatModalOpen, setFormatModalOpen] = useState(false);
   const [wrapperContent, setWrapperContent] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -714,6 +718,7 @@ export default function ChatPanel() {
       if (active) {
         setSelectedWrapper(active.name);
         loadWrapperContent(active.name);
+        loadFormat(active.name);
       }
     });
   }, []);
@@ -725,9 +730,33 @@ export default function ChatPanel() {
     } catch { setWrapperContent(''); }
   };
 
+  const loadFormat = async (wrapperName: string) => {
+    try {
+      // Load wrapper meta to get format name
+      const metaResponse = await api.getWrapperMeta(wrapperName);
+      const formatName = metaResponse.meta?.format;
+      
+      if (formatName) {
+        setSelectedFormat(formatName);
+        // Load format details to get fields
+        const formatResponse = await api.getFormat(formatName);
+        setFormatDetails(formatResponse.format);
+      } else {
+        setSelectedFormat('');
+        setFormatDetails(null);
+      }
+    } catch (err) {
+      console.error('Failed to load format:', err);
+      setSelectedFormat('');
+      setFormatDetails(null);
+    }
+  };
+
+
   const handleWrapperChange = (name: string) => {
     setSelectedWrapper(name);
     loadWrapperContent(name);
+    loadFormat(name);
   };
 
   useEffect(() => {
@@ -962,6 +991,7 @@ export default function ChatPanel() {
           </div>
         </GlassCard>
 
+
         {/* SIDEBAR */}
         {!isMobile && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto' }}>
@@ -983,10 +1013,13 @@ export default function ChatPanel() {
                 showFullName={true}
               />
             </GlassCard>
+            <FormatCard
+              selectedFormat={selectedFormat}
+              formatDetails={formatDetails}
+              onOpenModal={() => setFormatModalOpen(true)}
+            />
 
-            <GlassCard style={{ padding: 16 }} glowColor="#00d4ff">
-              <LivePromptPreview wrapperContent={wrapperContent} />
-            </GlassCard>
+
 
             <GlassCard style={{ padding: 16 }} glowColor="#00d4ff">
               <div style={{

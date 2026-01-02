@@ -86,6 +86,7 @@ export interface Wrapper {
   size_human: string;
   last_modified: string;
   is_active: boolean;
+  meta?: WrapperMeta;
 }
 
 export interface WrapperListResponse {
@@ -100,6 +101,7 @@ export interface WrapperDetailResponse {
   size_human: string;
   last_modified: string;
   is_active: boolean;
+  meta?: WrapperMeta;
 }
 
 export interface WrapperCreateRequest {
@@ -140,6 +142,7 @@ export interface WrapperUpdateResponse {
     previous_size_bytes: number;
     modified: string;
     is_active: boolean;
+  meta?: WrapperMeta;
   };
 }
 

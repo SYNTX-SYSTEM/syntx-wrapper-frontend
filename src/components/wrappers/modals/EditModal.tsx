@@ -52,7 +52,7 @@ export default function EditModal({ wrapper, onClose, onSave, saving }: EditModa
       setFormats((data.formats || []).map((f: any) => ({ name: f.name, fields_count: f.fields_count || f.fields?.length || 0, description: f.description })));
       
       // Use wrapper's bound format if available, otherwise use first format
-      const boundFormat = wrapper?.meta?.format || wrapper?.format_binding || '';
+      const boundFormat = wrapper?.meta?.format || '';
       const initialFormat = boundFormat || (data.formats?.length > 0 ? data.formats[0].name : '');
       
       if (initialFormat) {
