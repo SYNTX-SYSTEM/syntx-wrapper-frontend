@@ -1020,7 +1020,9 @@ export default function ChatPanel() {
               onOpenModal={() => setFormatModalOpen(true)}
             />
 
-
+            <GlassCard style={{ padding: 16 }} glowColor="#00d4ff">
+              <LivePromptPreview wrapperContent={wrapperContent} />
+            </GlassCard>
 
             <GlassCard style={{ padding: 16 }} glowColor="#00d4ff">
               <div style={{
