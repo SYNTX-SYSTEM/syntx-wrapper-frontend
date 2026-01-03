@@ -4,12 +4,12 @@ import Image from 'next/image';
 import React, { useState, useEffect, useRef } from 'react';
 import { api, Wrapper } from '@/lib/api';
 import { ChatHeader } from './components';
+import { FormatCard } from './sidebar/FormatCard';
+import { FormatModal } from './sidebar/FormatModal';
 import { useHealthCheck } from './hooks';
 
 // ═══════════════════════════════════════════════════════════════
 // 🎨 CYBER STYLES - MAXIMUM MOVEMENT
-import { FormatCard } from './sidebar/FormatCard';
-import { FormatModal } from './sidebar/FormatModal';
 // ═══════════════════════════════════════════════════════════════
 
 const cyberStyles = `
@@ -702,7 +702,6 @@ export default function ChatPanel() {
   const [selectedWrapper, setSelectedWrapper] = useState<string>('');
   const [selectedFormat, setSelectedFormat] = useState<string>('');
   const [formatDetails, setFormatDetails] = useState<any>(null);
-  const [formatModalOpen, setFormatModalOpen] = useState(false);
   const [wrapperContent, setWrapperContent] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -1014,10 +1013,8 @@ export default function ChatPanel() {
                 showFullName={true}
               />
             </GlassCard>
-            <FormatCard
               selectedFormat={selectedFormat}
               formatDetails={formatDetails}
-              onOpenModal={() => setFormatModalOpen(true)}
             />
 
 
@@ -1096,12 +1093,6 @@ export default function ChatPanel() {
             </GlassCard>
           </div>
         )}
-      <FormatModal
-        isOpen={formatModalOpen}
-        onClose={() => setFormatModalOpen(false)}
-        formatName={selectedFormat}
-        formatDetails={formatDetails}
-      />
       </div>
     </div>
   );
