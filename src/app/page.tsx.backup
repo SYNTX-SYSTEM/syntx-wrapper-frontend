@@ -12,13 +12,12 @@ import GraphsPanel from "@/components/graphs/GraphsPanel";
 import SystemPanel from "@/components/system/SystemPanel";
 import DataPanel from "@/components/data/DataPanel";
 import FormatPanel from "@/components/formats/FormatPanel";
-import { OptimizerPanel } from "@/components/optimizer";
 import LiveBadge from "@/components/ui/LiveBadge";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { useRealtime, useRealtimeHealth } from "@/hooks/useRealtime";
 import { api } from "@/lib/api";
 
-type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff" | "optimizer";
+type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff";
 
 const TABS = [
   { id: "data", label: "DATA", icon: "📊", color: "#8b5cf6" },
@@ -31,7 +30,6 @@ const TABS = [
   { id: "flow", label: "FLOW", icon: "🌊", color: "#10b981" },
   { id: "alchemy", label: "ALCHEMY", icon: "⚗️", color: "#d946ef" },
   { id: "diff", label: "DIFF", icon: "🔀", color: "#8b5cf6" },
-  { id: "optimizer", label: "OPTIMIZER", icon: "🤖", color: "#00d4ff" },
 ] as const;
 
 function HeroSection({ onEnter }: { onEnter: () => void }) {
@@ -272,7 +270,6 @@ function Dashboard() {
         {activeTab === "flow" && <FlowPanel />}
         {activeTab === "alchemy" && <AlchemyPanel />}
         {activeTab === "diff" && <DiffPanel />}
-        {activeTab === "optimizer" && <OptimizerPanel />}
       </section>
 
       <CreateWrapperModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleCreateWrapper} />
