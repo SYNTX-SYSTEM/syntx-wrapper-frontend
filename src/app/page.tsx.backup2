@@ -1,5 +1,4 @@
 "use client";
-import ProfilesLayout from "@/components/profiles/ProfilesLayout";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { WrapperPanel as WrapperControl } from "@/components/wrappers";
@@ -19,7 +18,7 @@ import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { useRealtime, useRealtimeHealth } from "@/hooks/useRealtime";
 import { api } from "@/lib/api";
 
-type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff" | "optimizer" | "profiles";
+type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff" | "optimizer";
 
 const TABS = [
   { id: "data", label: "DATA", icon: "📊", color: "#8b5cf6" },
@@ -33,7 +32,6 @@ const TABS = [
   { id: "alchemy", label: "ALCHEMY", icon: "⚗️", color: "#d946ef" },
   { id: "diff", label: "DIFF", icon: "🔀", color: "#8b5cf6" },
   { id: "optimizer", label: "OPTIMIZER", icon: "🤖", color: "#00d4ff" },
-  { id: "profiles", label: "PROFILES", icon: "👤", color: "#8b5cf6" },
 ] as const;
 
 function HeroSection({ onEnter }: { onEnter: () => void }) {
@@ -275,7 +273,6 @@ function Dashboard() {
         {activeTab === "alchemy" && <AlchemyPanel />}
         {activeTab === "diff" && <DiffPanel />}
         {activeTab === "optimizer" && <OptimizerPanel />}
-        {activeTab === "profiles" && <ProfilesLayout />}
       </section>
 
       <CreateWrapperModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleCreateWrapper} />

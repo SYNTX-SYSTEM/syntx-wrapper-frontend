@@ -519,3 +519,27 @@ export type {
   StyleMutationResponse,
   StyleDeleteResponse,
 } from '@/types/api';
+
+// 🧠 PROFILES API
+export async function getProfiles() {
+  const res = await fetch(`${BASE_URL}/resonanz/scoring/profiles`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function getProfile(profileId: string) {
+  const res = await fetch(`${BASE_URL}/resonanz/scoring/profiles`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return data.profiles[profileId];
+}
+
+export async function updateProfile(profileId: string, data: any) {
+  const res = await fetch(`${BASE_URL}/resonanz/scoring/profiles/${profileId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
