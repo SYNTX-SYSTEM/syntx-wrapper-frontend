@@ -2,12 +2,15 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from 'next/image';
+import { createPortal } from 'react-dom';
 
-interface FieldPerformance {
+interface FieldAnalytics {
   field: string;
+  total_uses: number;
   avg_score: number;
-  count: number;
-  profile_used: string;
+  success_rate: number;
+  recent_prompts: number;
+  problem_indicators?: string[];
 }
 
 interface Props {
@@ -15,83 +18,39 @@ interface Props {
   onClose: () => void;
 }
 
-type SortBy = 'score' | 'count' | 'name';
-
 export default function FieldAnalyticsModal({ isOpen, onClose }: Props) {
-  const [fields, setFields] = useState<FieldPerformance[]>([]);
+  const [analytics, setAnalytics] = useState<FieldAnalytics[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<SortBy>('score');
+  const [sortBy, setSortBy] = useState<'uses' | 'score' | 'success'>('uses');
+  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchAnalytics();
-    }
-  }, [isOpen]);
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { if (isOpen) fetchAnalytics(); }, [isOpen]);
 
   const fetchAnalytics = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const logsRes = await fetch("https://dev.syntx-system.com/resonanz/scoring/logs?limit=100");
-      if (!logsRes.ok) throw new Error(`Logs fetch failed: ${logsRes.status}`);
-      const logsData = await logsRes.json();
-      
-      const fieldSet = new Set<string>();
-      logsData.logs.forEach((log: any) => {
-        if (log.field) fieldSet.add(log.field);
-      });
-      const uniqueFields = Array.from(fieldSet);
-      
-      const performancePromises = uniqueFields.map(async (field) => {
-        try {
-          const perfRes = await fetch(`https://dev.syntx-system.com/resonanz/scoring/analytics/performance/${field}`);
-          if (!perfRes.ok) return null;
-          const perfData = await perfRes.json();
-          return {
-            field: perfData.field,
-            avg_score: perfData.avg_score,
-            count: perfData.total_scores,
-            profile_used: perfData.profiles_used?.[0] || 'unknown'
-          };
-        } catch {
-          return null;
-        }
-      });
-      
-      const results = await Promise.all(performancePromises);
-      const validResults = results.filter((r): r is FieldPerformance => r !== null);
-      
-      setFields(validResults);
-    } catch (err: any) {
-      console.error("Failed to fetch analytics:", err);
-      setError(err.message);
+      const res = await fetch("https://dev.syntx-system.com/resonanz/scoring/analytics/fields");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setAnalytics(data.fields || []);
+    } catch (error) {
+      console.error("Failed to fetch analytics:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const sortedFields = [...fields].sort((a, b) => {
-    switch (sortBy) {
-      case 'score':
-        return b.avg_score - a.avg_score;
-      case 'count':
-        return b.count - a.count;
-      case 'name':
-        return a.field.localeCompare(b.field);
-      default:
-        return 0;
-    }
+  const sortedAnalytics = [...analytics].sort((a, b) => {
+    if (sortBy === 'uses') return b.total_uses - a.total_uses;
+    if (sortBy === 'score') return b.avg_score - a.avg_score;
+    if (sortBy === 'success') return b.success_rate - a.success_rate;
+    return 0;
   });
 
-  const totalSamples = fields.reduce((sum, f) => sum + f.count, 0);
-  const avgScore = fields.length > 0 
-    ? fields.reduce((sum, f) => sum + f.avg_score, 0) / fields.length 
-    : 0;
+  if (!isOpen || !mounted) return null;
 
-  if (!isOpen) return null;
-
-  return (
+  const modalContent = (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -101,23 +60,122 @@ export default function FieldAnalyticsModal({ isOpen, onClose }: Props) {
         style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 1000,
+          zIndex: 9999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(12px)'
+          background: 'rgba(0,0,0,0.92)',
+          backdropFilter: 'blur(20px)'
         }}
       >
-        {/* Neural Network Background */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          overflow: 'hidden',
-          opacity: 0.15,
-          pointerEvents: 'none'
-        }}>
-          {[...Array(20)].map((_, i) => (
+        {/* MEGA NEURAL NETWORK - ANIMATED CONNECTIONS */}
+        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.12, pointerEvents: 'none' }}>
+          <defs>
+            <linearGradient id="neuralGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#0ea5e9', stopOpacity: 1 }} />
+              <stop offset="50%" style={{ stopColor: '#06b6d4', stopOpacity: 0.8 }} />
+              <stop offset="100%" style={{ stopColor: '#8b5cf6', stopOpacity: 0.6 }} />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          
+          {/* Neural Network Grid - 6x8 Nodes */}
+          {[...Array(6)].map((_, row) => 
+            [...Array(8)].map((_, col) => {
+              const x = 15 + col * 12.5;
+              const y = 15 + row * 16;
+              
+              return (
+                <g key={`node-${row}-${col}`}>
+                  {/* Connections to next layer */}
+                  {col < 7 && [...Array(3)].map((_, i) => {
+                    const targetRow = Math.max(0, Math.min(5, row + i - 1));
+                    const x2 = 15 + (col + 1) * 12.5;
+                    const y2 = 15 + targetRow * 16;
+                    return (
+                      <motion.line
+                        key={`conn-${row}-${col}-${i}`}
+                        x1={`${x}%`}
+                        y1={`${y}%`}
+                        x2={`${x2}%`}
+                        y2={`${y2}%`}
+                        stroke="url(#neuralGrad3)"
+                        strokeWidth="1.5"
+                        filter="url(#glow)"
+                        animate={{
+                          opacity: [0.2, 0.6, 0.2],
+                          strokeWidth: [1.5, 2.5, 1.5]
+                        }}
+                        transition={{
+                          duration: 2 + Math.random() * 2,
+                          repeat: Infinity,
+                          delay: (row * 8 + col) * 0.05
+                        }}
+                      />
+                    );
+                  })}
+                  
+                  {/* Node */}
+                  <motion.circle
+                    cx={`${x}%`}
+                    cy={`${y}%`}
+                    r="4"
+                    fill="url(#neuralGrad3)"
+                    filter="url(#glow)"
+                    animate={{
+                      r: [4, 6, 4],
+                      opacity: [0.6, 1, 0.6]
+                    }}
+                    transition={{
+                      duration: 1.5 + Math.random(),
+                      repeat: Infinity,
+                      delay: (row * 8 + col) * 0.04
+                    }}
+                  />
+                </g>
+              );
+            })
+          )}
+          
+          {/* Signal Pulses */}
+          {[...Array(15)].map((_, i) => {
+            const startX = 15 + (i % 8) * 12.5;
+            const startY = 15 + Math.floor(i / 8) * 16;
+            const endX = 85;
+            const endY = 50;
+            
+            return (
+              <motion.circle
+                key={`pulse-${i}`}
+                r="3"
+                fill="#06b6d4"
+                filter="url(#glow)"
+                animate={{
+                  cx: [`${startX}%`, `${endX}%`],
+                  cy: [`${startY}%`, `${endY}%`],
+                  opacity: [0, 1, 0],
+                  r: [3, 5, 3]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  delay: i * 0.2,
+                  ease: "easeInOut"
+                }}
+              />
+            );
+          })}
+        </svg>
+
+        {/* Floating Data Particles */}
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+          {[...Array(30)].map((_, i) => (
             <motion.div
               key={i}
               style={{
@@ -125,496 +183,152 @@ export default function FieldAnalyticsModal({ isOpen, onClose }: Props) {
                 width: 4,
                 height: 4,
                 borderRadius: '50%',
-                background: i % 3 === 0 ? '#00d4ff' : i % 3 === 1 ? '#d946ef' : '#f59e0b',
-                boxShadow: `0 0 20px ${i % 3 === 0 ? '#00d4ff' : i % 3 === 1 ? '#d946ef' : '#f59e0b'}`
+                background: `hsl(${180 + i * 8}, 80%, 65%)`,
+                boxShadow: `0 0 15px hsl(${180 + i * 8}, 80%, 65%)`
               }}
               animate={{
-                x: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000)
-                ],
-                y: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800)
-                ],
-                scale: [1, 1.5, 1],
+                x: [Math.random() * 1200, Math.random() * 1200, Math.random() * 1200],
+                y: [Math.random() * 800, Math.random() * 800, Math.random() * 800],
+                scale: [1, 1.8, 1],
                 opacity: [0.3, 0.8, 0.3]
               }}
               transition={{
                 duration: 10 + Math.random() * 10,
                 repeat: Infinity,
-                ease: 'linear'
+                ease: 'easeInOut'
               }}
             />
           ))}
         </div>
 
         <motion.div
-          initial={{ scale: 0.9, y: 20 }}
+          initial={{ scale: 0.96, y: 30 }}
           animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.9, y: 20 }}
+          exit={{ scale: 0.96, y: 30 }}
           onClick={(e) => e.stopPropagation()}
           className="cyber-card"
           style={{
-            width: '90%',
-            maxWidth: 1000,
-            maxHeight: '85vh',
-            overflowY: 'auto',
-            padding: 40,
-            borderRadius: 24,
-            background: 'linear-gradient(145deg, rgba(10,26,46,0.98), rgba(6,13,24,0.98))',
-            border: '2px solid rgba(245,158,11,0.5)',
+            width: '88%',
+            maxWidth: 1050,
+            maxHeight: '88vh',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '18px',
+            borderRadius: 14,
+            background: 'linear-gradient(145deg, rgba(8,24,42,0.98), rgba(4,10,18,0.98))',
+            border: '2px solid rgba(14,165,233,0.55)',
             position: 'relative',
-            boxShadow: '0 30px 100px rgba(0,0,0,0.7), 0 0 50px rgba(245,158,11,0.2)'
+            boxShadow: '0 40px 130px rgba(0,0,0,0.9), 0 0 70px rgba(14,165,233,0.28)',
+            overflow: 'hidden'
           }}
         >
-          <div className="scan-line" style={{ '--scan-color': '#f59e0b' } as React.CSSProperties} />
+          <div className="scan-line" style={{ '--scan-color': '#0ea5e9' } as React.CSSProperties} />
           
-          {/* Header with Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-              <motion.div
-                className="float pulse"
-                style={{
-                  position: 'relative',
-                  width: 60,
-                  height: 60
-                }}
-                animate={{
-                  rotateY: [0, 360],
-                }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: 'linear'
-                }}
-              >
-                <Image 
-                  src="/Logo1_trans.png" 
-                  alt="SYNTX" 
-                  width={60} 
-                  height={60}
-                  style={{
-                    filter: 'drop-shadow(0 0 30px rgba(245,158,11,0.8))',
-                    imageRendering: 'crisp-edges'
-                  }}
-                />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <motion.div style={{ width: 32, height: 32, position: 'relative' }} animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                <Image src="/logo_original.png" alt="SYNTX" width={32} height={32} style={{ filter: 'drop-shadow(0 0 8px rgba(14,165,233,0.5))' }} />
               </motion.div>
-              
               <div>
-                <h2 className="glow-text" style={{
-                  fontSize: 32,
-                  fontWeight: 900,
-                  color: '#f59e0b',
-                  fontFamily: 'monospace',
-                  margin: 0,
-                  letterSpacing: 3
-                }}>
-                  FIELD ANALYTICS
-                </h2>
-                <div style={{
-                  fontSize: 11,
-                  color: 'rgba(255,255,255,0.4)',
-                  fontFamily: 'monospace',
-                  marginTop: 4,
-                  letterSpacing: 2
-                }}>
-                  Neural Network Analysis • Field Resonance System
-                </div>
+                <h2 className="glow-text" style={{ fontSize: 18, fontWeight: 900, color: '#0ea5e9', fontFamily: 'monospace', margin: 0, letterSpacing: 1.5 }}>FIELD ANALYTICS</h2>
+                <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>Neural Performance Analysis</div>
               </div>
             </div>
-            
-            <button
-              onClick={onClose}
-              className="cyber-btn"
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                border: '1px solid rgba(255,255,255,0.2)',
-                background: 'rgba(255,255,255,0.05)',
-                color: 'rgba(255,255,255,0.6)',
-                fontSize: 24,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              ×
-            </button>
+            <button onClick={onClose} className="cyber-btn" style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', fontSize: 14, cursor: 'pointer' }}>×</button>
           </div>
 
-          {/* Stats Bar */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 16,
-            marginBottom: 24
-          }}>
-            <StatCard label="Total Fields" value={fields.length} color="#00d4ff" icon="🎯" />
-            <StatCard label="Total Samples" value={totalSamples} color="#d946ef" icon="📊" />
-            <StatCard label="Avg Performance" value={`${(avgScore * 100).toFixed(0)}%`} color={avgScore >= 0.7 ? '#10b981' : avgScore >= 0.4 ? '#f59e0b' : '#ef4444'} icon="⚡" />
-          </div>
-
-          {/* Sort Controls */}
-          <div style={{
-            display: 'flex',
-            gap: 12,
-            marginBottom: 20,
-            padding: 16,
-            borderRadius: 12,
-            background: 'rgba(0,0,0,0.3)',
-            border: '1px solid rgba(255,255,255,0.05)'
-          }}>
-            <span style={{
-              fontSize: 11,
-              color: 'rgba(255,255,255,0.5)',
-              fontFamily: 'monospace',
-              letterSpacing: 2,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8
-            }}>
-              <span>🔧</span> SORT BY:
-            </span>
-            <SortButton active={sortBy === 'score'} onClick={() => setSortBy('score')} label="SCORE" />
-            <SortButton active={sortBy === 'count'} onClick={() => setSortBy('count')} label="SAMPLES" />
-            <SortButton active={sortBy === 'name'} onClick={() => setSortBy('name')} label="NAME" />
-          </div>
-
-          {loading ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 80, gap: 24 }}>
-              <motion.div
-                style={{
-                  width: 80,
-                  height: 80,
-                  border: '5px solid rgba(245,158,11,0.2)',
-                  borderTopColor: '#f59e0b',
-                  borderRadius: '50%',
-                  boxShadow: '0 0 40px rgba(245,158,11,0.4)'
-                }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              />
-              <div style={{
-                color: 'rgba(255,255,255,0.6)',
-                fontFamily: 'monospace',
-                fontSize: 13,
-                letterSpacing: 2
-              }}>
-                AGGREGATING NEURAL FIELD DATA...
-              </div>
-            </div>
-          ) : error ? (
-            <div style={{
-              padding: 60,
-              textAlign: 'center',
-              color: '#ef4444',
-              fontFamily: 'monospace',
-              fontSize: 14
-            }}>
-              <div style={{ fontSize: 60, marginBottom: 20 }}>⚠️</div>
-              <div style={{ marginBottom: 20 }}>System Error: {error}</div>
-              <button
-                onClick={fetchAnalytics}
-                className="cyber-btn"
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: 10,
-                  border: '1px solid rgba(245,158,11,0.4)',
-                  background: 'rgba(245,158,11,0.1)',
-                  color: '#f59e0b',
-                  cursor: 'pointer',
-                  fontFamily: 'monospace',
-                  fontSize: 13,
-                  fontWeight: 700
-                }}
-              >
-                🔄 RETRY CONNECTION
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', gap: 5, marginBottom: 8, position: 'relative', zIndex: 1 }}>
+            {(['uses', 'score', 'success'] as const).map(sort => (
+              <button key={sort} onClick={() => setSortBy(sort)} className="cyber-btn" style={{ padding: '4px 10px', borderRadius: 5, border: sortBy === sort ? '1px solid rgba(14,165,233,0.5)' : '1px solid rgba(255,255,255,0.15)', background: sortBy === sort ? 'rgba(14,165,233,0.15)' : 'rgba(255,255,255,0.05)', color: sortBy === sort ? '#0ea5e9' : 'rgba(255,255,255,0.5)', fontSize: 8, fontFamily: 'monospace', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>
+                {sort === 'uses' ? '🔥 USES' : sort === 'score' ? '⚡ SCORE' : '✨ SUCCESS'}
               </button>
-            </div>
-          ) : fields.length === 0 ? (
-            <div style={{
-              padding: 80,
-              textAlign: 'center',
-              color: 'rgba(255,255,255,0.4)',
-              fontFamily: 'monospace',
-              fontSize: 14
-            }}>
-              <div style={{ fontSize: 80, marginBottom: 24 }}>📊</div>
-              <div style={{ fontSize: 18, marginBottom: 12, color: 'rgba(255,255,255,0.6)' }}>
-                No Neural Field Data
+            ))}
+          </motion.div>
+
+          <div style={{ flex: 1, overflowY: 'auto', paddingRight: 4, display: 'grid', gap: 6, position: 'relative', zIndex: 1 }}>
+            {loading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                <motion.div style={{ width: 35, height: 35, border: '3px solid rgba(14,165,233,0.2)', borderTopColor: '#0ea5e9', borderRadius: '50%' }} animate={{ rotate: 360 }} transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }} />
               </div>
-              <div>Awaiting field calibration results...</div>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gap: 14 }}>
-              {sortedFields.map((field, idx) => (
-                <FieldRow key={field.field} field={field} index={idx} />
-              ))}
-            </div>
-          )}
+            ) : sortedAnalytics.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 30, color: 'rgba(255,255,255,0.4)' }}>
+                <div style={{ fontSize: 40, marginBottom: 8 }}>📊</div>
+                No analytics data yet
+              </div>
+            ) : (
+              sortedAnalytics.map((field, idx) => <FieldCard key={idx} field={field} index={idx} />)
+            )}
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
-function StatCard({ label, value, color, icon }: { label: string; value: string | number; color: string; icon: string }) {
+function FieldCard({ field, index }: { field: FieldAnalytics; index: number }) {
+  const scoreColor = field.avg_score >= 0.7 ? '#10b981' : field.avg_score >= 0.4 ? '#f59e0b' : '#ef4444';
+  const hasProblems = field.problem_indicators && field.problem_indicators.length > 0;
+
   return (
     <motion.div
-      whileHover={{ scale: 1.02, y: -2 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.02 }}
+      whileHover={{ scale: 1.005, x: 3 }}
       className="cyber-card"
       style={{
-        padding: 16,
-        borderRadius: 12,
-        background: `linear-gradient(135deg, ${color}15, ${color}05)`,
-        border: `1px solid ${color}30`,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12
+        padding: 12,
+        borderRadius: 9,
+        background: hasProblems ? 'rgba(239,68,68,0.05)' : 'rgba(0,0,0,0.6)',
+        border: hasProblems ? '1px solid rgba(239,68,68,0.3)' : `1px solid ${scoreColor}20`,
       }}
     >
-      <span style={{ fontSize: 32 }}>{icon}</span>
-      <div>
-        <div style={{
-          fontSize: 10,
-          color: 'rgba(255,255,255,0.4)',
-          fontFamily: 'monospace',
-          marginBottom: 4
-        }}>
-          {label}
-        </div>
-        <div className="glow-text" style={{
-          fontSize: 24,
-          fontWeight: 900,
-          color: color,
-          fontFamily: 'monospace'
-        }}>
-          {value}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function SortButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
-  return (
-    <motion.button
-      onClick={onClick}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      className="cyber-btn"
-      style={{
-        padding: '8px 16px',
-        borderRadius: 8,
-        border: active ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
-        background: active 
-          ? 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.05))'
-          : 'rgba(255,255,255,0.03)',
-        color: active ? '#f59e0b' : 'rgba(255,255,255,0.5)',
-        fontSize: 11,
-        fontFamily: 'monospace',
-        fontWeight: 700,
-        cursor: 'pointer',
-        letterSpacing: 1,
-        boxShadow: active ? '0 0 20px rgba(245,158,11,0.3)' : 'none'
-      }}
-    >
-      {label}
-    </motion.button>
-  );
-}
-
-function FieldRow({ field, index }: { field: FieldPerformance; index: number }) {
-  const scoreColor = field.avg_score >= 0.7 ? '#10b981' : field.avg_score >= 0.4 ? '#f59e0b' : '#ef4444';
-  const percentage = (field.avg_score * 100).toFixed(0);
-  
-  // 🔥 PROBLEM DETECTION
-  const hasLowScore = field.avg_score < 0.3;
-  const hasHighVolume = field.count > 5;
-  const isProblem = hasLowScore && hasHighVolume;
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.04 }}
-      whileHover={{ scale: 1.01, x: 4 }}
-      className="cyber-card data-stream"
-      style={{
-        padding: 20,
-        borderRadius: 14,
-        background: isProblem 
-          ? 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(0,0,0,0.4))'
-          : 'rgba(0,0,0,0.4)',
-        border: isProblem 
-          ? '2px solid rgba(239,68,68,0.5)'
-          : `1px solid ${scoreColor}30`,
-        display: 'grid',
-        gridTemplateColumns: 'auto 1fr auto auto auto',
-        gap: 20,
-        alignItems: 'center',
-        position: 'relative',
-        overflow: 'visible'
-      }}
-    >
-      {/* Problem Indicator */}
-      {isProblem && (
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', gap: 10, alignItems: 'center' }}>
         <motion.div
           style={{
-            position: 'absolute',
-            top: -8,
-            right: -8,
-            width: 32,
-            height: 32,
+            width: 40,
+            height: 40,
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-            border: '2px solid rgba(0,0,0,0.8)',
+            background: `conic-gradient(${scoreColor} ${field.avg_score * 360}deg, rgba(0,0,0,0.3) 0deg)`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 16,
-            boxShadow: '0 0 30px rgba(239,68,68,0.8)'
+            position: 'relative'
           }}
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 5, -5, 0]
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity
-          }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
         >
-          ⚠️
+          <div style={{ position: 'absolute', width: 34, height: 34, borderRadius: '50%', background: 'rgba(8,24,42,1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: scoreColor, fontFamily: 'monospace' }}>
+            {(field.avg_score * 100).toFixed(0)}%
+          </div>
         </motion.div>
-      )}
 
-      {/* Health Indicator Dot */}
-      <motion.div
-        style={{
-          width: 14,
-          height: 14,
-          borderRadius: '50%',
-          background: scoreColor,
-          boxShadow: `0 0 20px ${scoreColor}`,
-          border: '2px solid rgba(0,0,0,0.5)'
-        }}
-        animate={{
-          scale: isProblem ? [1, 1.4, 1] : [1, 1.2, 1],
-          opacity: [1, 0.6, 1]
-        }}
-        transition={{
-          duration: isProblem ? 1 : 2,
-          repeat: Infinity
-        }}
-      />
-
-      {/* Field Info */}
-      <div>
-        <div style={{
-          fontSize: 18,
-          fontWeight: 900,
-          color: isProblem ? '#ef4444' : '#00d4ff',
-          fontFamily: 'monospace',
-          marginBottom: 6,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8
-        }}>
-          {field.field}
-          {isProblem && (
-            <span style={{
-              fontSize: 9,
-              padding: '3px 8px',
-              borderRadius: 6,
-              background: 'rgba(239,68,68,0.2)',
-              border: '1px solid rgba(239,68,68,0.4)',
-              color: '#ef4444',
-              fontWeight: 700,
-              letterSpacing: 1
-            }}>
-              CRITICAL
-            </span>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#0ea5e9', fontFamily: 'monospace' }}>{field.field}</div>
+            {hasProblems && <span style={{ fontSize: 10 }}>⚠️</span>}
+          </div>
+          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>
+            {field.total_uses} uses • {(field.success_rate * 100).toFixed(0)}% success
+          </div>
+          {hasProblems && (
+            <div style={{ fontSize: 7, color: '#ef4444', fontFamily: 'monospace', marginTop: 2 }}>
+              {field.problem_indicators!.join(', ')}
+            </div>
           )}
         </div>
-        <div style={{
-          fontSize: 11,
-          color: 'rgba(255,255,255,0.4)',
-          fontFamily: 'monospace'
-        }}>
-          Profile: {field.profile_used}
-        </div>
-      </div>
 
-      {/* Sample Count */}
-      <div style={{
-        textAlign: 'center',
-        padding: '10px 16px',
-        borderRadius: 10,
-        background: 'rgba(0,212,255,0.1)',
-        border: '1px solid rgba(0,212,255,0.2)'
-      }}>
-        <div style={{
-          fontSize: 18,
-          fontWeight: 800,
-          color: '#00d4ff',
-          fontFamily: 'monospace'
-        }}>
-          {field.count}
+        <div style={{ padding: '4px 9px', borderRadius: 6, background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', textAlign: 'center' }}>
+          <div style={{ fontSize: 12, fontWeight: 900, color: '#8b5cf6', fontFamily: 'monospace' }}>{field.recent_prompts}</div>
+          <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>RECENT</div>
         </div>
-        <div style={{
-          fontSize: 8,
-          color: 'rgba(255,255,255,0.3)',
-          marginTop: 2,
-          letterSpacing: 1
-        }}>
-          SAMPLES
-        </div>
-      </div>
 
-      {/* Performance Bar */}
-      <div style={{ width: 120 }}>
-        <div style={{
-          height: 8,
-          borderRadius: 4,
-          background: 'rgba(255,255,255,0.1)',
-          overflow: 'hidden',
-          position: 'relative'
-        }}>
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${field.avg_score * 100}%` }}
-            transition={{ duration: 1, delay: index * 0.05 }}
-            style={{
-              height: '100%',
-              background: `linear-gradient(90deg, ${scoreColor}, ${scoreColor}aa)`,
-              boxShadow: `0 0 10px ${scoreColor}`
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Score Badge */}
-      <div style={{
-        padding: '14px 26px',
-        borderRadius: 12,
-        background: `linear-gradient(135deg, ${scoreColor}30, ${scoreColor}15)`,
-        border: `2px solid ${scoreColor}50`,
-        textAlign: 'center',
-        minWidth: 90
-      }}>
-        <div className="glow-text" style={{
-          fontSize: 32,
-          fontWeight: 900,
-          color: scoreColor,
-          fontFamily: 'monospace',
-          lineHeight: 1
-        }}>
-          {percentage}%
+        <div style={{ padding: '5px 11px', borderRadius: 6, background: `linear-gradient(135deg, ${scoreColor}18, ${scoreColor}06)`, border: `1.5px solid ${scoreColor}32`, textAlign: 'center' }}>
+          <div className="glow-text" style={{ fontSize: 14, fontWeight: 900, color: scoreColor, fontFamily: 'monospace' }}>
+            {(field.avg_score * 100).toFixed(0)}%
+          </div>
         </div>
       </div>
     </motion.div>
