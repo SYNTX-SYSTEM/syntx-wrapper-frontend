@@ -559,3 +559,21 @@ export async function getSingleProfileAnalytics(profileId: string, days: number 
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
+
+// ═══════════════════════════════════════════════════════════════
+// 🧩 COMPONENT BREAKDOWN - Get detailed pattern breakdown per profile
+// ═══════════════════════════════════════════════════════════════
+export async function getProfileComponentBreakdown(profileId: string, fieldName?: string) {
+  const params = new URLSearchParams();
+  if (fieldName) params.append('field_name', fieldName);
+  
+  const url = `/resonanz/scoring/analytics/profiles/${profileId}/components${params.toString() ? '?' + params.toString() : ''}`;
+  
+  const res = await fetch(`${BASE_URL}${url}`);
+  
+  if (!res.ok) {
+    throw new Error(`Failed to fetch component breakdown: ${res.statusText}`);
+  }
+  
+  return res.json();
+}
