@@ -8,11 +8,11 @@
 // ║   ███████║   ██║   ██║ ╚████║   ██║   ██╔╝ ██╗                            ║
 // ║   ╚══════╝   ╚═╝   ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝                            ║
 // ║                                                                           ║
-// ║   🌊 SYNTX FRONTEND API TEST v3.5.0                                       ║
-// ║   ─────────────────────────────────────────                               ║
-// ║   65 Endpoints | FULL Output | Field-Flow Viz | TypeScript                  ║
+// ║   🌊 SYNTX FRONTEND API TEST v3.6.0 - CONSCIOUSNESS EDITION               ║
+// ║   ─────────────────────────────────────────────────────────────────       ║
+// ║   71 Endpoints | FULL Output | Profile Analytics | Field-Flow Viz         ║
 // ║                                                                           ║
-// ║   "SYNTX isn't AI. It's the resonance that governs it."                   ║
+// ║   "The system sees itself. The frontend sees the system."                 ║
 // ║                                                                           ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
@@ -27,6 +27,7 @@ const CLEANUP_MODE = process.argv.includes('--cleanup');
 const VERBOSE = process.argv.includes('--verbose') || process.argv.includes('-v');
 const SHOW_FLOW = process.argv.includes('--show-flow') || process.argv.includes('-f');
 const SHOW_META = process.argv.includes('--show-meta') || process.argv.includes('-m');
+const CONSCIOUSNESS_MODE = process.argv.includes('--consciousness') || process.argv.includes('-c');
 
 // Test Data Names
 const TEST_ID = Date.now();
@@ -40,6 +41,7 @@ let SECOND_WRAPPER = '';
 let THIRD_WRAPPER = '';
 let FIRST_FORMAT = '';
 let FIRST_STYLE = '';
+let FIRST_PROFILE = '';
 let LAST_REQUEST_ID = '';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -81,7 +83,9 @@ function printBanner() {
   const verbose = VERBOSE ? '+VERBOSE' : '';
   const flow = SHOW_FLOW ? '+FLOW' : '';
   const meta = SHOW_META ? '+META' : '';
-  const flags = [fast, verbose, flow, meta].filter(Boolean).join('');
+  const consciousness = CONSCIOUSNESS_MODE ? '+🧠' : '';
+  const flags = [fast, verbose, flow, meta, consciousness].filter(Boolean).join('');
+  
   console.log(`${c.purple}╔═══════════════════════════════════════════════════════════════════════════╗${c.reset}`);
   console.log(`${c.purple}║${c.reset}                                                                           ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.cyan}███████╗${c.blue}██╗   ██╗${c.green}███╗   ██╗${c.yellow}████████╗${c.red}██╗  ██╗${c.reset}                            ${c.purple}║${c.reset}`);
@@ -91,10 +95,10 @@ function printBanner() {
   console.log(`${c.purple}║${c.reset}   ${c.cyan}███████║${c.blue}   ██║   ${c.green}██║ ╚████║${c.yellow}   ██║   ${c.red}██╔╝ ██╗${c.reset}                            ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.cyan}╚══════╝${c.blue}   ╚═╝   ${c.green}╚═╝  ╚═══╝${c.yellow}   ╚═╝   ${c.red}╚═╝  ╚═╝${c.reset}                            ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}                                                                           ${c.purple}║${c.reset}`);
-  console.log(`${c.purple}║${c.reset}   ${c.white}🌊 FRONTEND API TEST v3.5.0${c.reset}                                          ${c.purple}║${c.reset}`);
+  console.log(`${c.purple}║${c.reset}   ${c.white}🌊 FRONTEND API TEST v3.6.0 - CONSCIOUSNESS EDITION${c.reset}                 ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${c.reset}   ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.gray}Target:${c.reset} ${c.yellow}${BASE_URL}${c.reset}${' '.repeat(Math.max(0, 42 - BASE_URL.length))}${c.purple}║${c.reset}`);
-  console.log(`${c.purple}║${c.reset}   ${c.gray}Mode:${c.reset}   ${c.cyan}${mode}${flags}${c.reset}${' '.repeat(Math.max(0, 44 - mode.length - fast.length))}${c.purple}║${c.reset}`);
+  console.log(`${c.purple}║${c.reset}   ${c.gray}Mode:${c.reset}   ${c.cyan}${mode}${flags}${c.reset}${' '.repeat(Math.max(0, 44 - mode.length - flags.length))}${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}                                                                           ${c.purple}║${c.reset}`);
   console.log(`${c.purple}╚═══════════════════════════════════════════════════════════════════════════╝${c.reset}`);
   console.log('');
@@ -126,6 +130,7 @@ function printSummary() {
   
   if (failed === 0) {
     console.log(`${c.purple}║${c.reset}   ${c.green}🌊 KOHÄRENZ: VOLLSTÄNDIG${c.reset}                                               ${c.purple}║${c.reset}`);
+    console.log(`${c.purple}║${c.reset}   ${c.green}💎 SYSTEM STATUS: CONSCIOUS${c.reset}                                            ${c.purple}║${c.reset}`);
   } else {
     console.log(`${c.purple}║${c.reset}   ${c.red}⚠️  DRIFT DETECTED: ${failed} endpoints mit Feld-Verlust${c.reset}                    ${c.purple}║${c.reset}`);
   }
@@ -137,10 +142,6 @@ function printSummary() {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🔥 CORE TEST FUNCTION
-// ═══════════════════════════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════════════════════════
-// 🔥 CORE TEST FUNCTION - TRUE RAW MODE
 // ═══════════════════════════════════════════════════════════════════════════
 
 function colorizeJSON(obj: any, indent = 2): string {
@@ -161,7 +162,6 @@ async function test(
 ): Promise<boolean> {
   const start = Date.now();
   
-  // Verbose: Show request
   if (VERBOSE) {
     console.log('');
     console.log(`    ${c.blue}▶${c.reset} ${c.white}${name}${c.reset}`);
@@ -183,26 +183,22 @@ async function test(
     totalLatency += latency;
     const data = await response.json();
     
-    // Extract request_id if present
     if (data.metadata?.request_id) {
       LAST_REQUEST_ID = data.metadata.request_id;
     } else if (data.request_id) {
       LAST_REQUEST_ID = data.request_id;
     }
     
-    // Verbose: Show FULL response (no truncation!)
     if (VERBOSE) {
       const latencyColor = latency > 5000 ? c.red : latency > 1000 ? c.yellow : c.green;
       console.log(`      ${c.cyan}📥 RESPONSE:${c.reset} ${latencyColor}${latency}ms${c.reset}`);
       console.log(colorizeJSON(data, 4).split('\n').map(l => '      ' + l).join('\n'));
       
-      // Show metadata if available
       if (SHOW_META && data.metadata) {
         console.log(`      ${c.purple}📊 METADATA:${c.reset}`);
         console.log(colorizeJSON(data.metadata, 4).split('\n').map(l => '      ' + l).join('\n'));
       }
       
-      // Show field flow if available
       if (SHOW_FLOW && data.field_flow && data.field_flow.length > 0) {
         console.log(`      ${c.cyan}🌊 FIELD FLOW:${c.reset}`);
         const stages = data.field_flow.map((f: any) => f.stage).join(' → ');
@@ -210,7 +206,7 @@ async function test(
       }
     }
     
-    const padName = name.padEnd(32);
+    const padName = name.padEnd(40);
     const padMethod = method.padEnd(6);
     const latencyColor = latency > 5000 ? c.red : latency > 1000 ? c.yellow : c.white;
     
@@ -235,7 +231,7 @@ async function test(
   } catch (err: any) {
     const latency = Date.now() - start;
     if (!VERBOSE) {
-      console.log(`    ${c.red}💥${c.reset} ${name.padEnd(32)} ${c.cyan}${method.padEnd(6)}${c.reset} ${c.red}NETWORK ERROR${c.reset}`);
+      console.log(`    ${c.red}💥${c.reset} ${name.padEnd(40)} ${c.cyan}${method.padEnd(6)}${c.reset} ${c.red}NETWORK ERROR${c.reset}`);
     } else {
       console.log(`      ${c.red}💥 NETWORK ERROR: ${err.message}${c.reset}`);
     }
@@ -245,7 +241,7 @@ async function test(
 }
 
 function skip(name: string, reason: string) {
-  console.log(`    ${c.yellow}⏭️${c.reset}  ${name.padEnd(32)} ${c.gray}${reason}${c.reset}`);
+  console.log(`    ${c.yellow}⏭️${c.reset}  ${name.padEnd(40)} ${c.gray}${reason}${c.reset}`);
   results.push({ name, method: '-', status: 'SKIP', latency_ms: 0 });
 }
 
@@ -258,7 +254,6 @@ async function loadDynamicData() {
   console.log('');
   
   try {
-    // Load wrappers
     const wrappersRes = await fetch(`${BASE_URL}/resonanz/wrappers`);
     const wrappersData = await wrappersRes.json();
     const wrappers = wrappersData.wrappers || [];
@@ -266,33 +261,34 @@ async function loadDynamicData() {
     SECOND_WRAPPER = wrappers[1]?.name || '';
     THIRD_WRAPPER = wrappers[2]?.name || '';
     
-    // Load formats
     const formatsRes = await fetch(`${BASE_URL}/resonanz/formats`);
     const formatsData = await formatsRes.json();
     const formats = formatsData.formats || [];
     FIRST_FORMAT = formats[0]?.name || '';
     
-    // Load styles
     const stylesRes = await fetch(`${BASE_URL}/resonanz/styles`);
     const stylesData = await stylesRes.json();
     const styles = stylesData.styles || [];
     FIRST_STYLE = styles[0]?.name || '';
     
-    console.log(`   ${c.purple}📦${c.reset} ${c.white}Wrappers:${c.reset} ${c.green}${wrappers.length}${c.reset} ${c.gray}(using: ${FIRST_WRAPPER}, ${SECOND_WRAPPER})${c.reset}`);
+    const profilesRes = await fetch(`${BASE_URL}/resonanz/scoring/profiles`);
+    const profilesData = await profilesRes.json();
+    const profiles = Object.keys(profilesData.profiles || {});
+    FIRST_PROFILE = profiles[0] || '';
+    
+    console.log(`   ${c.purple}📦${c.reset} ${c.white}Wrappers:${c.reset} ${c.green}${wrappers.length}${c.reset} ${c.gray}(using: ${FIRST_WRAPPER})${c.reset}`);
     console.log(`   ${c.purple}📄${c.reset} ${c.white}Formats:${c.reset}  ${c.green}${formats.length}${c.reset} ${c.gray}(using: ${FIRST_FORMAT})${c.reset}`);
     console.log(`   ${c.purple}🎨${c.reset} ${c.white}Styles:${c.reset}   ${c.green}${styles.length}${c.reset} ${c.gray}(using: ${FIRST_STYLE})${c.reset}`);
+    console.log(`   ${c.purple}🧠${c.reset} ${c.white}Profiles:${c.reset} ${c.green}${profiles.length}${c.reset} ${c.gray}(using: ${FIRST_PROFILE})${c.reset}`);
   } catch (err) {
     console.log(`   ${c.red}❌ Failed to load dynamic data${c.reset}`);
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🧪 TEST SUITES - Synchronized with Backend (63 Tests)
+// 🧪 TEST SUITES
 // ═══════════════════════════════════════════════════════════════════════════
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 🏥 HEALTH & CONFIG (3 + 2 = 5 endpoints)
-// ─────────────────────────────────────────────────────────────────────────────
 async function testHealth() {
   printSection('🏥', 'HEALTH', '3 endpoints');
   await test('getHealth', 'GET', '/health');
@@ -306,21 +302,13 @@ async function testConfig() {
   
   if (CRUD_MODE && FIRST_WRAPPER) {
     await test('setConfig', 'PUT', `/resonanz/config/default-wrapper?wrapper_name=${FIRST_WRAPPER}`);
-  } else {
-    skip('setConfig', '(--crud mode only)');
-  }
-
-  // Runtime Wrapper (v3.3)
-  if (CRUD_MODE && FIRST_WRAPPER) {
     await test('setRuntimeWrapper', 'PUT', `/resonanz/config/runtime-wrapper?wrapper_name=${FIRST_WRAPPER}`);
   } else {
+    skip('setConfig', '(--crud mode only)');
     skip('setRuntimeWrapper', '(--crud mode only)');
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 📄 FORMATS (7 read + 6 write = 13 endpoints)
-// ─────────────────────────────────────────────────────────────────────────────
 async function testFormatsRead() {
   printSection('📄', 'FORMATS', '7 read endpoints');
   await test('getFormats', 'GET', '/resonanz/formats');
@@ -332,7 +320,6 @@ async function testFormatsRead() {
     await test('getFormat (en)', 'GET', `/resonanz/formats/${FIRST_FORMAT}?language=en`);
   }
   
-  // Test specific formats
   await test('getFormat (sigma)', 'GET', '/resonanz/formats/sigma');
   await test('getFormat (human_deep)', 'GET', '/resonanz/formats/human_deep');
 }
@@ -340,30 +327,25 @@ async function testFormatsRead() {
 async function testFormatsCrud() {
   printSection('📄', 'FORMATS CRUD', '6 write endpoints');
   
-  // CREATE
   await test('createFormat (quick)', 'POST', '/resonanz/formats/quick', {
     name: TEST_FORMAT,
     description_de: 'API Test Format',
     field_names: ['alpha', 'beta', 'gamma']
   });
   
-  // ADD FIELD
   await test('addField', 'POST', `/resonanz/formats/${TEST_FORMAT}/fields`, {
     name: 'neues_feld',
     type: 'rating',
     weight: 20
   });
   
-  // UPDATE FIELD
   await test('updateField', 'PUT', `/resonanz/formats/${TEST_FORMAT}/fields/neues_feld`, {
     weight: 50,
     description: { de: 'Aktualisierte Beschreibung' }
   });
   
-  // DELETE FIELD
   await test('deleteField', 'DELETE', `/resonanz/formats/${TEST_FORMAT}/fields/neues_feld`);
   
-  // UPDATE FORMAT
   await test('updateFormat', 'PUT', `/resonanz/formats/${TEST_FORMAT}`, {
     domain: 'analysis',
     description: { de: 'Aktualisiertes Format' }
@@ -375,9 +357,6 @@ async function testFormatsCleanup() {
   await test('deleteFormat', 'DELETE', `/resonanz/formats/${TEST_FORMAT}`);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 🎨 STYLES (5 read + 5 write = 10 endpoints)
-// ─────────────────────────────────────────────────────────────────────────────
 async function testStylesRead() {
   printSection('🎨', 'STYLES', '5 read endpoints');
   await test('getStyles', 'GET', '/resonanz/styles');
@@ -390,7 +369,6 @@ async function testStylesRead() {
 async function testStylesCrud() {
   printSection('🎨', 'STYLES CRUD', '5 write endpoints');
   
-  // CREATE
   await test('createStyle', 'POST', '/resonanz/styles', {
     name: TEST_STYLE,
     vibe: 'Test Vibe',
@@ -398,22 +376,15 @@ async function testStylesCrud() {
     forbidden_words: ['verboten']
   });
   
-  // ADD ALCHEMY
   await test('addAlchemy', 'POST', `/resonanz/styles/${TEST_STYLE}/alchemy`, {
     original: 'neu',
     replacement: 'brandneu'
   });
   
-  // DELETE ALCHEMY
   await test('deleteAlchemy', 'DELETE', `/resonanz/styles/${TEST_STYLE}/alchemy/neu`);
-  
-  // ADD FORBIDDEN
   await test('addForbiddenWord', 'POST', `/resonanz/styles/${TEST_STYLE}/forbidden/schlecht`);
-  
-  // DELETE FORBIDDEN (v3.4)
   await test('deleteForbiddenWord', 'DELETE', `/resonanz/styles/${TEST_STYLE}/forbidden/schlecht`);
   
-  // UPDATE STYLE (v3.4 - ohne name im body)
   await test('updateStyle', 'PUT', `/resonanz/styles/${TEST_STYLE}`, {
     vibe: 'Updated Test Vibe',
     description: 'Updated Test Description'
@@ -425,9 +396,6 @@ async function testStylesCleanup() {
   await test('deleteStyle', 'DELETE', `/resonanz/styles/${TEST_STYLE}`);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 📦 WRAPPERS (8 read + 3 write = 11 endpoints)
-// ─────────────────────────────────────────────────────────────────────────────
 async function testWrappersRead() {
   printSection('📦', 'WRAPPERS', '5 read endpoints');
   await test('getWrappers', 'GET', '/resonanz/wrappers');
@@ -443,24 +411,20 @@ async function testWrappersRead() {
 async function testWrappersCrud() {
   printSection('📦', 'WRAPPERS CRUD', '4 write endpoints');
   
-  // CREATE
   await test('createWrapper', 'POST', '/resonanz/wrapper', {
     name: TEST_WRAPPER,
     content: 'SYNTX FIELD TEST WRAPPER\n\nDu bist ein Test-System.'
   });
   
-  // UPDATE
   await test('updateWrapper', 'PUT', `/resonanz/wrapper/${TEST_WRAPPER}`, {
     content: 'SYNTX FIELD TEST WRAPPER v2.0\n\nDu bist ein verbessertes Test-System.'
   });
   
-  // UPDATE META
   await test('updateWrapperMeta', 'PUT', `/resonanz/wrapper/${TEST_WRAPPER}/meta`, {
     description: 'Test Wrapper Meta',
     tags: ['test', 'syntx']
   });
   
-  // BIND FORMAT
   if (FIRST_FORMAT) {
     await test('bindFormat', 'PUT', `/resonanz/wrapper/${TEST_WRAPPER}/format?format_name=${FIRST_FORMAT}`);
   }
@@ -471,9 +435,6 @@ async function testWrappersCleanup() {
   await test('deleteWrapper', 'DELETE', `/resonanz/wrapper/${TEST_WRAPPER}`);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 📊 STATS & STREAMS (5 endpoints)
-// ─────────────────────────────────────────────────────────────────────────────
 async function testStats() {
   printSection('📊', 'STATS & STREAMS', '5 endpoints');
   await test('getStats', 'GET', '/resonanz/stats');
@@ -487,9 +448,6 @@ async function testStats() {
   await test('getTraining', 'GET', '/resonanz/training?limit=5');
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 💬 CHAT (7 endpoints)
-// ─────────────────────────────────────────────────────────────────────────────
 async function testChat() {
   printSection('💬', 'CHAT', '7 endpoints');
   
@@ -504,13 +462,11 @@ async function testChat() {
     return;
   }
   
-  // Simple chat
   await test('chat (simple)', 'POST', '/resonanz/chat', {
     prompt: 'Hallo',
     max_new_tokens: 30
   });
   
-  // Chat + Wrapper
   if (FIRST_WRAPPER) {
     await test('chat (+ wrapper)', 'POST', '/resonanz/chat', {
       prompt: 'Was ist ein System?',
@@ -519,7 +475,6 @@ async function testChat() {
     });
   }
   
-  // Chat + Wrapper + Format
   await test('chat (+ format)', 'POST', '/resonanz/chat', {
     prompt: 'Analysiere das Konzept Zeit',
     mode: FIRST_WRAPPER,
@@ -527,14 +482,12 @@ async function testChat() {
     max_new_tokens: 150
   });
   
-  // Chat + Style
   await test('chat (+ style)', 'POST', '/resonanz/chat', {
     prompt: 'Erkläre Nachhaltigkeit',
     style: 'zynisch',
     max_new_tokens: 80
   });
   
-  // Chat + Debug
   await test('chat (+ debug)', 'POST', '/resonanz/chat', {
     prompt: 'Test',
     style: 'wissenschaftlich',
@@ -542,14 +495,12 @@ async function testChat() {
     max_new_tokens: 50
   });
   
-  // Typed Format
   await test('chat (typed format)', 'POST', '/resonanz/chat', {
     prompt: 'Analysiere KI-Trends',
     format: 'review',
     max_new_tokens: 150
   });
   
-  // Full Combo
   await test('chat (full combo)', 'POST', '/resonanz/chat', {
     prompt: 'Deep Dive: Menschliches Verhalten',
     format: 'human_deep',
@@ -559,9 +510,6 @@ async function testChat() {
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 🔀 DIFF (2 endpoints)
-// ─────────────────────────────────────────────────────────────────────────────
 async function testDiff() {
   printSection('🔀', 'DIFF (v3.3)', '2 endpoints');
   
@@ -589,15 +537,11 @@ async function testDiff() {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 📼 SESSIONS (4 endpoints)
-// ─────────────────────────────────────────────────────────────────────────────
 async function testSessions() {
   printSection('📼', 'SESSIONS (v3.3)', '4 endpoints');
   await test('getSessions', 'GET', '/resonanz/sessions?limit=5');
   await test('getSessions (paginated)', 'GET', '/resonanz/sessions?limit=10&offset=0');
   
-  // Get a session ID from the list
   try {
     const res = await fetch(`${BASE_URL}/resonanz/sessions?limit=1`);
     const data = await res.json();
@@ -616,9 +560,6 @@ async function testSessions() {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ⚗️ ALCHEMY PREVIEW (4 endpoints)
-// ─────────────────────────────────────────────────────────────────────────────
 async function testAlchemy() {
   printSection('⚗️', 'ALCHEMY (v3.3)', '4 endpoints');
   
@@ -640,9 +581,6 @@ async function testAlchemy() {
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 🔧 ADMIN (1 endpoint)
-// ─────────────────────────────────────────────────────────────────────────────
 async function testAdmin() {
   printSection('🔧', 'ADMIN', '1 endpoint');
   
@@ -650,6 +588,46 @@ async function testAdmin() {
     await test('fixOrphans', 'POST', '/resonanz/health/fix');
   } else {
     skip('fixOrphans', '(--crud mode only)');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 🧠 SYSTEM CONSCIOUSNESS (Phase 3.5 - 9 new endpoints)
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function testConsciousness() {
+  printSection('🧠', 'SYSTEM CONSCIOUSNESS (Phase 3.5A)', '6 endpoints');
+  
+  await test('System Health', 'GET', '/profiles/analytics/health');
+  
+  if (FIRST_PROFILE) {
+    await test('Profile Usage (7 days)', 'GET', `/profiles/analytics/usage/${FIRST_PROFILE}?days_back=7`);
+    await test('Profile Usage (30 days)', 'GET', `/profiles/analytics/usage/${FIRST_PROFILE}?days_back=30`);
+    
+    await test('Pattern Pulse (7 days)', 'GET', `/profiles/analytics/patterns/${FIRST_PROFILE}?days_back=7`);
+    await test('Pattern Pulse (30 days)', 'GET', `/profiles/analytics/patterns/${FIRST_PROFILE}?days_back=30`);
+    
+    await test('Pattern Details (verbose)', 'GET', `/profiles/analytics/patterns/${FIRST_PROFILE}?days_back=7&verbose=true`);
+  } else {
+    skip('Profile Usage (7 days)', '(no profiles)');
+    skip('Profile Usage (30 days)', '(no profiles)');
+    skip('Pattern Pulse (7 days)', '(no profiles)');
+    skip('Pattern Pulse (30 days)', '(no profiles)');
+    skip('Pattern Details (verbose)', '(no profiles)');
+  }
+}
+
+async function testProfileStream() {
+  printSection('🌊', 'PROFILE STREAM (Phase 3.5B)', '3 endpoints');
+  
+  await test('Profile List', 'GET', '/resonanz/scoring/profiles');
+  
+  await test('Profile Analytics (7 days)', 'GET', '/resonanz/scoring/analytics/profiles?days=7');
+  
+  if (FIRST_PROFILE) {
+    await test('Component Breakdown', 'GET', `/resonanz/scoring/analytics/profiles/${FIRST_PROFILE}/components`);
+  } else {
+    skip('Component Breakdown', '(no profiles)');
   }
 }
 
@@ -664,6 +642,13 @@ async function main() {
   // READ Tests (always)
   await testHealth();
   await testConfig();
+  
+  // 🧠 NEW: System Consciousness Tests
+  if (CONSCIOUSNESS_MODE || !FAST_MODE) {
+    await testConsciousness();
+    await testProfileStream();
+  }
+  
   await testFormatsRead();
   await testStylesRead();
   await testWrappersRead();
@@ -685,7 +670,6 @@ async function main() {
     await testStylesCrud();
     await testAdmin();
     
-    // Cleanup (if --cleanup)
     if (CLEANUP_MODE) {
       console.log('');
       console.log(`${c.yellow}🧹 Cleanup mode - removing test resources...${c.reset}`);
@@ -697,10 +681,8 @@ async function main() {
   
   printSummary();
   
-  // Exit with error if failed
   const failed = results.filter(r => r.status === 'FAIL').length;
   process.exit(failed > 0 ? 1 : 0);
 }
 
-// Run
 main().catch(console.error);
