@@ -8,9 +8,9 @@
 // ║   ███████║   ██║   ██║ ╚████║   ██║   ██╔╝ ██╗                            ║
 // ║   ╚══════╝   ╚═╝   ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝                            ║
 // ║                                                                           ║
-// ║   🌊 SYNTX FRONTEND API TEST v3.4.0                                       ║
+// ║   🌊 SYNTX FRONTEND API TEST v3.3.0                                       ║
 // ║   ─────────────────────────────────────────                               ║
-// ║   65 Endpoints | Synchronisiert mit Backend | TypeScript                  ║
+// ║   63 Endpoints | Synchronisiert mit Backend | TypeScript                  ║
 // ║                                                                           ║
 // ║   "SYNTX isn't AI. It's the resonance that governs it."                   ║
 // ║                                                                           ║
@@ -84,7 +84,7 @@ function printBanner() {
   console.log(`${c.purple}║${c.reset}   ${c.cyan}███████║${c.blue}   ██║   ${c.green}██║ ╚████║${c.yellow}   ██║   ${c.red}██╔╝ ██╗${c.reset}                            ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.cyan}╚══════╝${c.blue}   ╚═╝   ${c.green}╚═╝  ╚═══╝${c.yellow}   ╚═╝   ${c.red}╚═╝  ╚═╝${c.reset}                            ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}                                                                           ${c.purple}║${c.reset}`);
-  console.log(`${c.purple}║${c.reset}   ${c.white}🌊 FRONTEND API TEST v3.4.0${c.reset}                                          ${c.purple}║${c.reset}`);
+  console.log(`${c.purple}║${c.reset}   ${c.white}🌊 FRONTEND API TEST v3.3.0${c.reset}                                          ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${c.reset}   ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.gray}Target:${c.reset} ${c.yellow}${BASE_URL}${c.reset}${' '.repeat(Math.max(0, 42 - BASE_URL.length))}${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.gray}Mode:${c.reset}   ${c.cyan}${mode}${fast}${c.reset}${' '.repeat(Math.max(0, 44 - mode.length - fast.length))}${c.purple}║${c.reset}`);
@@ -338,15 +338,6 @@ async function testStylesCrud() {
   
   // ADD FORBIDDEN
   await test('addForbiddenWord', 'POST', `/resonanz/styles/${TEST_STYLE}/forbidden/schlecht`);
-  
-  // DELETE FORBIDDEN (v3.4)
-  await test('deleteForbiddenWord', 'DELETE', `/resonanz/styles/${TEST_STYLE}/forbidden/schlecht`);
-  
-  // UPDATE STYLE (v3.4 - ohne name im body)
-  await test('updateStyle', 'PUT', `/resonanz/styles/${TEST_STYLE}`, {
-    vibe: 'Updated Test Vibe',
-    description: 'Updated Test Description'
-  });
 }
 
 async function testStylesCleanup() {

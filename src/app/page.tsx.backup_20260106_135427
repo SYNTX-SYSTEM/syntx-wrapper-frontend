@@ -1,6 +1,5 @@
 "use client";
 import ProfilesLayout from "@/components/profiles/ProfilesLayout";
-import { ProfilesPanel } from "@/components/profiles/system-organs";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { WrapperPanel as WrapperControl } from "@/components/wrappers";
@@ -19,7 +18,8 @@ import LiveBadge from "@/components/ui/LiveBadge";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { useRealtime, useRealtimeHealth } from "@/hooks/useRealtime";
 import { api } from "@/lib/api";
-type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff" | "optimizer" | "profiles" | "system-diagnostics";
+
+type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff" | "optimizer" | "profiles";
 
 const TABS = [
   { id: "data", label: "DATA", icon: "📊", color: "#8b5cf6" },
@@ -34,7 +34,6 @@ const TABS = [
   { id: "diff", label: "DIFF", icon: "🔀", color: "#8b5cf6" },
   { id: "optimizer", label: "OPTIMIZER", icon: "🤖", color: "#00d4ff" },
   { id: "profiles", label: "PROFILES", icon: "👤", color: "#8b5cf6" },
-  { id: "system-diagnostics", label: "SYSTEM DIAGNOSTICS", icon: "🧠", color: "#00ff9d" },
 ] as const;
 
 function HeroSection({ onEnter }: { onEnter: () => void }) {
@@ -237,7 +236,7 @@ function Dashboard() {
         {TABS.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => { const t = tab as any; if (t.href) { window.location.href = t.href; } else { handleTabChange(tab.id as TabId); } }}
+            onClick={() => handleTabChange(tab.id as TabId)}
             style={{
               flex: 1,
               padding: "12px 16px",
@@ -277,7 +276,6 @@ function Dashboard() {
         {activeTab === "diff" && <DiffPanel />}
         {activeTab === "optimizer" && <OptimizerPanel />}
         {activeTab === "profiles" && <ProfilesLayout />}
-        {activeTab === "system-diagnostics" && <ProfilesPanel />}
       </section>
 
       <CreateWrapperModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleCreateWrapper} />
