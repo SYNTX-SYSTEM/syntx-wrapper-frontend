@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Zap, AlertTriangle, Ban, Moon } from 'lucide-react';
-import { getProfiles } from '@/lib/api';
+import { Search, Zap, Moon } from 'lucide-react';
+import { getProfiles, getProfileAnalytics } from '@/lib/api';
 
 interface Props {
   onSelectProfile: (profileId: string) => void;
@@ -24,7 +24,6 @@ export default function FieldStream({ onSelectProfile, selectedProfile }: Props)
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [tierFilter, setTierFilter] = useState<number | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProfiles();
@@ -33,16 +32,25 @@ export default function FieldStream({ onSelectProfile, selectedProfile }: Props)
   const fetchProfiles = async () => {
     setLoading(true);
     try {
-      const data = await getProfiles();
-      const profilesList: ProfileData[] = Object.entries(data.profiles).map(([id, profile]: [string, any]) => ({
-        id,
-        name: profile.name,
-        description: profile.description,
-        status: 'active', // TODO: Get real status
-        avgScore: Math.floor(Math.random() * 40 + 60), // TODO: Get from analytics
-        uses: Math.floor(Math.random() * 200 + 50), // TODO: Get from logs
-        tier: id.includes('default') ? 1 : 2 // TODO: Get from profile metadata
-      }));
+      const [profilesData, analyticsData] = await Promise.all([
+        getProfiles(),
+        getProfileAnalytics(7)
+      ]);
+      
+      const profilesList: ProfileData[] = Object.entries(profilesData.profiles).map(([id, profile]: [string, any]) => {
+        const analytics = analyticsData.profiles[id];
+        
+        return {
+          id,
+          name: profile.name,
+          description: profile.description,
+          status: analytics ? 'active' : 'unused',
+          avgScore: analytics ? Math.round(analytics.avg_score * 100) : 0,
+          uses: analytics ? analytics.total_usage : 0,
+          tier: id.includes('default') ? 1 : 2
+        };
+      });
+      
       setProfiles(profilesList);
       if (profilesList.length > 0 && !selectedProfile) {
         onSelectProfile(profilesList[0].id);
@@ -57,8 +65,7 @@ export default function FieldStream({ onSelectProfile, selectedProfile }: Props)
   const filtered = profiles.filter(f => {
     const matchSearch = f.name.toLowerCase().includes(search.toLowerCase());
     const matchTier = tierFilter === null || f.tier === tierFilter;
-    const matchStatus = statusFilter === null || f.status === statusFilter;
-    return matchSearch && matchTier && matchStatus;
+    return matchSearch && matchTier;
   });
 
   if (loading) {
@@ -79,7 +86,6 @@ export default function FieldStream({ onSelectProfile, selectedProfile }: Props)
         FIELD STREAM
       </div>
 
-      {/* SEARCH */}
       <div style={{ position: 'relative' }}>
         <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(14,165,233,0.5)' }} />
         <input
@@ -101,13 +107,11 @@ export default function FieldStream({ onSelectProfile, selectedProfile }: Props)
         />
       </div>
 
-      {/* FILTERS */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {[1, 2, 3].map(tier => (
           <button
             key={tier}
             onClick={() => setTierFilter(tierFilter === tier ? null : tier)}
-            className="cyber-btn"
             style={{
               padding: '4px 8px',
               borderRadius: 5,
@@ -125,11 +129,10 @@ export default function FieldStream({ onSelectProfile, selectedProfile }: Props)
         ))}
       </div>
 
-      {/* PROFILE LIST */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {filtered.map((profile, idx) => (
           <ProfileCard
-            key={profile.id}
+            key={`${profile.id}-${profile.avgScore}-${profile.uses}`}
             profile={profile}
             isSelected={selectedProfile === profile.id}
             onClick={() => onSelectProfile(profile.id)}
@@ -144,8 +147,6 @@ export default function FieldStream({ onSelectProfile, selectedProfile }: Props)
 function ProfileCard({ profile, isSelected, onClick, index }: any) {
   const statusConfig = {
     active: { icon: Zap, color: '#10b981', label: 'ACTIVE' },
-    modified: { icon: AlertTriangle, color: '#f59e0b', label: 'MODIFIED' },
-    orphaned: { icon: Ban, color: '#ef4444', label: 'ORPHANED' },
     unused: { icon: Moon, color: '#6b7280', label: 'UNUSED' }
   };
 
@@ -159,7 +160,6 @@ function ProfileCard({ profile, isSelected, onClick, index }: any) {
       transition={{ delay: index * 0.03 }}
       whileHover={{ x: 4, scale: 1.01 }}
       onClick={onClick}
-      className="cyber-card"
       style={{
         padding: 10,
         borderRadius: 8,
@@ -192,7 +192,7 @@ function ProfileCard({ profile, isSelected, onClick, index }: any) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 9, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>
-        <div>Score: <span style={{ color: profile.avgScore >= 70 ? '#10b981' : '#f59e0b', fontWeight: 700 }}>{profile.avgScore}%</span></div>
+        <div>Score: <span style={{ color: profile.avgScore >= 50 ? '#10b981' : '#f59e0b', fontWeight: 700 }}>{profile.avgScore}%</span></div>
         <div>Uses: <span style={{ color: '#8b5cf6', fontWeight: 700 }}>{profile.uses}</span></div>
       </div>
     </motion.div>

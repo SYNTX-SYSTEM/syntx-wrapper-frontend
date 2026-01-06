@@ -543,3 +543,19 @@ export async function updateProfile(profileId: string, data: any) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 📊 PROFILE ANALYTICS API (Phase 2.6)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function getProfileAnalytics(days: number = 7) {
+  const res = await fetch(`${BASE_URL}/resonanz/scoring/analytics/profiles?days=${days}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function getSingleProfileAnalytics(profileId: string, days: number = 7) {
+  const res = await fetch(`${BASE_URL}/resonanz/scoring/analytics/profiles/${profileId}?days=${days}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
