@@ -8,11 +8,11 @@
 // ║   ███████║   ██║   ██║ ╚████║   ██║   ██╔╝ ██╗                            ║
 // ║   ╚══════╝   ╚═╝   ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝                            ║
 // ║                                                                           ║
-// ║   🌊 SYNTX FRONTEND API TEST v3.6.0 - CONSCIOUSNESS EDITION               ║
+// ║   🌊 SYNTX FRONTEND API TEST v3.7.0 - PROFILE CRUD EDITION                ║
 // ║   ─────────────────────────────────────────────────────────────────       ║
-// ║   71 Endpoints | FULL Output | Profile Analytics | Field-Flow Viz         ║
+// ║   78+ Endpoints | FULL Output | Profile CRUD | Real-time Sync             ║
 // ║                                                                           ║
-// ║   "The system sees itself. The frontend sees the system."                 ║
+// ║   "The system sees itself. The profiles edit themselves."                 ║
 // ║                                                                           ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
@@ -34,6 +34,7 @@ const TEST_ID = Date.now();
 const TEST_WRAPPER = `syntx_test_${TEST_ID}`;
 const TEST_FORMAT = `syntx_test_format_${TEST_ID}`;
 const TEST_STYLE = `syntx_test_style_${TEST_ID}`;
+const TEST_PROFILE = `test_profile_${TEST_ID}`;
 
 // Dynamic Data (loaded at runtime)
 let FIRST_WRAPPER = '';
@@ -51,7 +52,7 @@ let LAST_REQUEST_ID = '';
 interface TestResult {
   name: string;
   method: string;
-  status: 'PASS' | 'FAIL' | 'SKIP';
+  status: 'PASS' | 'FAIL' | 'SKIP' | 'DEPRECATED';
   latency_ms: number;
   error?: string;
 }
@@ -95,7 +96,7 @@ function printBanner() {
   console.log(`${c.purple}║${c.reset}   ${c.cyan}███████║${c.blue}   ██║   ${c.green}██║ ╚████║${c.yellow}   ██║   ${c.red}██╔╝ ██╗${c.reset}                            ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.cyan}╚══════╝${c.blue}   ╚═╝   ${c.green}╚═╝  ╚═══╝${c.yellow}   ╚═╝   ${c.red}╚═╝  ╚═╝${c.reset}                            ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}                                                                           ${c.purple}║${c.reset}`);
-  console.log(`${c.purple}║${c.reset}   ${c.white}🌊 FRONTEND API TEST v3.6.0 - CONSCIOUSNESS EDITION${c.reset}                 ${c.purple}║${c.reset}`);
+  console.log(`${c.purple}║${c.reset}   ${c.white}🌊 FRONTEND API TEST v3.7.0 - PROFILE CRUD EDITION${c.reset}               ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${c.reset}   ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.gray}Target:${c.reset} ${c.yellow}${BASE_URL}${c.reset}${' '.repeat(Math.max(0, 42 - BASE_URL.length))}${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.gray}Mode:${c.reset}   ${c.cyan}${mode}${flags}${c.reset}${' '.repeat(Math.max(0, 44 - mode.length - flags.length))}${c.purple}║${c.reset}`);
@@ -113,6 +114,7 @@ function printSummary() {
   const passed = results.filter(r => r.status === 'PASS').length;
   const failed = results.filter(r => r.status === 'FAIL').length;
   const skipped = results.filter(r => r.status === 'SKIP').length;
+  const deprecated = results.filter(r => r.status === 'DEPRECATED').length;
   const total = passed + failed;
   const avg = total > 0 ? Math.round(totalLatency / total) : 0;
   const pct = total > 0 ? Math.round((passed / total) * 100) : 0;
@@ -122,7 +124,7 @@ function printSummary() {
   console.log(`${c.purple}║${c.reset}   ${c.white}📊 RESONANZ-ANALYSE${c.reset}                                                     ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${c.reset}   ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}                                                                           ${c.purple}║${c.reset}`);
-  console.log(`${c.purple}║${c.reset}   ${c.green}✅ PASS:${c.reset} ${c.white}${passed}${c.reset}    ${c.red}❌ FAIL:${c.reset} ${c.white}${failed}${c.reset}    ${c.yellow}⏭️  SKIP:${c.reset} ${c.white}${skipped}${c.reset}                          ${c.purple}║${c.reset}`);
+  console.log(`${c.purple}║${c.reset}   ${c.green}✅ PASS:${c.reset} ${c.white}${passed}${c.reset}    ${c.red}❌ FAIL:${c.reset} ${c.white}${failed}${c.reset}    ${c.yellow}⏭️  SKIP:${c.reset} ${c.white}${skipped}${c.reset}    ${c.gray}⚠️  DEPRECATED:${c.reset} ${c.white}${deprecated}${c.reset}    ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}                                                                           ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.cyan}⚡ Avg Latency:${c.reset} ${c.white}${avg}ms${c.reset}                                                  ${c.purple}║${c.reset}`);
   console.log(`${c.purple}║${c.reset}   ${c.cyan}📈 Success Rate:${c.reset} ${c.white}${pct}%${c.reset}                                                   ${c.purple}║${c.reset}`);
@@ -158,13 +160,14 @@ async function test(
   name: string,
   method: string,
   endpoint: string,
-  body?: object
+  body?: object,
+  deprecated = false
 ): Promise<boolean> {
   const start = Date.now();
   
   if (VERBOSE) {
     console.log('');
-    console.log(`    ${c.blue}▶${c.reset} ${c.white}${name}${c.reset}`);
+    console.log(`    ${c.blue}▶${c.reset} ${c.white}${name}${c.reset}${deprecated ? ` ${c.gray}(DEPRECATED)${c.reset}` : ''}`);
     console.log(`      ${c.dim}${method} ${endpoint}${c.reset}`);
     if (body) {
       console.log(`      ${c.yellow}📤 REQUEST:${c.reset}`);
@@ -206,17 +209,19 @@ async function test(
       }
     }
     
-    const padName = name.padEnd(40);
+    const padName = name.padEnd(50);
     const padMethod = method.padEnd(6);
     const latencyColor = latency > 5000 ? c.red : latency > 1000 ? c.yellow : c.white;
     
     if (response.ok) {
+      const status = deprecated ? 'DEPRECATED' : 'PASS';
+      const icon = deprecated ? c.gray + '⚠️' : c.green + '✅';
       if (!VERBOSE) {
-        console.log(`    ${c.green}✅${c.reset} ${padName} ${c.cyan}${padMethod}${c.reset} ${latencyColor}${latency}ms${c.reset}`);
+        console.log(`    ${icon}${c.reset} ${padName} ${c.cyan}${padMethod}${c.reset} ${latencyColor}${latency}ms${c.reset}`);
       } else {
-        console.log(`      ${c.green}✅ PASS${c.reset}`);
+        console.log(`      ${icon} ${status}${c.reset}`);
       }
-      results.push({ name, method, status: 'PASS', latency_ms: latency });
+      results.push({ name, method, status, latency_ms: latency });
       return true;
     } else {
       const detail = data.detail || 'Unknown error';
@@ -231,7 +236,7 @@ async function test(
   } catch (err: any) {
     const latency = Date.now() - start;
     if (!VERBOSE) {
-      console.log(`    ${c.red}💥${c.reset} ${name.padEnd(40)} ${c.cyan}${method.padEnd(6)}${c.reset} ${c.red}NETWORK ERROR${c.reset}`);
+      console.log(`    ${c.red}💥${c.reset} ${name.padEnd(50)} ${c.cyan}${method.padEnd(6)}${c.reset} ${c.red}NETWORK ERROR${c.reset}`);
     } else {
       console.log(`      ${c.red}💥 NETWORK ERROR: ${err.message}${c.reset}`);
     }
@@ -241,7 +246,7 @@ async function test(
 }
 
 function skip(name: string, reason: string) {
-  console.log(`    ${c.yellow}⏭️${c.reset}  ${name.padEnd(40)} ${c.gray}${reason}${c.reset}`);
+  console.log(`    ${c.yellow}⏭️${c.reset}  ${name.padEnd(50)} ${c.gray}${reason}${c.reset}`);
   results.push({ name, method: '-', status: 'SKIP', latency_ms: 0 });
 }
 
@@ -271,7 +276,7 @@ async function loadDynamicData() {
     const styles = stylesData.styles || [];
     FIRST_STYLE = styles[0]?.name || '';
     
-    const profilesRes = await fetch(`${BASE_URL}/resonanz/scoring/profiles`);
+    const profilesRes = await fetch(`${BASE_URL}/resonanz/profiles/crud`);
     const profilesData = await profilesRes.json();
     const profiles = Object.keys(profilesData.profiles || {});
     FIRST_PROFILE = profiles[0] || '';
@@ -592,7 +597,7 @@ async function testAdmin() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🧠 SYSTEM CONSCIOUSNESS (Phase 3.5 - 9 new endpoints)
+// 🧠 SYSTEM CONSCIOUSNESS (Phase 3.5 - Analytics)
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function testConsciousness() {
@@ -620,7 +625,8 @@ async function testConsciousness() {
 async function testProfileStream() {
   printSection('🌊', 'PROFILE STREAM (Phase 3.5B)', '3 endpoints');
   
-  await test('Profile List', 'GET', '/resonanz/scoring/profiles');
+  // DEPRECATED: Old scoring endpoint
+  await test('Profile List (OLD)', 'GET', '/resonanz/scoring/profiles', undefined, true);
   
   await test('Profile Analytics (7 days)', 'GET', '/resonanz/scoring/analytics/profiles?days=7');
   
@@ -628,6 +634,46 @@ async function testProfileStream() {
     await test('Component Breakdown', 'GET', `/resonanz/scoring/analytics/profiles/${FIRST_PROFILE}/components`);
   } else {
     skip('Component Breakdown', '(no profiles)');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 💎 PROFILE CRUD SYSTEM (Phase 3.6 - NEW!)
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function testProfilesCrud() {
+  printSection('💎', 'PROFILES CRUD (Phase 3.6 - NEW!)', '5 endpoints');
+  
+  await test('List All Profiles', 'GET', '/resonanz/profiles/crud');
+  
+  if (FIRST_PROFILE) {
+    await test('Get Single Profile (NEW)', 'GET', `/resonanz/profiles/crud/${FIRST_PROFILE}`);
+  }
+  
+  if (CRUD_MODE) {
+    await test('Create Profile', 'POST', '/resonanz/profiles/crud', {
+      name: TEST_PROFILE,
+      label: TEST_PROFILE,
+      description: 'API Test Profile created via CRUD',
+      weight: 75,
+      active: true,
+      tags: ['test', 'api', 'crud']
+    });
+    
+    await test('Update Profile', 'PUT', `/resonanz/profiles/crud/${TEST_PROFILE}`, {
+      name: TEST_PROFILE,
+      label: `${TEST_PROFILE}_updated`,
+      description: 'Updated via API test',
+      weight: 80,
+      active: true,
+      tags: ['test', 'api', 'updated']
+    });
+    
+    await test('Delete Profile', 'DELETE', `/resonanz/profiles/crud/${TEST_PROFILE}`);
+  } else {
+    skip('Create Profile', '(--crud mode only)');
+    skip('Update Profile', '(--crud mode only)');
+    skip('Delete Profile', '(--crud mode only)');
   }
 }
 
@@ -643,11 +689,14 @@ async function main() {
   await testHealth();
   await testConfig();
   
-  // 🧠 NEW: System Consciousness Tests
+  // 🧠 System Consciousness Tests
   if (CONSCIOUSNESS_MODE || !FAST_MODE) {
     await testConsciousness();
     await testProfileStream();
   }
+  
+  // 💎 NEW: Profile CRUD Tests
+  await testProfilesCrud();
   
   await testFormatsRead();
   await testStylesRead();
