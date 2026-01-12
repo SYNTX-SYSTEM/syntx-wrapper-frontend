@@ -17,7 +17,8 @@ export function Header() {
           <Link href="/" className="flex items-center gap-4 group">
             <div className="relative w-12 h-12 transition-transform duration-300 group-hover:scale-110">
               <Image
-                src="/logo.png" unoptimized
+                src="/logo.png" 
+                unoptimized
                 alt="SYNTX Logo"
                 fill
                 className="object-contain drop-shadow-[0_0_15px_rgba(0,212,255,0.5)]"
@@ -37,6 +38,7 @@ export function Header() {
           <nav className="hidden md:flex items-center gap-6">
             <NavLink href="/">Dashboard</NavLink>
             <NavLink href="/wrappers">Wrappers</NavLink>
+            <NavLink href="/profiles">Profiles</NavLink>
             <NavLink href="/analytics">Analytics</NavLink>
             <NavLink href="/chat">Chat</NavLink>
           </nav>
