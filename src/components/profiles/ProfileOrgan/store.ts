@@ -43,7 +43,7 @@ export const useOrganStore = create<OrganState>((set) => ({
       const h = typeof window !== 'undefined' ? window.innerHeight : 800;
       const centerX = w / 2;
       const centerY = h / 2;
-      const radius = Math.min(w, h) * 0.25;
+      const orbitRadius = Math.min(w, h) * 0.3;
       return {
         snapshot,
         initialized: true,
@@ -54,10 +54,10 @@ export const useOrganStore = create<OrganState>((set) => ({
               p.id,
               {
                 id: p.id,
-                position: { x: centerX + Math.cos(angle) * radius, y: centerY + Math.sin(angle) * radius },
+                position: { x: centerX + Math.cos(angle) * orbitRadius, y: centerY + Math.sin(angle) * orbitRadius },
                 velocity: { x: 0, y: 0 },
                 radius: 25 + p.weight * 0.3,
-                pulsePhase: Math.random() * Math.PI * 2,
+                pulsePhase: angle,
               },
             ];
           })

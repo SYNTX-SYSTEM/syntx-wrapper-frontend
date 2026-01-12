@@ -1,8 +1,8 @@
 'use client';
 
 import { useOrganStore, PREVIEW_THRESHOLD, COMMIT_THRESHOLD } from '../store';
-import { useProfilePhysics } from '../hooks/useProfilePhysics';
-import { useState } from 'react';
+import { useOrbitPhysics } from '../hooks/useOrbitPhysics';
+import { useState, useEffect } from 'react';
 
 export default function ProfileLayer() {
   const snapshot = useOrganStore((state) => state.snapshot);
@@ -19,8 +19,52 @@ export default function ProfileLayer() {
   const setBindingPreview = useOrganStore((state) => state.setBindingPreview);
 
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [profileStrategies, setProfileStrategies] = useState<Record<string, string>>({});
+  const [profileLabels, setProfileLabels] = useState<Record<string, string>>({});
+  const [strategyColors, setStrategyColors] = useState<Record<string, string>>({});
 
-  useProfilePhysics();
+  useOrbitPhysics();
+
+  useEffect(() => {
+    fetch('https://dev.syntx-system.com/resonanz/profiles/crud')
+      .then(res => res.json())
+      .then(data => {
+        const strategies: Record<string, string> = {};
+        const labels: Record<string, string> = {};
+        const uniqueStrategies = new Set<string>();
+        
+        Object.entries(data.profiles).forEach(([id, profile]: [string, any]) => {
+          const strat = profile.strategy || 'unknown';
+          strategies[id] = strat;
+          labels[id] = profile.label || profile.name || id;
+          uniqueStrategies.add(strat);
+        });
+        
+        setProfileStrategies(strategies);
+        setProfileLabels(labels);
+        
+        // GENERATE DYNAMIC COLORS FOR EACH UNIQUE STRATEGY
+        const colorPalette = [
+          '#00d4ff', // cyan
+          '#9d00ff', // purple
+          '#ff6600', // orange
+          '#10b981', // green
+          '#f59e0b', // amber
+          '#ef4444', // red
+          '#8b5cf6', // violet
+          '#ec4899', // pink
+          '#06b6d4', // teal
+          '#84cc16', // lime
+        ];
+        
+        const colors: Record<string, string> = {};
+        Array.from(uniqueStrategies).forEach((strat, idx) => {
+          colors[strat] = colorPalette[idx % colorPalette.length];
+        });
+        
+        setStrategyColors(colors);
+      });
+  }, []);
 
   if (!snapshot) return null;
 
@@ -32,11 +76,12 @@ export default function ProfileLayer() {
     return { x: w / 2 + Math.cos(angle) * radius, y: h / 2 + Math.sin(angle) * radius };
   };
 
-  const getProfileColor = (weight: number, bindingCount: number) => {
-    if (bindingCount === 0) return { from: 'rgba(100,100,120,0.6)', to: 'rgba(80,80,100,0.5)' };
-    if (weight > 70) return { from: 'rgba(157,0,255,0.7)', to: 'rgba(255,0,100,0.6)' };
-    if (weight > 40) return { from: 'rgba(14,165,233,0.7)', to: 'rgba(157,0,255,0.5)' };
-    return { from: 'rgba(0,255,179,0.6)', to: 'rgba(14,165,233,0.5)' };
+  const getProfileColor = (bindingCount: number) => {
+    if (bindingCount === 0) return { from: 'rgba(100,100,120,0.9)', to: 'rgba(70,70,90,0.85)', glow: 'rgba(100,100,120,0.6)' };
+    if (bindingCount === 1) return { from: 'rgba(0,255,179,0.95)', to: 'rgba(14,165,233,0.9)', glow: 'rgba(0,255,179,0.7)' };
+    if (bindingCount === 2) return { from: 'rgba(14,165,233,0.95)', to: 'rgba(157,0,255,0.9)', glow: 'rgba(14,165,233,0.8)' };
+    if (bindingCount >= 3) return { from: 'rgba(157,0,255,0.95)', to: 'rgba(255,0,100,0.92)', glow: 'rgba(157,0,255,0.85)' };
+    return { from: 'rgba(255,215,0,0.95)', to: 'rgba(255,140,0,0.9)', glow: 'rgba(255,215,0,0.7)' };
   };
 
   const handleMouseDown = (e: React.MouseEvent, id: string) => {
@@ -96,65 +141,58 @@ export default function ProfileLayer() {
   };
 
   return (
-    <div 
-      style={{ position: 'absolute', inset: 0, zIndex: 10 }}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-    >
+    <div style={{ position: 'absolute', inset: 0, zIndex: 10 }} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
       {snapshot.profiles.map((profile) => {
         const node = nodes[profile.id];
         if (!node) return null;
-
         const isFocused = focusProfileId === profile.id;
         const isHovered = hoverProfileId === profile.id;
         const isDragging = draggingProfileId === profile.id;
         const bindingCount = snapshot.bindings.filter(b => b.profileId === profile.id).length;
-        const colors = getProfileColor(profile.weight, bindingCount);
+        const colors = getProfileColor(bindingCount);
+        const strategy = profileStrategies[profile.id] || 'unknown';
+        const ringColor = strategyColors[strategy] || '#606080';
+        const displayLabel = profileLabels[profile.id] || profile.label;
+        const radius = 42;
 
         return (
-          <div
-            key={profile.id}
-            onMouseDown={(e) => handleMouseDown(e, profile.id)}
-            onMouseEnter={() => setHover(profile.id)}
-            onMouseLeave={() => setHover(null)}
-            onClick={() => handleClick(profile.id)}
-            style={{
-              position: 'absolute',
-              left: node.position.x - node.radius,
-              top: node.position.y - node.radius,
-              width: node.radius * 2,
-              height: node.radius * 2,
-              cursor: isDragging ? 'grabbing' : 'grab',
-              transform: `scale(${isFocused ? 1.2 : 1})`,
-              transition: isDragging ? 'none' : 'transform 0.2s',
-              zIndex: isDragging ? 1000 : (isFocused ? 100 : 10),
-            }}
-          >
-            <div style={{ position: 'absolute', inset: -4, borderRadius: '50%', background: `radial-gradient(circle, ${colors.from.replace('0.', '0.3')} 0%, transparent 70%)`, filter: 'blur(8px)', opacity: 0.8 }} />
-            <div style={{
-              position: 'absolute',
-              inset: 2,
-              borderRadius: '50%',
-              background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
-              border: `2px solid ${isFocused ? '#0ea5e9' : isHovered ? '#00d4ff' : 'rgba(14,165,233,0.4)'}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontSize: '10px',
-              fontWeight: 'bold',
-              fontFamily: 'monospace',
-              boxShadow: isFocused ? '0 0 20px rgba(14,165,233,0.8)' : 'none',
-            }}>
-              {profile.label.substring(0, 4).toUpperCase()}
+          <div key={profile.id} onMouseDown={(e) => handleMouseDown(e, profile.id)} onMouseEnter={() => setHover(profile.id)} onMouseLeave={() => setHover(null)} onClick={() => handleClick(profile.id)} style={{ position: 'absolute', left: node.position.x - radius, top: node.position.y - radius, width: radius * 2, height: radius * 2, cursor: isDragging ? 'grabbing' : 'grab', transform: `scale(${isFocused ? 1.2 : 1})`, transition: isDragging ? 'none' : 'transform 0.2s', zIndex: isDragging ? 1000 : (isFocused ? 100 : 10) }}>
+            
+            {/* NEON GLOW NAME ABOVE */}
+            <div style={{ position: 'absolute', top: -35, left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', color: '#00d4ff', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace', textShadow: `0 0 20px ${ringColor}, 0 0 40px ${ringColor}, 0 0 60px ${ringColor}80, 0 4px 15px rgba(0,0,0,0.8)`, letterSpacing: '1.5px', filter: 'blur(0.3px)', pointerEvents: 'none' }}>
+              {displayLabel}
             </div>
-            {profile.active && !isDragging && <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1.5px solid #0ea5e9', animation: 'pulseRing 2s ease-out infinite' }} />}
-            {bindingCount > 0 && <div style={{ position: 'absolute', top: -6, right: -6, width: 16, height: 16, borderRadius: '50%', background: '#9d00ff', color: '#fff', fontSize: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', border: '2px solid #0a0e27' }}>{bindingCount}</div>}
+
+            {/* SATURN RING - ORBITAL (TILTED) - DYNAMIC COLOR */}
+            <div style={{ position: 'absolute', left: '50%', top: '50%', width: radius * 2.8, height: radius * 1.4, border: `3px solid ${ringColor}`, borderRadius: '50%', opacity: 0.8, transform: 'translate(-50%, -50%) rotateX(75deg)', animation: 'saturnOrbit 12s linear infinite', boxShadow: `0 0 20px ${ringColor}`, transformStyle: 'preserve-3d' }} />
+
+            {/* OUTER GLOW */}
+            <div style={{ position: 'absolute', inset: -10, borderRadius: '50%', background: `radial-gradient(circle, ${colors.glow} 0%, transparent 70%)`, filter: 'blur(15px)', opacity: 1 }} />
+            
+            {/* MAIN BUBBLE */}
+            <div style={{ position: 'absolute', inset: 4, borderRadius: '50%', background: `radial-gradient(circle at 30% 30%, ${colors.from}, ${colors.to} 70%, rgba(0,0,0,0.6))`, border: `3px solid ${isFocused ? '#0ea5e9' : isHovered ? '#00d4ff' : 'rgba(14,165,233,0.5)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '13px', fontWeight: 'bold', fontFamily: 'monospace', boxShadow: isFocused ? '0 0 30px rgba(14,165,233,1)' : '0 0 18px rgba(0,0,0,0.4)', overflow: 'hidden', position: 'relative' }}>
+              
+              <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(45deg, transparent 30%, ${colors.from.replace(/0\.\d+/, '0.7')} 50%, transparent 70%)`, animation: 'gradientFlow 3.5s ease-in-out infinite' }} />
+              
+              <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle at 20% 80%, ${colors.glow} 2px, transparent 2px), radial-gradient(circle at 80% 20%, ${colors.glow} 1.5px, transparent 1.5px), radial-gradient(circle at 50% 50%, ${colors.glow} 1px, transparent 1px)`, backgroundSize: '40px 40px, 30px 30px, 25px 25px', opacity: 0.4, animation: 'particleFloat 8s ease-in-out infinite' }} />
+              
+              <span style={{ position: 'relative', zIndex: 1, fontSize: '24px', opacity: 0.7, textShadow: '0 0 8px rgba(255,255,255,0.5)' }}>
+                {profile.id.substring(0, 1).toUpperCase()}
+              </span>
+            </div>
+
+            {profile.active && !isDragging && <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid #0ea5e9', animation: 'pulseRing 2s ease-out infinite' }} />}
+            
+            {bindingCount > 0 && <div style={{ position: 'absolute', top: -10, right: -10, width: 24, height: 24, borderRadius: '50%', background: '#9d00ff', color: '#fff', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', border: '3px solid #0a0e27', boxShadow: '0 0 15px rgba(157,0,255,1)' }}>{bindingCount}</div>}
           </div>
         );
       })}
-      <style jsx>{`@keyframes pulseRing { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(1.6); opacity: 0; } }`}</style>
+      <style jsx>{`
+        @keyframes pulseRing { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.8); opacity: 0; } }
+        @keyframes saturnOrbit { from { transform: translate(-50%, -50%) rotateX(75deg) rotateZ(0deg); } to { transform: translate(-50%, -50%) rotateX(75deg) rotateZ(360deg); } }
+        @keyframes gradientFlow { 0%, 100% { transform: translateX(-60%) rotate(0deg); } 50% { transform: translateX(60%) rotate(180deg); } }
+        @keyframes particleFloat { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(5px, -5px); } }
+      `}</style>
     </div>
   );
 }

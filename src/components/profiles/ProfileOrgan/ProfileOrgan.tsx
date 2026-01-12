@@ -1,13 +1,10 @@
 'use client';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 👑 PROFILE ORGAN - Living System (SYNTX)
-// ═══════════════════════════════════════════════════════════════════════════
-
 import { useEffect } from 'react';
 import { useOrganStore } from './store';
 import { useSystemSnapshot } from './hooks/useSystemSnapshot';
-import FieldLayer from './layers/FieldLayer';
+import NeuralBackground from './layers/NeuralBackground';
+import LogoCenter from './layers/LogoCenter';
 import ProfileLayer from './layers/ProfileLayer';
 import FormatLayer from './layers/FormatLayer';
 import HoverOverlay from './overlays/HoverOverlay';
@@ -38,71 +35,19 @@ export default function ProfileOrgan() {
     return () => window.removeEventListener('keydown', handler);
   }, [dirty, stabilize, editProfileId]);
 
-  if (isLoading) {
-    return (
-      <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%)', color: '#00d4ff', fontFamily: 'monospace', fontSize: '14px' }}>
-        ⚡ LOADING SYSTEM...
-      </div>
-    );
-  }
-
-  if (error || !snapshot) {
-    return (
-      <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%)', color: '#ff4444', fontFamily: 'monospace', fontSize: '14px' }}>
-        ❌ ERROR: {error?.message || 'NO SNAPSHOT'}
-      </div>
-    );
-  }
+  if (isLoading) return <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0e27', color: '#00d4ff', fontFamily: 'monospace', fontSize: '14px' }}>⚡ LOADING SYSTEM...</div>;
+  if (error || !snapshot) return <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0e27', color: '#ff4444', fontFamily: 'monospace', fontSize: '14px' }}>❌ ERROR: {error?.message || 'NO SNAPSHOT'}</div>;
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', background: 'linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%)' }}>
-      {/* EBENE 1: FELD */}
-      <FieldLayer />
-
-      {/* EBENE 2: FORMATE */}
-      <FormatLayer />
-
-      {/* EBENE 3: PROFILE */}
+    <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', background: '#0a0e27' }}>
+      <NeuralBackground />
+      <LogoCenter />
       <ProfileLayer />
-
-      {/* EBENE 4: HOVER OVERLAY */}
+      <FormatLayer />
       <HoverOverlay />
-
-      {/* EBENE 5: EDIT OVERLAY */}
       <EditOverlay />
-
-      {/* STABILIZE BUTTON */}
-      {dirty && !editProfileId && (
-        <button
-          onClick={stabilize}
-          style={{
-            position: 'absolute',
-            bottom: 20,
-            right: 20,
-            padding: '10px 20px',
-            background: 'rgba(14,165,233,0.2)',
-            border: '2px solid #0ea5e9',
-            borderRadius: '6px',
-            color: '#0ea5e9',
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            zIndex: 1000,
-            animation: 'stabilizePulse 2s ease-in-out infinite',
-            boxShadow: '0 0 20px rgba(14,165,233,0.5)',
-          }}
-        >
-          ⚡ STABILIZE (CMD+S)
-        </button>
-      )}
-
-      <style jsx>{`
-        @keyframes stabilizePulse {
-          0%, 100% { opacity: 0.8; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.05); }
-        }
-      `}</style>
+      {dirty && !editProfileId && <button onClick={stabilize} style={{ position: 'absolute', bottom: 20, right: 20, padding: '10px 20px', background: 'rgba(14,165,233,0.2)', border: '2px solid #0ea5e9', borderRadius: '6px', color: '#0ea5e9', fontFamily: 'monospace', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', zIndex: 1000, animation: 'stabilizePulse 2s ease-in-out infinite', boxShadow: '0 0 20px rgba(14,165,233,0.5)' }}>⚡ STABILIZE (CMD+S)</button>}
+      <style jsx>{`@keyframes stabilizePulse { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }`}</style>
     </div>
   );
 }

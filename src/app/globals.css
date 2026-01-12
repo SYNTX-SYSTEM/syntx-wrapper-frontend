@@ -66,31 +66,8 @@ body {
 }
 
 /* Animated Background Gradient */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: 
-    radial-gradient(ellipse at 20% 20%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(217, 70, 239, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 70%);
-  animation: morphGradient 20s ease infinite;
-  pointer-events: none;
-  z-index: -1;
-}
 
 /* Grid Pattern Overlay */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: 
-    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
-  background-size: 50px 50px;
-  pointer-events: none;
-  z-index: -1;
-}
 
 /* ═══════════════════════════════════════════════════════════════
    📜 CUSTOM SCROLLBAR
