@@ -3,6 +3,7 @@
 import { useOrganStore, PREVIEW_THRESHOLD, COMMIT_THRESHOLD } from '../store';
 import { useOrbitPhysics } from '../hooks/useOrbitPhysics';
 import { useState, useEffect } from 'react';
+import ProfileHoverOverlay from '../overlays/ProfileHoverOverlay';
 
 interface ProfileLayerProps {
   onBindingCreated?: (profileId: string, formatName: string) => void;
@@ -24,6 +25,7 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
   const setBindingPreview = useOrganStore((state) => state.setBindingPreview);
 
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
   const [profileStrategies, setProfileStrategies] = useState<Record<string, string>>({});
   const [profileLabels, setProfileLabels] = useState<Record<string, string>>({});
   const [strategyColors, setStrategyColors] = useState<Record<string, string>>({});
@@ -164,7 +166,7 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
   };
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 10 }} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+    <div style={{ position: 'absolute', inset: 0, zIndex: 50 }} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
       {snapshot.profiles.map((profile) => {
         const node = nodes[profile.id];
         if (!node) return null;
@@ -212,7 +214,10 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
           <div
             key={profile.id}
             onMouseDown={(e) => handleMouseDown(e, profile.id)}
-            onMouseEnter={() => setHover(profile.id)}
+            onMouseEnter={(e) => {
+              setHover(profile.id);
+              setHoverPosition({ x: e.clientX, y: e.clientY });
+            }}
             onMouseLeave={() => setHover(null)}
             onClick={() => handleClick(profile.id)}
             style={{
@@ -338,6 +343,14 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
           </div>
         );
       })}
+      
+      {/* Profile Hover Overlay */}
+      <ProfileHoverOverlay
+        isVisible={!!hoverProfileId}
+        position={hoverPosition}
+        profileId={hoverProfileId}
+        profileLabel={hoverProfileId ? profileLabels[hoverProfileId] : undefined}
+      />
     </div>
   );
 }

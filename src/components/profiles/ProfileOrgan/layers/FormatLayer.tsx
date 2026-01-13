@@ -1,9 +1,13 @@
 'use client';
 
+import { useState } from 'react';
+
 import { useOrganStore } from '../store';
+import HoverOverlay from '../overlays/HoverOverlay';
 import { motion } from 'framer-motion';
 
 export default function FormatLayer() {
+  const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
   const snapshot = useOrganStore((state) => state.snapshot);
   const hoverFormatName = useOrganStore((state) => state.hoverFormatName);
   const setHoverFormat = useOrganStore((state) => state.setHoverFormat);
@@ -19,7 +23,7 @@ export default function FormatLayer() {
   };
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 8, pointerEvents: 'none' }}>
+    <div style={{ position: 'absolute', inset: 0, zIndex: 12, pointerEvents: 'auto' }}>
       {snapshot.formats.map((format, index) => {
         const pos = getFormatPosition(format.name, snapshot.formats.length, index);
         const isHovered = hoverFormatName === format.name;
@@ -28,7 +32,11 @@ export default function FormatLayer() {
         return (
           <motion.div
             key={format.name}
-            onMouseEnter={() => setHoverFormat(format.name)}
+            onMouseEnter={(e) => {
+              console.log('🔥 onMouseEnter fired!', format.name, { x: e.clientX, y: e.clientY });
+              setHoverFormat(format.name);
+              setHoverPosition({ x: e.clientX, y: e.clientY });
+            }}
             onMouseLeave={() => setHoverFormat(null)}
             style={{
               position: 'absolute',
@@ -121,6 +129,13 @@ export default function FormatLayer() {
           </motion.div>
         );
       })}
+      
+      {/* Hover Overlay - Outside all format divs */}
+      <HoverOverlay
+        isVisible={!!hoverFormatName}
+        position={hoverPosition}
+        formatName={hoverFormatName}
+      />
     </div>
   );
 }

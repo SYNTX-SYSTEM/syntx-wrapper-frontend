@@ -266,3 +266,120 @@ export async function getTooltipData(formatName: string): Promise<TooltipData | 
     return null;
   }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// PROFILE TOOLTIP DATA 🌟
+// ═══════════════════════════════════════════════════════════════
+
+export interface ProfileTooltipData {
+  profileId: string;
+  profileName: string;
+  profileLabel: string;
+  profileDescription?: string;
+  profileStrategy: string;
+  profileWeight: number;
+  profileActive: boolean;
+  
+  boundFormats: string[];
+  bindingCount: number;
+  
+  profileColor: {
+    primary: string;
+    glow: string;
+    shadow: string;
+  };
+  
+  tags: string[];
+  patterns: string[];
+  updatedAt: string;
+}
+
+// DYNAMIC PROFILE COLOR BASED ON STRATEGY 🎨
+export function getProfileColor(strategy: string) {
+  const colorMap: Record<string, { primary: string; glow: string; shadow: string }> = {
+    balanced: { 
+      primary: '#00d4ff', 
+      glow: 'rgba(0, 212, 255, 0.6)',
+      shadow: '0 0 30px rgba(0, 212, 255, 0.4)'
+    },
+    aggressive: { 
+      primary: '#9d00ff', 
+      glow: 'rgba(157, 0, 255, 0.6)',
+      shadow: '0 0 30px rgba(157, 0, 255, 0.4)'
+    },
+    defensive: { 
+      primary: '#10b981', 
+      glow: 'rgba(16, 185, 129, 0.6)',
+      shadow: '0 0 30px rgba(16, 185, 129, 0.4)'
+    },
+    creative: { 
+      primary: '#f59e0b', 
+      glow: 'rgba(245, 158, 11, 0.6)',
+      shadow: '0 0 30px rgba(245, 158, 11, 0.4)'
+    },
+    analytical: { 
+      primary: '#8b5cf6', 
+      glow: 'rgba(139, 92, 246, 0.6)',
+      shadow: '0 0 30px rgba(139, 92, 246, 0.4)'
+    },
+  };
+  
+  return colorMap[strategy] || { 
+    primary: '#606080', 
+    glow: 'rgba(96, 96, 128, 0.6)',
+    shadow: '0 0 30px rgba(96, 96, 128, 0.4)'
+  };
+}
+
+// GET PROFILE TOOLTIP DATA 💎
+export async function getProfileTooltipData(profileId: string): Promise<ProfileTooltipData | null> {
+  try {
+    const [profilesRes, mappingRes] = await Promise.all([
+      fetch(`${BASE_URL}/resonanz/profiles/crud`),
+      fetch(`${BASE_URL}/mapping/formats`),
+    ]);
+
+    if (!profilesRes.ok || !mappingRes.ok) {
+      console.error('Failed to fetch profile data');
+      return null;
+    }
+
+    const profilesData = await profilesRes.json();
+    const mappingData = await mappingRes.json();
+
+    const profile = profilesData.profiles[profileId];
+    if (!profile) {
+      console.error(`Profile ${profileId} not found`);
+      return null;
+    }
+
+    // Get bound formats for this profile
+    const boundFormats = Object.entries(mappingData.mappings || {})
+      .filter(([_, mapping]: any) => mapping.profile_id === profileId)
+      .map(([formatName]) => formatName);
+
+    const strategy = profile.strategy || 'unknown';
+
+    return {
+      profileId: profileId,
+      profileName: profile.name || profileId,
+      profileLabel: profile.label || profile.name || profileId,
+      profileDescription: profile.description,
+      profileStrategy: strategy,
+      profileWeight: profile.weight || 50,
+      profileActive: profile.active ?? true,
+      
+      boundFormats: boundFormats,
+      bindingCount: boundFormats.length,
+      
+      profileColor: getProfileColor(strategy),
+      
+      tags: profile.tags || [],
+      patterns: profile.patterns || [],
+      updatedAt: profile.updated_at || new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('Error fetching profile tooltip data:', error);
+    return null;
+  }
+}

@@ -8,7 +8,6 @@ import FieldLayer from './layers/FieldLayer';
 import BindingLayer from './layers/BindingLayer';
 import FormatLayer from './layers/FormatLayer';
 import ProfileLayer from './layers/ProfileLayer';
-import HoverOverlay from './overlays/HoverOverlay';
 import PlanetBirthWizard from './overlays/PlanetBirthWizard';
 import BindingFlash from './overlays/BindingFlash';
 import ErrorNotification from './overlays/ErrorNotification';
@@ -95,7 +94,6 @@ export default function ProfileOrgan() {
       <BindingLayer />
       <FormatLayer />
       <ProfileLayer onBindingCreated={handleBindingCreated} onBindingError={handleBindingError} />
-      <HoverOverlay />
       <PlanetBirthWizard isOpen={isWizardOpen} onClose={() => setIsWizardOpen(false)} />
       <BindingFlash isVisible={showFlash} message={flashMessage} />
       <ErrorNotification 
