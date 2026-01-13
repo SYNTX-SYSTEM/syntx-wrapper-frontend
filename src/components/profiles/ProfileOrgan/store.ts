@@ -1,79 +1,87 @@
 import { create } from 'zustand';
-import { SystemSnapshot, ProfileNodeState, BindingPreview, Vector2 } from '@/types/profile-organ';
+import type { SystemSnapshot, ProfileNodeState, Vector2, BindingPreview } from '@/types/profile-organ';
+
+export const PREVIEW_THRESHOLD = 150;
+export const COMMIT_THRESHOLD = 100;
 
 interface OrganState {
   snapshot: SystemSnapshot | null;
   nodes: Record<string, ProfileNodeState>;
-  initialized: boolean;
   hoverProfileId: string | null;
+  hoverFormatName: string | null;
   focusProfileId: string | null;
   draggingProfileId: string | null;
   editProfileId: string | null;
   bindingPreview: BindingPreview | null;
-  dirty: boolean;
-  setSnapshot: (s: SystemSnapshot) => void;
+  
+  setSnapshot: (snapshot: SystemSnapshot) => void;
+  updateNodePosition: (id: string, position: Vector2) => void;
+  updateNodeVelocity: (id: string, velocity: Vector2) => void;
   setHover: (id: string | null) => void;
+  setHoverFormat: (name: string | null) => void;
   setFocus: (id: string | null) => void;
   setDragging: (id: string | null) => void;
   setEdit: (id: string | null) => void;
   setBindingPreview: (preview: BindingPreview | null) => void;
-  updateNodePosition: (id: string, position: Vector2) => void;
-  updateNodeVelocity: (id: string, velocity: Vector2) => void;
-  markDirty: () => void;
-  stabilize: () => void;
 }
-
-const PREVIEW_THRESHOLD = 150;
-const COMMIT_THRESHOLD = 80;
 
 export const useOrganStore = create<OrganState>((set) => ({
   snapshot: null,
   nodes: {},
-  initialized: false,
   hoverProfileId: null,
+  hoverFormatName: null,
   focusProfileId: null,
   draggingProfileId: null,
   editProfileId: null,
   bindingPreview: null,
-  dirty: false,
-  setSnapshot: (snapshot) => {
-    set((state) => {
-      if (state.initialized) return { snapshot };
-      const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
-      const h = typeof window !== 'undefined' ? window.innerHeight : 800;
-      const centerX = w / 2;
-      const centerY = h / 2;
-      const orbitRadius = Math.min(w, h) * 0.3;
-      return {
-        snapshot,
-        initialized: true,
-        nodes: Object.fromEntries(
-          snapshot.profiles.map((p, i) => {
-            const angle = (i / snapshot.profiles.length) * Math.PI * 2;
-            return [
-              p.id,
-              {
-                id: p.id,
-                position: { x: centerX + Math.cos(angle) * orbitRadius, y: centerY + Math.sin(angle) * orbitRadius },
-                velocity: { x: 0, y: 0 },
-                radius: 25 + p.weight * 0.3,
-                pulsePhase: angle,
-              },
-            ];
-          })
-        ),
-      };
+  
+  setSnapshot: (snapshot) => set((state) => {
+    const existingNodes = state.nodes;
+    const newNodes: Record<string, ProfileNodeState> = {};
+    
+    snapshot.profiles.forEach((profile, index) => {
+      if (existingNodes[profile.id]) {
+        newNodes[profile.id] = existingNodes[profile.id];
+      } else {
+        const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
+        const h = typeof window !== 'undefined' ? window.innerHeight : 800;
+        const angle = (index / snapshot.profiles.length) * Math.PI * 2;
+        const radius = Math.min(w, h) * 0.3;
+        
+        newNodes[profile.id] = {
+          id: profile.id,
+          position: {
+            x: w / 2 + Math.cos(angle) * radius,
+            y: h / 2 + Math.sin(angle) * radius,
+          },
+          velocity: { x: 0, y: 0 },
+          radius: 40,
+          pulsePhase: Math.random() * Math.PI * 2,
+        };
+      }
     });
-  },
+    
+    return { snapshot, nodes: newNodes };
+  }),
+  
+  updateNodePosition: (id, position) => set((state) => ({
+    nodes: {
+      ...state.nodes,
+      [id]: { ...state.nodes[id], position }
+    }
+  })),
+  
+  updateNodeVelocity: (id, velocity) => set((state) => ({
+    nodes: {
+      ...state.nodes,
+      [id]: { ...state.nodes[id], velocity }
+    }
+  })),
+  
   setHover: (id) => set({ hoverProfileId: id }),
+  setHoverFormat: (name) => set({ hoverFormatName: name }),
   setFocus: (id) => set({ focusProfileId: id }),
   setDragging: (id) => set({ draggingProfileId: id }),
   setEdit: (id) => set({ editProfileId: id }),
   setBindingPreview: (preview) => set({ bindingPreview: preview }),
-  updateNodePosition: (id, position) => set((state) => ({ nodes: { ...state.nodes, [id]: { ...state.nodes[id], position } } })),
-  updateNodeVelocity: (id, velocity) => set((state) => ({ nodes: { ...state.nodes, [id]: { ...state.nodes[id], velocity } } })),
-  markDirty: () => set({ dirty: true }),
-  stabilize: () => set({ dirty: false }),
 }));
-
-export { PREVIEW_THRESHOLD, COMMIT_THRESHOLD };

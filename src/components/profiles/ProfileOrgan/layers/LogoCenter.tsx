@@ -1,34 +1,77 @@
 'use client';
 
-export default function LogoCenter() {
+import { motion } from 'framer-motion';
+
+interface LogoCenterProps {
+  onCreateClick: () => void;
+}
+
+export default function LogoCenter({ onCreateClick }: LogoCenterProps) {
   return (
-    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 5 }}>
-      {/* ORBIT LINES (MULTIPLE) */}
-      <svg style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 800, height: 800, pointerEvents: 'none' }}>
-        <circle cx="400" cy="400" r="300" fill="none" stroke="rgba(0,255,100,0.2)" strokeWidth="1" strokeDasharray="8,8" style={{ animation: 'orbitRotate 60s linear infinite' }} />
-        <circle cx="400" cy="400" r="350" fill="none" stroke="rgba(0,212,255,0.15)" strokeWidth="1" style={{ animation: 'orbitRotate 80s linear infinite reverse' }} />
-        <circle cx="400" cy="400" r="400" fill="none" stroke="rgba(157,0,255,0.1)" strokeWidth="1" strokeDasharray="4,8" style={{ animation: 'orbitRotate 100s linear infinite' }} />
-      </svg>
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20, pointerEvents: 'none' }}>
+      {/* ORBIT RINGS */}
+      {[300, 350, 400].map((radius, idx) => (
+        <motion.div
+          key={radius}
+          style={{
+            position: 'absolute',
+            width: radius,
+            height: radius,
+            borderRadius: '50%',
+            border: '1px solid rgba(0,255,100,0.2)',
+            animation: `rotate${idx} ${60 + idx * 20}s linear infinite`,
+          }}
+        />
+      ))}
 
-      {/* MASSIVE GREEN GLOW */}
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,255,100,0.4) 0%, rgba(0,212,255,0.2) 40%, transparent 70%)', filter: 'blur(60px)', animation: 'planetPulse 5s ease-in-out infinite' }} />
-
-      {/* LOGO PLANET */}
-      <div style={{ position: 'relative', width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(10,14,39,1) 0%, rgba(15,25,50,0.98) 100%)', border: '3px solid rgba(0,255,100,0.8)', boxShadow: '0 0 100px rgba(0,255,100,0.6), inset 0 0 80px rgba(0,255,100,0.2), 0 0 150px rgba(0,212,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-        <img src="/Logo1_trans.png" alt="SYNTX" style={{ width: 160, height: 160, filter: 'drop-shadow(0 0 40px rgba(0,255,100,0.9)) brightness(1.3) contrast(1.1)' }} />
-        
-        {/* SUBTLE ROTATING SHIMMER */}
-        <div style={{ position: 'absolute', inset: -30, background: 'conic-gradient(from 0deg, transparent 0%, rgba(0,255,100,0.3) 5%, transparent 15%, transparent 85%, rgba(0,255,100,0.3) 95%, transparent 100%)', borderRadius: '50%', animation: 'shimmerRotate 4s linear infinite', opacity: 0.6 }} />
+      {/* LOGO PLANET - CLICKABLE */}
+      <motion.div
+        onClick={onCreateClick}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.98 }}
+        style={{
+          position: 'relative',
+          width: 240,
+          height: 240,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle at 30% 30%, rgba(0,255,100,0.3), rgba(0,150,50,0.2))',
+          border: '3px solid rgba(0,255,100,0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 0 60px rgba(0,255,100,0.4), inset 0 0 40px rgba(0,255,100,0.1)',
+          cursor: 'pointer',
+          pointerEvents: 'auto',
+        }}
+      >
+        {/* SHIMMER */}
+        <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)', animation: 'shimmer 4s ease-in-out infinite' }} />
         
         {/* SCAN LINE */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(0,255,100,0.25) 50%, transparent 100%)', animation: 'scanLine 5s ease-in-out infinite', opacity: 0.5 }} />
-      </div>
+        <motion.div 
+          style={{ position: 'absolute', inset: 0, borderRadius: '50%', overflow: 'hidden' }}
+          animate={{ y: ['-100%', '100%'] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
+        >
+          <div style={{ width: '100%', height: '4px', background: 'linear-gradient(90deg, transparent, rgba(0,255,100,0.6), transparent)' }} />
+        </motion.div>
+
+        {/* LOGO IMAGE */}
+        <img src="/Logo1_trans.png" alt="SYNTX" style={{ width: 180, height: 180, position: 'relative', zIndex: 1 }} />
+        
+        {/* PULSE INDICATOR */}
+        <motion.div
+          style={{ position: 'absolute', inset: -5, borderRadius: '50%', border: '2px solid rgba(0,255,100,0.6)' }}
+          animate={{ scale: [1, 1.05, 1], opacity: [0.6, 0.2, 0.6] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+      </motion.div>
 
       <style jsx>{`
-        @keyframes orbitRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes planetPulse { 0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); } }
-        @keyframes scanLine { 0%, 100% { top: -120%; opacity: 0; } 40% { opacity: 0.5; } 60% { opacity: 0.5; } 100% { top: 120%; opacity: 0; } }
-        @keyframes shimmerRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes rotate0 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes rotate1 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes rotate2 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes shimmer { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(180deg); } }
       `}</style>
     </div>
   );

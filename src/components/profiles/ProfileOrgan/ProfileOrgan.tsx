@@ -1,53 +1,108 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useOrganStore } from './store';
-import { useSystemSnapshot } from './hooks/useSystemSnapshot';
 import NeuralBackground from './layers/NeuralBackground';
 import LogoCenter from './layers/LogoCenter';
-import ProfileLayer from './layers/ProfileLayer';
+import FieldLayer from './layers/FieldLayer';
+import BindingLayer from './layers/BindingLayer';
 import FormatLayer from './layers/FormatLayer';
+import ProfileLayer from './layers/ProfileLayer';
 import HoverOverlay from './overlays/HoverOverlay';
-import EditOverlay from './overlays/EditOverlay';
+import PlanetBirthWizard from './overlays/PlanetBirthWizard';
+import BindingFlash from './overlays/BindingFlash';
+import ErrorNotification from './overlays/ErrorNotification';
 
 export default function ProfileOrgan() {
-  const { data: snapshot, error, isLoading } = useSystemSnapshot();
   const setSnapshot = useOrganStore((state) => state.setSnapshot);
-  const dirty = useOrganStore((state) => state.dirty);
-  const stabilize = useOrganStore((state) => state.stabilize);
-  const editProfileId = useOrganStore((state) => state.editProfileId);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [flashMessage, setFlashMessage] = useState('');
+  const [showFlash, setShowFlash] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
-    if (snapshot) setSnapshot(snapshot);
-  }, [snapshot, setSnapshot]);
+    const fetchData = async () => {
+      try {
+        const [profilesRes, formatsRes] = await Promise.all([
+          fetch('https://dev.syntx-system.com/resonanz/profiles/crud'),
+          fetch('https://dev.syntx-system.com/resonanz/formats'),
+        ]);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 's' && !editProfileId) {
-        e.preventDefault();
-        if (dirty) {
-          stabilize();
-          console.log('⚡ SYSTEM STABILIZED');
-        }
+        const profilesData = await profilesRes.json();
+        const formatsData = await formatsRes.json();
+
+        const profiles = Object.entries(profilesData.profiles).map(([id, data]: [string, any]) => ({
+          id,
+          name: data.name || id,
+          label: data.label || data.name || id,
+          active: data.active ?? true,
+          weight: data.weight || 50,
+          tags: data.tags || [],
+          patterns: data.patterns || [],
+          updated_at: data.updated_at || new Date().toISOString(),
+        }));
+
+        const formats = formatsData.formats.map((f: any) => ({
+          name: f.name,
+          fields: f.fields || [],
+          profile_reference: f.profile_reference || null,
+        }));
+
+        // GET BINDINGS FROM MAPPING (NOT FROM FORMATS!)
+        const mappingResponse = await fetch('https://dev.syntx-system.com/mapping/formats');
+        const mappingData = await mappingResponse.json();
+        
+        const bindings = Object.entries(mappingData.mappings || {})
+          .filter(([_, mapping]: any) => mapping.profile_id)
+          .map(([formatName, mapping]: any) => ({
+            profileId: mapping.profile_id,
+            formatName: formatName,
+          }));
+
+        setSnapshot({
+          profiles,
+          formats,
+          bindings,
+          timestamp: Date.now(),
+        });
+      } catch (error) {
+        console.error('Failed to fetch system data:', error);
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [dirty, stabilize, editProfileId]);
 
-  if (isLoading) return <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0e27', color: '#00d4ff', fontFamily: 'monospace', fontSize: '14px' }}>⚡ LOADING SYSTEM...</div>;
-  if (error || !snapshot) return <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0e27', color: '#ff4444', fontFamily: 'monospace', fontSize: '14px' }}>❌ ERROR: {error?.message || 'NO SNAPSHOT'}</div>;
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [setSnapshot]);
+
+  const handleBindingCreated = (profileId: string, formatName: string) => {
+    setFlashMessage('BINDING STABILIZED');
+    setShowFlash(true);
+    setTimeout(() => setShowFlash(false), 2000);
+  };
+
+  const handleBindingError = (error: string) => {
+    setErrorMessage(error);
+    setShowError(true);
+  };
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', background: '#0a0e27' }}>
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', background: '#0a0e27' }}>
       <NeuralBackground />
-      <LogoCenter />
-      <ProfileLayer />
+      <LogoCenter onCreateClick={() => setIsWizardOpen(true)} />
+      <FieldLayer />
+      <BindingLayer />
       <FormatLayer />
+      <ProfileLayer onBindingCreated={handleBindingCreated} onBindingError={handleBindingError} />
       <HoverOverlay />
-      <EditOverlay />
-      {dirty && !editProfileId && <button onClick={stabilize} style={{ position: 'absolute', bottom: 20, right: 20, padding: '10px 20px', background: 'rgba(14,165,233,0.2)', border: '2px solid #0ea5e9', borderRadius: '6px', color: '#0ea5e9', fontFamily: 'monospace', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', zIndex: 1000, animation: 'stabilizePulse 2s ease-in-out infinite', boxShadow: '0 0 20px rgba(14,165,233,0.5)' }}>⚡ STABILIZE (CMD+S)</button>}
-      <style jsx>{`@keyframes stabilizePulse { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }`}</style>
+      <PlanetBirthWizard isOpen={isWizardOpen} onClose={() => setIsWizardOpen(false)} />
+      <BindingFlash isVisible={showFlash} message={flashMessage} />
+      <ErrorNotification 
+        message={errorMessage}
+        isVisible={showError}
+        onClose={() => setShowError(false)}
+      />
     </div>
   );
 }

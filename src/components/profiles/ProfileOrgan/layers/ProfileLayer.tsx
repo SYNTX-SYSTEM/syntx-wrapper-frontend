@@ -4,7 +4,12 @@ import { useOrganStore, PREVIEW_THRESHOLD, COMMIT_THRESHOLD } from '../store';
 import { useOrbitPhysics } from '../hooks/useOrbitPhysics';
 import { useState, useEffect } from 'react';
 
-export default function ProfileLayer() {
+interface ProfileLayerProps {
+  onBindingCreated?: (profileId: string, formatName: string) => void;
+  onBindingError?: (error: string) => void;
+}
+
+export default function ProfileLayer({ onBindingCreated, onBindingError }: ProfileLayerProps) {
   const snapshot = useOrganStore((state) => state.snapshot);
   const nodes = useOrganStore((state) => state.nodes);
   const hoverProfileId = useOrganStore((state) => state.hoverProfileId);
@@ -43,18 +48,9 @@ export default function ProfileLayer() {
         setProfileStrategies(strategies);
         setProfileLabels(labels);
         
-        // GENERATE DYNAMIC COLORS FOR EACH UNIQUE STRATEGY
         const colorPalette = [
-          '#00d4ff', // cyan
-          '#9d00ff', // purple
-          '#ff6600', // orange
-          '#10b981', // green
-          '#f59e0b', // amber
-          '#ef4444', // red
-          '#8b5cf6', // violet
-          '#ec4899', // pink
-          '#06b6d4', // teal
-          '#84cc16', // lime
+          '#00d4ff', '#9d00ff', '#ff6600', '#10b981', '#f59e0b',
+          '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16',
         ];
         
         const colors: Record<string, string> = {};
@@ -79,8 +75,7 @@ export default function ProfileLayer() {
   const getProfileColor = (bindingCount: number) => {
     if (bindingCount === 0) return { from: 'rgba(100,100,120,0.9)', to: 'rgba(70,70,90,0.85)', glow: 'rgba(100,100,120,0.6)' };
     if (bindingCount === 1) return { from: 'rgba(0,255,179,0.95)', to: 'rgba(14,165,233,0.9)', glow: 'rgba(0,255,179,0.7)' };
-    if (bindingCount === 2) return { from: 'rgba(14,165,233,0.95)', to: 'rgba(157,0,255,0.9)', glow: 'rgba(14,165,233,0.8)' };
-    if (bindingCount >= 3) return { from: 'rgba(157,0,255,0.95)', to: 'rgba(255,0,100,0.92)', glow: 'rgba(157,0,255,0.85)' };
+    if (bindingCount >= 2) return { from: 'rgba(157,0,255,0.95)', to: 'rgba(255,0,100,0.92)', glow: 'rgba(157,0,255,0.85)' };
     return { from: 'rgba(255,215,0,0.95)', to: 'rgba(255,140,0,0.9)', glow: 'rgba(255,215,0,0.7)' };
   };
 
@@ -117,13 +112,41 @@ export default function ProfileLayer() {
     const preview = useOrganStore.getState().bindingPreview;
     if (preview && preview.distance < COMMIT_THRESHOLD) {
       try {
-        await fetch(`https://dev.syntx-system.com/resonanz/formats/${preview.formatName}`, {
+        const url = 'https://dev.syntx-system.com/mapping/formats/' + preview.formatName + '/kalibriere-format-profil?profile_id=' + preview.profileId;
+        const response = await fetch(url, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ profile_reference: preview.profileId }),
         });
+        
+        if (response.ok) {
+          // UPDATE STORE DIRECTLY - NO RELOAD! 💎
+          const currentSnapshot = useOrganStore.getState().snapshot;
+          if (currentSnapshot) {
+            const newBindings = [
+              ...currentSnapshot.bindings.filter(b => b.formatName !== preview.formatName),
+              { profileId: preview.profileId, formatName: preview.formatName }
+            ];
+            useOrganStore.getState().setSnapshot({
+              ...currentSnapshot,
+              bindings: newBindings,
+              timestamp: Date.now(),
+            });
+          }
+          
+          if (onBindingCreated) {
+            onBindingCreated(preview.profileId, preview.formatName);
+          }
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          if (onBindingError) {
+            onBindingError(errorData.message || 'BINDING FAILED');
+          }
+        }
       } catch (err) {
         console.error('Binding failed:', err);
+        if (onBindingError) {
+          onBindingError('NETWORK ERROR - BINDING FAILED');
+        }
       }
     }
     setDragging(null);
@@ -145,54 +168,176 @@ export default function ProfileLayer() {
       {snapshot.profiles.map((profile) => {
         const node = nodes[profile.id];
         if (!node) return null;
+        
+        const radius = 50;
         const isFocused = focusProfileId === profile.id;
         const isHovered = hoverProfileId === profile.id;
+        
+        // ORBITAL RINGS DATA 🌊
+        const orbitalRings = [
+          { offset: 25, speed: 0.0008, opacity: 0.18, dashArray: '3 10' },
+          { offset: 42, speed: 0.0005, opacity: 0.12, dashArray: '2 12' },
+          { offset: 58, speed: 0.0003, opacity: 0.08, dashArray: '1 14' },
+        ];
         const isDragging = draggingProfileId === profile.id;
         const bindingCount = snapshot.bindings.filter(b => b.profileId === profile.id).length;
         const colors = getProfileColor(bindingCount);
         const strategy = profileStrategies[profile.id] || 'unknown';
         const ringColor = strategyColors[strategy] || '#606080';
         const displayLabel = profileLabels[profile.id] || profile.label;
-        const radius = 42;
+
+        // RAINDROP RIPPLE EFFECT 💧
+        const time = Date.now() * 0.001;
+        const ripplePhase = (time * 0.6 + profile.id.length * 0.3) % 2; // 0 to 2 loop
+        
+        // Create ripple wave: transparent → solid → transparent
+        let rippleOpacity;
+        if (ripplePhase < 1) {
+          // First half: fade in (0 → 1)
+          rippleOpacity = ripplePhase;
+        } else {
+          // Second half: fade out (1 → 0)
+          rippleOpacity = 2 - ripplePhase;
+        }
+        
+        // Smooth the transition with ease curve
+        rippleOpacity = Math.sin(rippleOpacity * Math.PI / 2);
+        
+        // Final opacity: 0.3 (transparent) → 1.0 (solid)
+        const finalOpacity = 0.3 + rippleOpacity * 0.7;
+        
+        const baseScale = isFocused ? 1.3 : isHovered ? 1.15 : isDragging ? 1.1 : 1;
 
         return (
-          <div key={profile.id} onMouseDown={(e) => handleMouseDown(e, profile.id)} onMouseEnter={() => setHover(profile.id)} onMouseLeave={() => setHover(null)} onClick={() => handleClick(profile.id)} style={{ position: 'absolute', left: node.position.x - radius, top: node.position.y - radius, width: radius * 2, height: radius * 2, cursor: isDragging ? 'grabbing' : 'grab', transform: `scale(${isFocused ? 1.2 : 1})`, transition: isDragging ? 'none' : 'transform 0.2s', zIndex: isDragging ? 1000 : (isFocused ? 100 : 10) }}>
+          <div
+            key={profile.id}
+            onMouseDown={(e) => handleMouseDown(e, profile.id)}
+            onMouseEnter={() => setHover(profile.id)}
+            onMouseLeave={() => setHover(null)}
+            onClick={() => handleClick(profile.id)}
+            style={{
+              position: 'absolute',
+              left: node.position.x - radius,
+              top: node.position.y - radius,
+              width: radius * 2,
+              height: radius * 2,
+              cursor: isDragging ? 'grabbing' : 'grab',
+              transition: isDragging ? 'none' : 'all 0.3s cubic-bezier(0.23, 1, 0.32, 1)',
+              transform: `scale(${baseScale})`,
+              opacity: finalOpacity,
+              zIndex: isDragging ? 1000 : isFocused ? 100 : isHovered ? 50 : 10,
+            }}
+          >
+            <div style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              background: `radial-gradient(circle at 35% 35%, ${colors.from}, ${colors.to})`,
+              boxShadow: `0 0 ${isHovered || isDragging ? 40 : 20}px ${colors.glow}, inset 0 0 ${isHovered || isDragging ? 30 : 15}px rgba(0,0,0,0.5)`,
+              border: `3px solid ${ringColor}`,
+              position: 'relative',
+              overflow: 'visible',
+            }}>
+              {/* ORBITAL SATURN RINGS 🪐 */}
+              {orbitalRings.map((ring, idx) => {
+                const rotation = (time * ring.speed + idx * 0.5) % (Math.PI * 2);
+                const rotationDeg = (rotation * 180 / Math.PI);
+                
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      width: `${100 + ring.offset * 2}%`,
+                      height: `${100 + ring.offset * 2}%`,
+                      transform: `translate(-50%, -50%) rotate(${rotationDeg}deg)`,
+                      borderRadius: '50%',
+                      border: `2px solid ${ringColor}`,
+                      borderStyle: 'dashed',
+                      borderSpacing: ring.dashArray,
+                      opacity: ring.opacity,
+                      pointerEvents: 'none',
+                    }}
+                  />
+                );
+              })}
+              
+              {/* HORIZONTAL RING */}
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%) rotateX(75deg)',
+                width: '140%',
+                height: '70%',
+                border: `4px solid ${ringColor}`,
+                borderRadius: '50%',
+                opacity: 0.6,
+                boxShadow: `0 0 15px ${ringColor}`,
+              }} />
+
+            </div>
             
-            {/* NEON GLOW NAME ABOVE */}
-            <div style={{ position: 'absolute', top: -35, left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', color: '#00d4ff', fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace', textShadow: `0 0 20px ${ringColor}, 0 0 40px ${ringColor}, 0 0 60px ${ringColor}80, 0 4px 15px rgba(0,0,0,0.8)`, letterSpacing: '1.5px', filter: 'blur(0.3px)', pointerEvents: 'none' }}>
+            {/* RIPPLE WAVES FROM INSIDE OUT 🌊 */}
+            {[1, 2, 3, 4].map((waveIdx) => {
+              const waveDelay = waveIdx * 0.25;
+              const wavePhase = (time * 0.8 + profile.id.length * 0.2 + waveDelay) % 2;
+              
+              // Wave expands from inside out
+              let waveScale, waveOpacity;
+              if (wavePhase < 1) {
+                // Expanding from center outward
+                waveScale = 0.3 + wavePhase * 1.2; // 0.3 → 1.5
+                waveOpacity = (1 - wavePhase) * 0.5; // 0.5 → 0 (fades as expands)
+              } else {
+                // Reset/invisible
+                waveScale = 0.3;
+                waveOpacity = 0;
+              }
+              
+              return (
+                <div
+                  key={`wave-${waveIdx}`}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: '100%',
+                    height: '100%',
+                    transform: `translate(-50%, -50%) scale(${waveScale})`,
+                    borderRadius: '50%',
+                    border: `2px solid ${ringColor}`,
+                    opacity: waveOpacity,
+                    pointerEvents: 'none',
+                    boxShadow: `0 0 ${10 * waveOpacity}px ${ringColor}`,
+                  }}
+                />
+              );
+            })}
+            
+            {/* LABEL OUTSIDE PLANET 💎 */}
+            <div style={{
+              position: 'absolute',
+              bottom: -20,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              whiteSpace: 'nowrap',
+              color: ringColor,
+              fontSize: '12px',
+              fontWeight: 700,
+              fontFamily: '"Orbitron", "Rajdhani", "Space Mono", monospace',
+              letterSpacing: '1.5px',
+              textShadow: `0 0 12px ${ringColor}, 0 0 24px ${ringColor}`,
+              pointerEvents: 'none',
+              opacity: isHovered || isDragging ? 1 : 0.85,
+            }}>
               {displayLabel}
             </div>
-
-            {/* SATURN RING - ORBITAL (TILTED) - DYNAMIC COLOR */}
-            <div style={{ position: 'absolute', left: '50%', top: '50%', width: radius * 2.8, height: radius * 1.4, border: `3px solid ${ringColor}`, borderRadius: '50%', opacity: 0.8, transform: 'translate(-50%, -50%) rotateX(75deg)', animation: 'saturnOrbit 12s linear infinite', boxShadow: `0 0 20px ${ringColor}`, transformStyle: 'preserve-3d' }} />
-
-            {/* OUTER GLOW */}
-            <div style={{ position: 'absolute', inset: -10, borderRadius: '50%', background: `radial-gradient(circle, ${colors.glow} 0%, transparent 70%)`, filter: 'blur(15px)', opacity: 1 }} />
-            
-            {/* MAIN BUBBLE */}
-            <div style={{ position: 'absolute', inset: 4, borderRadius: '50%', background: `radial-gradient(circle at 30% 30%, ${colors.from}, ${colors.to} 70%, rgba(0,0,0,0.6))`, border: `3px solid ${isFocused ? '#0ea5e9' : isHovered ? '#00d4ff' : 'rgba(14,165,233,0.5)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '13px', fontWeight: 'bold', fontFamily: 'monospace', boxShadow: isFocused ? '0 0 30px rgba(14,165,233,1)' : '0 0 18px rgba(0,0,0,0.4)', overflow: 'hidden', position: 'relative' }}>
-              
-              <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(45deg, transparent 30%, ${colors.from.replace(/0\.\d+/, '0.7')} 50%, transparent 70%)`, animation: 'gradientFlow 3.5s ease-in-out infinite' }} />
-              
-              <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle at 20% 80%, ${colors.glow} 2px, transparent 2px), radial-gradient(circle at 80% 20%, ${colors.glow} 1.5px, transparent 1.5px), radial-gradient(circle at 50% 50%, ${colors.glow} 1px, transparent 1px)`, backgroundSize: '40px 40px, 30px 30px, 25px 25px', opacity: 0.4, animation: 'particleFloat 8s ease-in-out infinite' }} />
-              
-              <span style={{ position: 'relative', zIndex: 1, fontSize: '24px', opacity: 0.7, textShadow: '0 0 8px rgba(255,255,255,0.5)' }}>
-                {profile.id.substring(0, 1).toUpperCase()}
-              </span>
-            </div>
-
-            {profile.active && !isDragging && <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid #0ea5e9', animation: 'pulseRing 2s ease-out infinite' }} />}
-            
-            {bindingCount > 0 && <div style={{ position: 'absolute', top: -10, right: -10, width: 24, height: 24, borderRadius: '50%', background: '#9d00ff', color: '#fff', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', border: '3px solid #0a0e27', boxShadow: '0 0 15px rgba(157,0,255,1)' }}>{bindingCount}</div>}
           </div>
         );
       })}
-      <style jsx>{`
-        @keyframes pulseRing { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.8); opacity: 0; } }
-        @keyframes saturnOrbit { from { transform: translate(-50%, -50%) rotateX(75deg) rotateZ(0deg); } to { transform: translate(-50%, -50%) rotateX(75deg) rotateZ(360deg); } }
-        @keyframes gradientFlow { 0%, 100% { transform: translateX(-60%) rotate(0deg); } 50% { transform: translateX(60%) rotate(180deg); } }
-        @keyframes particleFloat { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(5px, -5px); } }
-      `}</style>
     </div>
   );
 }
