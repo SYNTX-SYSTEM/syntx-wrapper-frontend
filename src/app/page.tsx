@@ -14,9 +14,10 @@ import DataPanel from "@/components/data/DataPanel";
 import FormatPanel from "@/components/formats/FormatPanel";
 import { OptimizerPanel } from "@/components/optimizer";
 import ProfileOrgan from "@/components/profiles/ProfileOrgan";
+import ScoringOrgan from "@/components/scoring/ScoringOrgan";
 import { ProfilesPanel } from "@/components/profiles/system-organs";
 
-type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff" | "optimizer" | "profiles" | "profile-organ";
+type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff" | "optimizer" | "profiles" | "profile-organ" | "scoring";
 
 const TABS = [
   { id: "data", label: "DATA", icon: "📊", color: "#8b5cf6" },
@@ -31,6 +32,7 @@ const TABS = [
   { id: "diff", label: "DIFF", icon: "🔀", color: "#8b5cf6" },
   { id: "optimizer", label: "OPTIMIZER", icon: "🤖", color: "#00d4ff" },
   { id: "profiles", label: "PROFILES", icon: "👤", color: "#8b5cf6" },
+  { id: "scoring", label: "SCORING", icon: "💎", color: "#9d00ff" },
   { id: "profile-organ", label: "PROFILE ORGAN", icon: "🧬", color: "#00ff9d" },
 ] as const;
 
@@ -52,6 +54,7 @@ export default function Home() {
       case "diff": return <DiffPanel />;
       case "optimizer": return <OptimizerPanel />;
       case "profiles": return <ProfilesPanel />;
+      case "scoring": return <ScoringOrgan />;
       case "profile-organ": return <ProfileOrgan />;
       default: return null;
     }
