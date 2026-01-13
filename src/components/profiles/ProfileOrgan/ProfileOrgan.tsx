@@ -7,6 +7,7 @@ import LogoCenter from './layers/LogoCenter';
 import FieldLayer from './layers/FieldLayer';
 import BindingLayer from './layers/BindingLayer';
 import FormatLayer from './layers/FormatLayer';
+import FormatLegend from './overlays/FormatLegend';
 import ProfileLayer from './layers/ProfileLayer';
 import PlanetBirthWizard from './overlays/PlanetBirthWizard';
 import BindingFlash from './overlays/BindingFlash';

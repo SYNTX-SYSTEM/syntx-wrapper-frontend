@@ -166,7 +166,7 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
   };
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 50 }} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+    <div style={{ position: 'absolute', inset: 0, zIndex: 10 }} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
       {snapshot.profiles.map((profile) => {
         const node = nodes[profile.id];
         if (!node) return null;

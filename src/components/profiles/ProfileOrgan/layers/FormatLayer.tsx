@@ -23,7 +23,7 @@ export default function FormatLayer() {
   };
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 12, pointerEvents: 'auto' }}>
+    <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none' }}>
       {snapshot.formats.map((format, index) => {
         const pos = getFormatPosition(format.name, snapshot.formats.length, index);
         const isHovered = hoverFormatName === format.name;
