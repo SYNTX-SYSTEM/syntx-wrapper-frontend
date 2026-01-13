@@ -23,6 +23,7 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
   const setEdit = useOrganStore((state) => state.setEdit);
   const updateNodePosition = useOrganStore((state) => state.updateNodePosition);
   const setBindingPreview = useOrganStore((state) => state.setBindingPreview);
+  const bindProfile = useOrganStore((state) => state.bindProfile);
 
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
@@ -113,41 +114,18 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
   const handleMouseUp = async () => {
     const preview = useOrganStore.getState().bindingPreview;
     if (preview && preview.distance < COMMIT_THRESHOLD) {
-      try {
-        const url = 'https://dev.syntx-system.com/mapping/formats/' + preview.formatName + '/kalibriere-format-profil?profile_id=' + preview.profileId;
-        const response = await fetch(url, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        
-        if (response.ok) {
-          // UPDATE STORE DIRECTLY - NO RELOAD! 💎
-          const currentSnapshot = useOrganStore.getState().snapshot;
-          if (currentSnapshot) {
-            const newBindings = [
-              ...currentSnapshot.bindings.filter(b => b.formatName !== preview.formatName),
-              { profileId: preview.profileId, formatName: preview.formatName }
-            ];
-            useOrganStore.getState().setSnapshot({
-              ...currentSnapshot,
-              bindings: newBindings,
-              timestamp: Date.now(),
-            });
-          }
-          
-          if (onBindingCreated) {
-            onBindingCreated(preview.profileId, preview.formatName);
-          }
-        } else {
-          const errorData = await response.json().catch(() => ({}));
-          if (onBindingError) {
-            onBindingError(errorData.message || 'BINDING FAILED');
-          }
+      // Use new store method! 🔥
+      const result = await bindProfile(preview.profileId, preview.formatName);
+      
+      if (result.success) {
+        console.log('🎯 BINDING SUCCESS!', result.data);
+        if (onBindingCreated) {
+          onBindingCreated(preview.profileId, preview.formatName);
         }
-      } catch (err) {
-        console.error('Binding failed:', err);
+      } else {
+        console.error('❌ BINDING FAILED:', result.error);
         if (onBindingError) {
-          onBindingError('NETWORK ERROR - BINDING FAILED');
+          onBindingError(result.error || 'BINDING FAILED');
         }
       }
     }

@@ -13,6 +13,8 @@ interface OrganState {
   draggingProfileId: string | null;
   editProfileId: string | null;
   bindingPreview: BindingPreview | null;
+  bindingRefreshTrigger: number;
+  profileBindings: Map<string, string>; // profileId -> formatName
   
   setSnapshot: (snapshot: SystemSnapshot) => void;
   updateNodePosition: (id: string, position: Vector2) => void;
@@ -23,6 +25,8 @@ interface OrganState {
   setDragging: (id: string | null) => void;
   setEdit: (id: string | null) => void;
   setBindingPreview: (preview: BindingPreview | null) => void;
+  bindProfile: (profileId: string, formatName: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+  unbindProfile: (formatName: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const useOrganStore = create<OrganState>((set) => ({
@@ -34,6 +38,8 @@ export const useOrganStore = create<OrganState>((set) => ({
   draggingProfileId: null,
   editProfileId: null,
   bindingPreview: null,
+  bindingRefreshTrigger: 0,
+  profileBindings: new Map(),
   
   setSnapshot: (snapshot) => set((state) => {
     const existingNodes = state.nodes;
@@ -84,4 +90,125 @@ export const useOrganStore = create<OrganState>((set) => ({
   setDragging: (id) => set({ draggingProfileId: id }),
   setEdit: (id) => set({ editProfileId: id }),
   setBindingPreview: (preview) => set({ bindingPreview: preview }),
+
+  
+  unbindProfile: async (formatName) => {
+    try {
+      const deleteUrl = `https://dev.syntx-system.com/mapping/formats/${formatName}/loesche-format-profil-binding`;
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        return { success: false, error: 'UNBIND FAILED' };
+      }
+      
+      // Update store - remove binding
+      const currentSnapshot = useOrganStore.getState().snapshot;
+      if (currentSnapshot) {
+        const newBindings = currentSnapshot.bindings.filter(b => b.formatName !== formatName);
+        useOrganStore.getState().setSnapshot({
+          ...updatedSnapshot,
+          bindings: newBindings,
+          timestamp: Date.now(),
+        });
+      }
+      
+      // Remove from cache
+      const profile = useOrganStore.getState().snapshot?.profiles.find(p => 
+        useOrganStore.getState().snapshot?.bindings.some(b => 
+          b.profileId === p.id && b.formatName === formatName
+        )
+      );
+      if (profile) {
+        const newBindings = new Map(useOrganStore.getState().profileBindings);
+        newBindings.delete(profile.id);
+        useOrganStore.setState({ profileBindings: newBindings });
+        console.log('🗑️  Removed from cache:', profile.id);
+      }
+      
+      return { success: true };
+    } catch (err) {
+      console.error('unbindProfile error:', err);
+      return { success: false, error: 'NETWORK ERROR' };
+    }
+  },
+  bindProfile: async (profileId, formatName) => {
+    try {
+      // 0. Check if profile already has a binding - UNBIND OLD FIRST! 🔥
+      const existingSnapshot = useOrganStore.getState().snapshot;
+      if (existingSnapshot) {
+        const existingBinding = existingSnapshot.bindings.find(b => b.profileId === profileId);
+        if (existingBinding && existingBinding.formatName !== formatName) {
+          console.log('🗑️  Unbinding old format:', existingBinding.formatName);
+          await useOrganStore.getState().unbindProfile(existingBinding.formatName);
+        }
+      }
+      
+      // 1. PUT - Bind it
+      const putUrl = `https://dev.syntx-system.com/mapping/formats/${formatName}/kalibriere-format-profil?profile_id=${profileId}`;
+      const putResponse = await fetch(putUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (!putResponse.ok) {
+        const errorData = await putResponse.json().catch(() => ({}));
+        return { success: false, error: errorData.message || 'BINDING FAILED' };
+      }
+
+      const putData = await putResponse.json();
+      
+      // 2. GET - Fetch complete binding data back
+      const getUrl = `https://dev.syntx-system.com/mapping/formats/${formatName}/stroeme-profil-fuer-format`;
+      const getResponse = await fetch(getUrl);
+      
+      if (!getResponse.ok) {
+        return { success: true, data: putData }; // Binding worked, but couldn't fetch details
+      }
+      
+      const getData = await getResponse.json();
+      
+      // 3. Update store snapshot with new binding
+      const updatedSnapshot = useOrganStore.getState().snapshot;
+      if (updatedSnapshot) {
+        const newBindings = [
+          ...updatedSnapshot.bindings.filter(b => b.formatName !== formatName),
+          { profileId: profileId, formatName: formatName }
+        ];
+        
+        useOrganStore.getState().setSnapshot({
+          ...updatedSnapshot,
+          bindings: newBindings,
+          timestamp: Date.now(),
+        });
+      }
+      
+      // Return complete data
+      // Cache binding and increment refresh trigger
+      const newTrigger = useOrganStore.getState().bindingRefreshTrigger + 1;
+      const newBindings = new Map(useOrganStore.getState().profileBindings);
+      newBindings.set(profileId, formatName);
+      
+      console.log('🔄 STORE: Cached binding:', profileId, '→', formatName);
+      console.log('🔄 STORE: Incrementing bindingRefreshTrigger:', useOrganStore.getState().bindingRefreshTrigger, '→', newTrigger);
+      
+      useOrganStore.setState({ 
+        bindingRefreshTrigger: newTrigger,
+        profileBindings: newBindings,
+      });
+      
+      return { 
+        success: true, 
+        data: {
+          put: putData,
+          get: getData,
+          binding: getData.binding
+        }
+      };
+    } catch (err) {
+      console.error('bindProfile error:', err);
+      return { success: false, error: 'NETWORK ERROR' };
+    }
+  },
 }));

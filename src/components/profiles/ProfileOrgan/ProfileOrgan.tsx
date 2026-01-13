@@ -8,6 +8,7 @@ import FieldLayer from './layers/FieldLayer';
 import BindingLayer from './layers/BindingLayer';
 import FormatLayer from './layers/FormatLayer';
 import FormatLegend from './overlays/FormatLegend';
+import BindingSuccessNotification from './overlays/BindingSuccessNotification';
 import ProfileLayer from './layers/ProfileLayer';
 import PlanetBirthWizard from './overlays/PlanetBirthWizard';
 import BindingFlash from './overlays/BindingFlash';
@@ -20,6 +21,12 @@ export default function ProfileOrgan() {
   const [showFlash, setShowFlash] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showError, setShowError] = useState(false);
+  const [bindingNotification, setBindingNotification] = useState<{
+    profileId: string;
+    profileLabel: string;
+    profileStrategy: string;
+    formatName: string;
+  } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,9 +84,23 @@ export default function ProfileOrgan() {
   }, [setSnapshot]);
 
   const handleBindingCreated = (profileId: string, formatName: string) => {
-    setFlashMessage('BINDING STABILIZED');
+    setFlashMessage(`✅ ${profileId} → ${formatName}`);
     setShowFlash(true);
-    setTimeout(() => setShowFlash(false), 2000);
+    setTimeout(() => setShowFlash(false), 3000);
+    
+    // Show molecule animation
+    const snapshot = useOrganStore.getState().snapshot;
+    if (snapshot) {
+      const profile = snapshot.profiles.find(p => p.id === profileId);
+      if (profile) {
+        setBindingNotification({
+          profileId: profileId,
+          profileLabel: profile.label || profileId,
+          profileStrategy: profile.strategy || 'unknown',
+          formatName: formatName,
+        });
+      }
+    }
   };
 
   const handleBindingError = (error: string) => {
@@ -94,6 +115,15 @@ export default function ProfileOrgan() {
       <FieldLayer />
       <BindingLayer />
       <FormatLayer />
+      <BindingSuccessNotification
+        isVisible={!!bindingNotification}
+        profileId={bindingNotification?.profileId || ''}
+        profileLabel={bindingNotification?.profileLabel || ''}
+        profileStrategy={bindingNotification?.profileStrategy || 'unknown'}
+        formatName={bindingNotification?.formatName || ''}
+        onComplete={() => setBindingNotification(null)}
+      />
+      
       <ProfileLayer onBindingCreated={handleBindingCreated} onBindingError={handleBindingError} />
       <PlanetBirthWizard isOpen={isWizardOpen} onClose={() => setIsWizardOpen(false)} />
       <BindingFlash isVisible={showFlash} message={flashMessage} />
