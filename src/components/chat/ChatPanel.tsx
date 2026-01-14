@@ -21,6 +21,7 @@ import {
   FormatCard,
   FormatModal,
   LivePromptPreview,
+  PromptModal,
   SettingsPanel,
   SessionPanel,
   SessionScores,
@@ -168,6 +169,7 @@ export default function ChatPanel() {
   const [selectedWrapper, setSelectedWrapper] = useState<string>('');
   const [panelData, setPanelData] = useState<CompletePanelData | null>(null);
   const [formatModalOpen, setFormatModalOpen] = useState(false);
+  const [promptModalOpen, setPromptModalOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -372,10 +374,15 @@ export default function ChatPanel() {
               onOpenModal={() => setFormatModalOpen(true)}
             />
 
-            <GlassCard style={{ padding: 16 }} glowColor="#00d4ff">
+            <GlassCard 
+              style={{ padding: 16, cursor: 'pointer' }} 
+              glowColor="#00d4ff"
+              
+            >
               <LivePromptPreview 
                 wrapperContent={panelData?.mistral_wrapper.content || ''} 
                 loading={panelLoading}
+                onOpenModal={() => setPromptModalOpen(true)}
               />
             </GlassCard>
 
@@ -407,6 +414,13 @@ export default function ChatPanel() {
             </GlassCard>
           </div>
         )}
+        
+        <PromptModal
+          isOpen={promptModalOpen}
+          onClose={() => setPromptModalOpen(false)}
+          wrapperName={selectedWrapper}
+          content={panelData?.mistral_wrapper.content || ''}
+        />
         
         <FormatModal
           isOpen={formatModalOpen}
