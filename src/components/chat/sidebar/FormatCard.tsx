@@ -21,6 +21,7 @@ export function FormatCard({
 }: FormatCardProps) {
   const color = '#d946ef';
   const totalFieldWeight = formatDetails?.fields?.reduce((sum, f) => sum + (f.weight || 0), 0) || 0;
+  const totalWeight = (profileWeight || 0) + totalFieldWeight;
 
   return (
     <GlassCard 
@@ -137,7 +138,8 @@ export function FormatCard({
               gridTemplateColumns: profileWeight !== undefined ? '1fr 1fr' : '1fr', 
               gap: 12,
               position: 'relative',
-              zIndex: 1
+              zIndex: 1,
+              marginBottom: 12
             }}>
               {profileWeight !== undefined && (
                 <div className="float" style={{ 
@@ -215,8 +217,40 @@ export function FormatCard({
                   position: 'relative',
                   zIndex: 1
                 }}>
-                  FIELDS TOTAL
+                  FIELDS
                 </div>
+              </div>
+            </div>
+
+            {/* TOTAL GEWICHTUNG */}
+            <div style={{
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+              paddingTop: 12,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              position: 'relative',
+              zIndex: 1
+            }}>
+              <div style={{
+                fontSize: 11,
+                fontFamily: 'monospace',
+                color: 'rgba(255,255,255,0.6)',
+                fontWeight: 600,
+                letterSpacing: 1
+              }}>
+                GESAMT
+              </div>
+              <div style={{
+                fontSize: 24,
+                fontWeight: 900,
+                color: '#f59e0b',
+                fontFamily: 'monospace',
+                textShadow: '0 0 20px rgba(245,158,11,0.8)'
+              }}
+              className="glow-text"
+              >
+                {totalWeight}
               </div>
             </div>
           </div>
