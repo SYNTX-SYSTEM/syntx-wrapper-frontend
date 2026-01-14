@@ -17,12 +17,13 @@ import ProfileOrgan from "@/components/profiles/ProfileOrgan";
 import ScoringOrgan from "@/components/scoring/ScoringOrgan";
 import { ProfilesPanel } from "@/components/profiles/system-organs";
 
-type TabId = "data" | "system" | "chat" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff" | "optimizer" | "profiles" | "profile-organ" | "scoring";
+type TabId = "data" | "system" | "chat" | "chat-v6" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff" | "optimizer" | "profiles" | "profile-organ" | "scoring";
 
 const TABS = [
   { id: "data", label: "DATA", icon: "📊", color: "#8b5cf6" },
   { id: "system", label: "SYSTEM", icon: "🖥️", color: "#10b981" },
   { id: "chat", label: "CHAT", icon: "💬", color: "#00d4ff" },
+  { id: "chat-v6", label: "CHAT v6.1", icon: "🔥", color: "#d946ef" },
   { id: "graphs", label: "GRAPHS", icon: "📈", color: "#d946ef" },
   { id: "wrappers", label: "WRAPPERS", icon: "📦", color: "#f59e0b" },
   { id: "formats", label: "FORMATS", icon: "📋", color: "#14b8a6" },
@@ -37,14 +38,15 @@ const TABS = [
 ] as const;
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<TabId>("profile-organ");
+  const [activeTab, setActiveTab] = useState<TabId>("chat-v6");
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const renderPanel = () => {
     switch (activeTab) {
       case "data": return <DataPanel />;
       case "system": return <SystemPanel />;
-      case "chat": return <ChatPanel />;
+      case "chat": return <div style={{ padding: 40, color: 'white' }}>OLD CHAT (Legacy)</div>;
+      case "chat-v6": return <ChatPanel />;
       case "graphs": return <GraphsPanel />;
       case "wrappers": return <WrapperControl onCreateNew={() => setCreateModalOpen(true)} />;
       case "formats": return <FormatPanel />;
