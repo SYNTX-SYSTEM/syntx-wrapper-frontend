@@ -1,8 +1,10 @@
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║                                                                           ║
-// ║   🔥💎⚡ SYNTX WRAPPER CONFIG PANEL - API CLIENT v6.1 ⚡💎🔥              ║
+// ║   🔥💎⚡ SYNTX WRAPPER CONFIG PANEL - API CLIENT v7.0 ⚡💎🔥              ║
 // ║                                                                           ║
-// ║                    FINALE VERSION MIT MAPPING SUPPORT                     ║
+// ║              SYNTX ARCHITEKTUR - RESONANZ-BASIERTER ZUGRIFF               ║
+// ║                                                                           ║
+// ║   Nicht "API Wrapper" - FELD-RESONANZ KANAL                              ║
 // ║                                                                           ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
@@ -15,9 +17,15 @@ import type {
   ChatResponse,
 } from '@/types/api';
 
+// ═══════════════════════════════════════════════════════════════════════════
+// 🌊 KONSTANTEN
+// ═══════════════════════════════════════════════════════════════════════════
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://dev.syntx-system.com';
 
-// [SAME TYPES AS BEFORE - COPY FROM PREVIOUS VERSION]
+// ═══════════════════════════════════════════════════════════════════════════
+// 🧬 TYPE DEFINITIONS
+// ═══════════════════════════════════════════════════════════════════════════
 
 export interface FormatMapping {
   mistral_wrapper: string;
@@ -84,7 +92,12 @@ export interface CompletePanelData {
   format_details: FormatDetails;
   stats: WrapperStatsResponse;
   drift_scoring_enabled: boolean;
+  profile_id: string | null;  // 🔥 DIRECT ACCESS
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ⚡ ERROR HANDLING
+// ═══════════════════════════════════════════════════════════════════════════
 
 export class PanelAPIError extends Error {
   constructor(
@@ -96,6 +109,10 @@ export class PanelAPIError extends Error {
     this.name = 'PanelAPIError';
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 🌊 CORE FETCH FUNCTION
+// ═══════════════════════════════════════════════════════════════════════════
 
 async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
@@ -121,7 +138,15 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
   return data;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// 💎 SYNTX PANEL API - HAUPTKLASSE
+// ═══════════════════════════════════════════════════════════════════════════
+
 export const panelAPI = {
+
+  // ───────────────────────────────────────────────────────────────────────
+  // 📋 WRAPPER OPERATIONS
+  // ───────────────────────────────────────────────────────────────────────
 
   async getWrappersList(): Promise<Wrapper[]> {
     const data = await fetchAPI<{ wrappers: Wrapper[] }>('/resonanz/wrappers/full');
@@ -140,6 +165,10 @@ export const panelAPI = {
     return fetchAPI<WrapperStatsResponse>(`/resonanz/stats/wrapper/${encodeURIComponent(name)}`);
   },
 
+  // ───────────────────────────────────────────────────────────────────────
+  // 🗺️ MAPPING OPERATIONS
+  // ───────────────────────────────────────────────────────────────────────
+
   async getMappings(): Promise<MappingsResponse> {
     return fetchAPI<MappingsResponse>('/mapping/formats');
   },
@@ -149,18 +178,70 @@ export const panelAPI = {
     return mappings.mappings[format] || null;
   },
 
+  // ───────────────────────────────────────────────────────────────────────
+  // 📋 FORMAT OPERATIONS
+  // ───────────────────────────────────────────────────────────────────────
+
   async getFormatDetails(format: string): Promise<FormatResponse> {
     return fetchAPI<FormatResponse>(`/resonanz/formats/${encodeURIComponent(format)}`);
   },
 
+  // ───────────────────────────────────────────────────────────────────────
+  // 🎯 PROFILE OPERATIONS
+  // ───────────────────────────────────────────────────────────────────────
+
   /**
-   * Load ALL data needed for the panel
+   * 🔥 GET PROFILE_ID FOR WRAPPER
    * 
-   * WICHTIG: Benutzt den URSPRÜNGLICHEN Wrapper Namen,
-   * nicht den aus dem Mapping!
+   * Brutaler Direct Call - holt profile_id aus mapping
    * 
-   * Weil: User wählt "naxixam" → das ist der echte Wrapper
-   * Mapping sagt "syntex_wrapper_review" → das ist ein Standard-Name der nicht existiert!
+   * Flow: wrapper → meta → format → mapping → profile_id
+   */
+  async getProfileIdForWrapper(wrapperName: string): Promise<string | null> {
+    try {
+      // STEP 1: Get wrapper meta to find format
+      const meta = await this.getWrapperMeta(wrapperName);
+      const formatName = meta.meta?.format;
+      
+      if (!formatName) {
+        console.warn(`[getProfileId] No format for wrapper: ${wrapperName}`);
+        return null;
+      }
+      
+      // STEP 2: Get mapping for format to extract profile_id
+      const mapping = await this.getMappingForFormat(formatName);
+      
+      if (!mapping) {
+        console.warn(`[getProfileId] No mapping for format: ${formatName}`);
+        return null;
+      }
+      
+      return mapping.profile_id || null;
+    } catch (error) {
+      console.error('[getProfileId] Error:', error);
+      return null;
+    }
+  },
+
+  // ───────────────────────────────────────────────────────────────────────
+  // 🌊 COMPLETE PANEL DATA (MAIN LOADER)
+  // ───────────────────────────────────────────────────────────────────────
+
+  /**
+   * 💎 LOAD COMPLETE PANEL DATA
+   * 
+   * Lädt ALLE Daten für das Panel in einem optimierten Flow
+   * 
+   * WICHTIG: Benutzt den URSPRÜNGLICHEN Wrapper Namen!
+   * Der User wählt z.B. "naxixam" → das ist der echte Wrapper
+   * Mapping könnte "syntex_wrapper_review" sagen → das wäre falsch!
+   * 
+   * Flow:
+   *   1. Wrapper Meta laden → Format finden
+   *   2. Mapping für Format laden → GPT Wrapper + Drift Config + Profile ID
+   *   3. Parallel laden: Wrapper Details, Format Details, Stats
+   *   4. Profile ID separat laden (über getProfileIdForWrapper)
+   *   5. Alles kombinieren → Complete Panel Data
    */
   async loadCompletePanelData(wrapperName: string): Promise<CompletePanelData> {
     // STEP 1: Get wrapper meta to find format
@@ -168,25 +249,34 @@ export const panelAPI = {
     const formatName = meta.meta?.format;
 
     if (!formatName) {
-      throw new PanelAPIError(400, 'Wrapper has no format binding', 'meta.format is null');
+      throw new PanelAPIError(
+        400, 
+        'Wrapper has no format binding', 
+        'meta.format is null'
+      );
     }
 
-    // STEP 2: Get mapping (hat GPT wrapper + drift config)
+    // STEP 2: Get mapping (hat GPT wrapper + drift config + profile_id)
     const mapping = await this.getMappingForFormat(formatName);
 
     if (!mapping) {
-      throw new PanelAPIError(404, `No mapping for format: ${formatName}`, 'Format not in mappings');
+      throw new PanelAPIError(
+        404, 
+        `No mapping for format: ${formatName}`, 
+        'Format not in mappings'
+      );
     }
 
     // STEP 3: Load everything in parallel
     // WICHTIG: Benutze wrapperName (der echte!), nicht mapping.mistral_wrapper!
-    const [mistralWrapper, formatDetails, stats] = await Promise.all([
-      this.getWrapperDetail(wrapperName),  // ← DER ECHTE WRAPPER NAME!
-      this.getFormatDetails(formatName),
-      this.getWrapperStats(wrapperName),
+    const [mistralWrapper, formatDetails, stats, profileId] = await Promise.all([
+      this.getWrapperDetail(wrapperName),      // ← DER ECHTE WRAPPER!
+      this.getFormatDetails(formatName),       // ← FORMAT DETAILS
+      this.getWrapperStats(wrapperName),       // ← STATS
+      this.getProfileIdForWrapper(wrapperName), // ← PROFILE_ID
     ]);
 
-    // STEP 4: Return everything!
+    // STEP 4: Return complete panel data!
     return {
       format_name: formatName,
       mapping: mapping,
@@ -195,8 +285,13 @@ export const panelAPI = {
       format_details: formatDetails.format,
       stats: stats,
       drift_scoring_enabled: mapping.drift_scoring.enabled,
+      profile_id: profileId,  // 🔥 DIRECT ACCESS!
     };
   },
+
+  // ───────────────────────────────────────────────────────────────────────
+  // 💬 CHAT OPERATIONS
+  // ───────────────────────────────────────────────────────────────────────
 
   async sendChat(request: ChatRequest): Promise<ChatResponse> {
     return fetchAPI<ChatResponse>('/resonanz/chat', {
@@ -204,5 +299,4 @@ export const panelAPI = {
       body: JSON.stringify(request),
     });
   },
-
 };

@@ -10,20 +10,34 @@ interface ProfilePlanetProps {
 export default function ProfilePlanet({ profile }: ProfilePlanetProps) {
   const coherence = useScoringStore((state) => state.coherence);
   const instability = useScoringStore((state) => state.instability);
-  const nextProfile = useScoringStore((state) => state.nextProfile);
-  const prevProfile = useScoringStore((state) => state.prevProfile);
+  const updateComponentWeight = useScoringStore((state) => state.updateComponentWeight);
   
   const pulseRate = 1.6 - (profile.weight / 100) * 0.4;
   const isStable = instability < 0.1;
   const componentsCount = Object.keys(profile.components || {}).length;
+  const componentsList = Object.entries(profile.components || {});
+  
+  // CLICK → Äußerster Component weight++
+  const handleClick = () => {
+    if (componentsList.length === 0) return;
+    const aeusstesterComponent = componentsList[componentsList.length - 1];
+    const [name] = aeusstesterComponent;
+    updateComponentWeight(name, 0.01);
+  };
+  
+  // DOUBLE-CLICK → Innerster Component weight++
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (componentsList.length === 0) return;
+    const innersterComponent = componentsList[0];
+    const [name] = innersterComponent;
+    updateComponentWeight(name, 0.01);
+  };
   
   return (
     <div 
-      onClick={nextProfile}
-      onDoubleClick={(e) => {
-        e.stopPropagation();
-        prevProfile();
-      }}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       style={{
         position: 'fixed',
         inset: 0,

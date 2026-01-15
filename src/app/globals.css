@@ -1112,6 +1112,7 @@ body {
   box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2);
 }
 
+/* .cyber-scan-line - DISABLED (animated scanning line)
 .cyber-scan-line {
   position: absolute;
   top: 0;
@@ -1122,6 +1123,7 @@ body {
   animation: scan 3s linear infinite;
   pointer-events: none;
 }
+*/
 
 @keyframes scan {
   0% { transform: translateY(0); }
@@ -1136,6 +1138,7 @@ body {
   overflow: hidden;
 }
 
+/* .cyber-card::before - DISABLED (animated diagonal lines)
 .cyber-card::before {
   content: '';
   position: absolute;
@@ -1148,6 +1151,7 @@ body {
   animation: border-flow 3s linear infinite;
   border-radius: 16px;
 }
+*/
 
 @keyframes border-flow {
   0%, 100% { transform: rotate(0deg); }

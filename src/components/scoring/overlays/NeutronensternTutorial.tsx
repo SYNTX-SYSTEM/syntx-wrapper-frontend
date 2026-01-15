@@ -16,7 +16,7 @@ export default function NeutronensternTutorial({ autoShow = true }: Neutronenste
     
     const timer = setTimeout(() => {
       setVisible(false);
-    }, 20000); // 20 Sekunden
+    }, 20000);
     
     return () => clearTimeout(timer);
   }, [autoShow]);
@@ -28,29 +28,19 @@ export default function NeutronensternTutorial({ autoShow = true }: Neutronenste
       position: { top: '20%', left: '50%' }
     },
     {
-      title: "👆 CLICK = WACHSEN",
-      text: "Click in den Zwischenraum zwischen Ringen → Ring wächst (weight++)",
-      position: { top: '40%', left: '30%' }
-    },
-    {
-      title: "👆👆 DOUBLE-CLICK = SCHRUMPFEN",
-      text: "Double-Click im Zwischenraum → Ring schrumpft (weight--). Muss schnell sein!",
-      position: { top: '60%', right: '30%' }
-    },
-    {
       title: "🖱️ MAUSRAD = ÄUSSERER RING",
       text: "Scroll UP → Äußerster Ring wächst | Scroll DOWN → Äußerster Ring schrumpft",
       position: { top: '30%', right: '25%' }
     },
     {
-      title: "⚖️ AUTO-BALANCE",
-      text: "Andere Ringe passen sich automatisch an. Sum bleibt immer 1.000!",
-      position: { bottom: '25%', left: '50%' }
+      title: "🌍 PLANET-CLICK",
+      text: "Click auf Planet → Äußerster Component weight++ | Double-Click → Innerster Component weight++",
+      position: { top: '50%', left: '50%' }
     },
     {
-      title: "🌍 PLANET-CLICK",
-      text: "Click auf Planet → Nächstes Profil | Double-Click → Vorheriges Profil",
-      position: { top: '50%', left: '50%' }
+      title: "⚖️ AUTO-BALANCE",
+      text: "Andere Components passen sich automatisch an. Sum bleibt immer 1.000!",
+      position: { bottom: '25%', left: '50%' }
     }
   ];
   
@@ -70,7 +60,6 @@ export default function NeutronensternTutorial({ autoShow = true }: Neutronenste
             pointerEvents: 'none',
           }}
         >
-          {/* NEUTRONENSTERN */}
           <motion.div
             animate={{
               ...currentStep.position,
@@ -102,7 +91,6 @@ export default function NeutronensternTutorial({ autoShow = true }: Neutronenste
             ⭐
           </motion.div>
           
-          {/* TEXT BUBBLE */}
           <motion.div
             key={step}
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -147,7 +135,6 @@ export default function NeutronensternTutorial({ autoShow = true }: Neutronenste
               {currentStep.text}
             </div>
             
-            {/* NAVIGATION */}
             <div style={{
               display: 'flex',
               gap: '12px',

@@ -6,7 +6,6 @@ import ScoringNeuralBackground from './layers/ScoringNeuralBackground';
 import ProfilePlanet from './layers/ProfilePlanet';
 import RingSystem from './layers/RingSystem';
 import Legend from './overlays/Legend';
-import InteractionZones from './overlays/InteractionZones';
 import SumDisplay from './overlays/SumDisplay';
 import NeutronensternTutorial from './overlays/NeutronensternTutorial';
 
@@ -21,6 +20,7 @@ export default function ScoringOrgan() {
   const profiles = useScoringStore((state) => state.profiles);
   const activeProfile = useScoringStore((state) => state.activeProfile);
   const setProfiles = useScoringStore((state) => state.setProfiles);
+  const updateComponentWeight = useScoringStore((state) => state.updateComponentWeight);
 
   useEffect(() => {
     const fetchProfiles = async () => {
@@ -37,7 +37,6 @@ export default function ScoringOrgan() {
         setProfiles(profilesList);
         setLoading(false);
         
-        // Show tutorial on first load
         const hasSeenTutorial = localStorage.getItem('syntx-scoring-tutorial-seen');
         if (!hasSeenTutorial) {
           setShowTutorial(true);
@@ -83,7 +82,6 @@ export default function ScoringOrgan() {
     };
   }, [activeProfile]);
 
-  // Keyboard shortcut: Press "?" to show tutorial
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === '?') {
@@ -94,6 +92,24 @@ export default function ScoringOrgan() {
     window.addEventListener('keypress', handleKeyPress);
     return () => window.removeEventListener('keypress', handleKeyPress);
   }, []);
+
+  // MAUSRAD HANDLER
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (!activeProfile) return;
+      
+      const componentsList = Object.entries(activeProfile.components || {});
+      const aeusstesterRing = componentsList[componentsList.length - 1];
+      if (!aeusstesterRing) return;
+      
+      const [name] = aeusstesterRing;
+      const delta = e.deltaY < 0 ? 0.01 : -0.01;
+      updateComponentWeight(name, delta);
+    };
+    
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [activeProfile, updateComponentWeight]);
 
   if (loading) {
     return (
@@ -146,14 +162,12 @@ export default function ScoringOrgan() {
       <Legend components={activeProfile.components || {}} />
       <ProfilePlanet profile={activeProfile} />
       <RingSystem components={activeProfile.components || {}} />
-      <InteractionZones components={activeProfile.components || {}} />
       <SumDisplay components={activeProfile.components || {}} />
       
       {showTutorial && (
         <NeutronensternTutorial autoShow={showTutorial} />
       )}
       
-      {/* HELP BUTTON */}
       <button
         onClick={() => setShowTutorial(true)}
         style={{

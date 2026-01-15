@@ -368,6 +368,8 @@ export default function ChatPanel() {
 
             <FormatCard
               profileWeight={panelData?.mapping?.resonanz_score}
+              profileId={panelData?.mapping?.profile_id}
+              scoringId={panelData?.profile_id}
               selectedFormat={panelData?.format_name || ''}
               formatDetails={panelData?.format_details || null}
               loading={panelLoading}

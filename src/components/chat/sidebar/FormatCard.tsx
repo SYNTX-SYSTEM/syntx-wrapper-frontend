@@ -8,6 +8,8 @@ interface FormatCardProps {
   selectedFormat: string;
   formatDetails: FormatDetails | null;
   profileWeight?: number;
+  profileId?: string;
+  scoringId?: string;  // ← NEU!
   loading?: boolean;
   onOpenModal: () => void;
 }
@@ -16,6 +18,8 @@ export function FormatCard({
   selectedFormat, 
   formatDetails, 
   profileWeight,
+  profileId,
+  scoringId,  // ← NEU!
   loading = false,
   onOpenModal 
 }: FormatCardProps) {
@@ -106,14 +110,14 @@ export function FormatCard({
             overflow: 'hidden',
             boxShadow: '0 0 20px rgba(217,70,239,0.2), inset 0 0 30px rgba(217,70,239,0.1)'
           }}>
-            {/* Animated Border */}
-            <div style={{
+            {/* Animated Border - DISABLED */}
+            {/* <div style={{
               position: 'absolute',
               top: 0, left: 0, right: 0, height: 2,
               background: 'linear-gradient(90deg, transparent, #d946ef, transparent)',
               animation: 'shimmer 2s infinite',
               opacity: 0.8
-            }} />
+            }} /> */}
             
             {/* Neural Background Pattern */}
             <div style={{
@@ -124,13 +128,37 @@ export function FormatCard({
               pointerEvents: 'none'
             }} />
 
+            {/* HEADER mit IDs */}
             <div style={{
               fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.6)',
               marginBottom: 12, letterSpacing: 2, fontWeight: 700,
               textTransform: 'uppercase',
-              position: 'relative', zIndex: 1
+              position: 'relative', zIndex: 1,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 8
             }}>
-              ⚡ GEWICHTUNG
+              <span>⚡ GEWICHTUNG</span>
+              
+              {/* PROFILE ID BADGE */}
+              {scoringId && (
+                <span className="float" style={{
+                  fontSize: 9,
+                  color: 'rgba(0,212,255,0.9)',
+                  background: 'linear-gradient(135deg, rgba(0,212,255,0.15), rgba(0,212,255,0.05))',
+                  padding: '3px 8px',
+                  borderRadius: 6,
+                  border: '1px solid rgba(0,212,255,0.4)',
+                  fontWeight: 700,
+                  letterSpacing: 0.5,
+                  boxShadow: '0 0 10px rgba(0,212,255,0.3)',
+                  textShadow: '0 0 8px rgba(0,212,255,0.5)'
+                }}>
+                  📊 {scoringId}
+                </span>
+              )}
             </div>
             
             <div style={{ 
