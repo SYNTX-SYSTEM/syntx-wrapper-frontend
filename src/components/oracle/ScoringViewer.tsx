@@ -37,7 +37,6 @@ export function ScoringViewer({ profileId, format, reloadTrigger }: Props) {
         const data = await response.json();
         const profile = data.profile_complete;
         
-        // Extract only scoring-relevant data
         const scoringWeights = {
           field_scoring_methods: profile?.field_scoring_methods || {},
           entity_weights: profile?.entity_weights || {},
@@ -58,15 +57,11 @@ export function ScoringViewer({ profileId, format, reloadTrigger }: Props) {
   if (!format || !profileId) {
     return (
       <div style={{
-        position: 'fixed',
-        bottom: 20,
-        right: 20,
-        width: 400,
-        maxHeight: 500,
+        width: '100%',
+        padding: 20,
         background: ORACLE_COLORS.bgLight,
         borderRadius: 14,
         border: `2px solid ${ORACLE_COLORS.tertiary}60`,
-        padding: 20,
       }}>
         <div style={{
           fontSize: 12,
@@ -82,10 +77,7 @@ export function ScoringViewer({ profileId, format, reloadTrigger }: Props) {
 
   return (
     <div style={{
-      position: 'fixed',
-      bottom: 20,
-      right: 20,
-      width: 400,
+      width: '100%',
       maxHeight: 500,
       background: `linear-gradient(135deg, ${ORACLE_COLORS.bgLight}f0, ${ORACLE_COLORS.bg}f0)`,
       borderRadius: 14,

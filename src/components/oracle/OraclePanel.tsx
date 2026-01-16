@@ -41,7 +41,6 @@ export function OraclePanel() {
         const data = await response.json();
         setProfileData(data.profile_complete || null);
         
-        // Store original values
         const originals: Record<string, number> = {};
         const profile = data.profile_complete;
         
@@ -110,7 +109,6 @@ export function OraclePanel() {
     try {
       const AUTH = btoa('syntx:ekv2xp73zdEUEH5u9fVu');
 
-      // Build weight update payload
       const entityWeights: Record<string, number> = {};
       const thresholds: Record<string, number> = {};
       const methodWeights: Record<string, number> = {};
@@ -151,7 +149,6 @@ export function OraclePanel() {
         const result = await response.json();
         console.log('✅ SAVE SUCCESS:', result);
         
-        // Prepare modifications for overlay
         const mods = Object.entries(modifiedProperties).map(([id, newValue]) => ({
           property: id.replace(/^(entity|threshold|method)_/, ''),
           oldValue: originalValues[id] || 0,
@@ -161,10 +158,8 @@ export function OraclePanel() {
         setSaveModifications(mods);
         setShowSaveOverlay(true);
         
-        // Clear modifications
         setModifiedProperties({});
         
-        // Trigger reload
         await loadProfileData(selectedFormat!);
         setReloadTrigger(prev => prev + 1);
       } else {
@@ -189,7 +184,7 @@ export function OraclePanel() {
       overflow: 'hidden',
     }}>
       <div style={{
-        maxWidth: 1600,
+        maxWidth: 1800,
         margin: '0 auto',
         position: 'relative',
         zIndex: 1,
@@ -198,7 +193,7 @@ export function OraclePanel() {
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '300px 1fr 320px',
+          gridTemplateColumns: '300px 1fr 400px',
           gap: 40,
           alignItems: 'start',
         }}>
@@ -217,7 +212,6 @@ export function OraclePanel() {
               loading={false}
             />
 
-            {/* Save Button */}
             {hasModifications && (
               <div style={{
                 marginTop: 20,
@@ -261,27 +255,29 @@ export function OraclePanel() {
             )}
           </div>
 
-          {/* Center - Oracle Eye with Spaceballs */}
+          {/* Center - Oracle Eye */}
           <OracleEye
             profile={profileData}
             onPropertyChange={handlePropertyChange}
           />
 
-          {/* Right Column - Stats (Raised Position) */}
-          <div style={{ marginTop: -80 }}>
+          {/* Right Column - Stacked Panels (NO OVERLAP!) */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 20,
+          }}>
             <SpaceLegend scores={null} />
+            
+            <ScoringViewer
+              profileId={selectedProfile}
+              format={selectedFormat}
+              reloadTrigger={reloadTrigger}
+            />
           </div>
         </div>
       </div>
 
-      {/* Bottom Right - Scoring Viewer */}
-      <ScoringViewer
-        profileId={selectedProfile}
-        format={selectedFormat}
-        reloadTrigger={reloadTrigger}
-      />
-
-      {/* Save Success Overlay */}
       <SaveSuccessOverlay
         show={showSaveOverlay}
         modifications={saveModifications}
