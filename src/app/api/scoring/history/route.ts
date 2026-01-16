@@ -8,30 +8,22 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format');
-    const profile = searchParams.get('profile');
     const limit = searchParams.get('limit') || '20';
-    
-    // Scorings hängen an Format + Profile!
-    if (!format || !profile) {
-      return NextResponse.json(
-        { error: 'Format and profile parameters required', scorings: [] },
-        { status: 400 }
-      );
-    }
     
     const authHeader = 'Basic ' + Buffer.from(`${AUTH_USER}:${AUTH_PASS}`).toString('base64');
     
-    // Call backend: /resonanz/scoring/history?format=sigma&profile=gpt-4&limit=20
-    const response = await fetch(
-      `${BACKEND_URL}/resonanz/scoring/history?format=${format}&profile=${profile}&limit=${limit}`,
-      {
-        method: 'GET',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': authHeader,
-        },
-      }
-    );
+    let url = `${BACKEND_URL}/drift/results`;
+    if (format) {
+      url += `?format=${format.toUpperCase()}`;
+    }
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': authHeader,
+      },
+    });
 
     if (!response.ok) {
       const error = await response.text();
@@ -43,7 +35,21 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    
+    const scorings = (data.results || []).slice(0, parseInt(limit)).map((result: any) => ({
+      id: result.filename,
+      timestamp: result.scored_at || result.timestamp,
+      format: result.format,
+      profile: result.template_id || 'default',
+      overall_score: result.aggregate?.overall || 0,
+      field_count: Object.keys(result.field_scores || {}).length,
+      scores: result.field_scores,
+    }));
+    
+    return NextResponse.json({
+      scorings,
+      total: data.total_results || scorings.length,
+    });
   } catch (error) {
     console.error('Scoring history API error:', error);
     return NextResponse.json(
