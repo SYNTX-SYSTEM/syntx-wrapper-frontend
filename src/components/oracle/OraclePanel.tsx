@@ -64,21 +64,26 @@ export function OraclePanel() {
   };
 
   const handleSave = async () => {
-    if (!selectedFormat || !selectedProfile || Object.keys(modifiedProperties).length === 0) {
+    if (!selectedFormat || Object.keys(modifiedProperties).length === 0) {
       alert('No changes to save');
       return;
     }
 
-    console.log('💾 SAVING MODIFICATIONS:', {
-      format: selectedFormat,
-      profile: selectedProfile,
-      modifications: modifiedProperties,
-    });
+    // ✅ GET ACTUAL PROFILE_ID FROM LOADED DATA
+    const actualProfileId = profileData?.profile_id;
+    
+    if (!actualProfileId) {
+      alert('Profile ID not found');
+      console.error('❌ profileData:', profileData);
+      return;
+    }
+
+    console.log('💾 SAVING WITH PROFILE ID:', actualProfileId);
 
     try {
       const AUTH = btoa('syntx:ekv2xp73zdEUEH5u9fVu');
 
-      // Build update payload based on property types
+      // Build weight update payload
       const entityWeights: Record<string, number> = {};
       const thresholds: Record<string, number> = {};
       const methodWeights: Record<string, number> = {};
@@ -96,32 +101,39 @@ export function OraclePanel() {
         }
       });
 
-      // Update profile weights endpoint
+      const payload: any = {};
+      if (Object.keys(entityWeights).length > 0) payload.entity_weights = entityWeights;
+      if (Object.keys(thresholds).length > 0) payload.thresholds = thresholds;
+      if (Object.keys(methodWeights).length > 0) payload.method_weights = methodWeights;
+
+      console.log('📦 PAYLOAD:', payload);
+
+      // ✅ USE CORRECT ENDPOINT WITH ACTUAL PROFILE ID
       const response = await fetch(
-        `https://dev.syntx-system.com/scoring/profiles/${selectedProfile}/weights`,
+        `https://dev.syntx-system.com/scoring/profiles/${actualProfileId}/weights`,
         {
           method: 'PUT',
           headers: {
             'Authorization': `Basic ${AUTH}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            entity_weights: Object.keys(entityWeights).length > 0 ? entityWeights : undefined,
-            thresholds: Object.keys(thresholds).length > 0 ? thresholds : undefined,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
       if (response.ok) {
-        alert('✅ Scoring profile updated successfully!');
+        const result = await response.json();
+        console.log('✅ SAVE SUCCESS:', result);
+        alert(`✅ Updated ${result.updated.join(', ')}!`);
         setModifiedProperties({});
-        loadProfileData(selectedFormat!);
+        await loadProfileData(selectedFormat!);
       } else {
-        const error = await response.text();
-        alert(`❌ Failed to save: ${error}`);
+        const errorText = await response.text();
+        console.error('❌ Save failed:', errorText);
+        alert(`❌ Failed to save: ${errorText}`);
       }
     } catch (error) {
-      console.error('Save failed:', error);
+      console.error('❌ Save failed:', error);
       alert(`❌ Save failed: ${error}`);
     }
   };
@@ -215,8 +227,10 @@ export function OraclePanel() {
             onPropertyChange={handlePropertyChange}
           />
 
-          {/* Right Column - Stats */}
-          <SpaceLegend scores={null} />
+          {/* Right Column - Stats (Raised Position) */}
+          <div style={{ marginTop: -80 }}>
+            <SpaceLegend scores={null} />
+          </div>
         </div>
       </div>
 
