@@ -5,7 +5,8 @@ import { OracleHeader } from './OracleHeader';
 import { OracleEye } from './OracleEye';
 import { FormatSelector } from './FormatSelector';
 import { ProfileSelector } from './ProfileSelector';
-import { ProfileViewer } from './ProfileViewer';
+import { ScoringViewer } from './ScoringViewer';
+import { SaveSuccessOverlay } from './SaveSuccessOverlay';
 import { SpaceLegend } from './SpaceLegend';
 import { ORACLE_COLORS } from './constants';
 
@@ -14,6 +15,10 @@ export function OraclePanel() {
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<any>(null);
   const [modifiedProperties, setModifiedProperties] = useState<Record<string, number>>({});
+  const [originalValues, setOriginalValues] = useState<Record<string, number>>({});
+  const [reloadTrigger, setReloadTrigger] = useState(0);
+  const [showSaveOverlay, setShowSaveOverlay] = useState(false);
+  const [saveModifications, setSaveModifications] = useState<any[]>([]);
 
   useEffect(() => {
     if (selectedFormat && selectedProfile) {
@@ -35,6 +40,28 @@ export function OraclePanel() {
       if (response.ok) {
         const data = await response.json();
         setProfileData(data.profile_complete || null);
+        
+        // Store original values
+        const originals: Record<string, number> = {};
+        const profile = data.profile_complete;
+        
+        if (profile?.entity_weights) {
+          Object.entries(profile.entity_weights).forEach(([k, v]) => {
+            originals[`entity_${k}`] = v as number;
+          });
+        }
+        if (profile?.thresholds) {
+          Object.entries(profile.thresholds).forEach(([k, v]) => {
+            originals[`threshold_${k}`] = v as number;
+          });
+        }
+        if (profile?.field_scoring_methods) {
+          Object.entries(profile.field_scoring_methods).forEach(([k, v]: [string, any]) => {
+            originals[`method_${k}`] = v.weight;
+          });
+        }
+        
+        setOriginalValues(originals);
       }
     } catch (error) {
       console.error('Failed to load profile:', error);
@@ -47,6 +74,7 @@ export function OraclePanel() {
     setSelectedProfile(null);
     setProfileData(null);
     setModifiedProperties({});
+    setOriginalValues({});
   };
 
   const handleProfileChange = (profile: string) => {
@@ -69,7 +97,6 @@ export function OraclePanel() {
       return;
     }
 
-    // ✅ GET ACTUAL PROFILE_ID FROM LOADED DATA
     const actualProfileId = profileData?.profile_id;
     
     if (!actualProfileId) {
@@ -108,7 +135,6 @@ export function OraclePanel() {
 
       console.log('📦 PAYLOAD:', payload);
 
-      // ✅ USE CORRECT ENDPOINT WITH ACTUAL PROFILE ID
       const response = await fetch(
         `https://dev.syntx-system.com/scoring/profiles/${actualProfileId}/weights`,
         {
@@ -124,9 +150,23 @@ export function OraclePanel() {
       if (response.ok) {
         const result = await response.json();
         console.log('✅ SAVE SUCCESS:', result);
-        alert(`✅ Updated ${result.updated.join(', ')}!`);
+        
+        // Prepare modifications for overlay
+        const mods = Object.entries(modifiedProperties).map(([id, newValue]) => ({
+          property: id.replace(/^(entity|threshold|method)_/, ''),
+          oldValue: originalValues[id] || 0,
+          newValue: newValue,
+        }));
+        
+        setSaveModifications(mods);
+        setShowSaveOverlay(true);
+        
+        // Clear modifications
         setModifiedProperties({});
+        
+        // Trigger reload
         await loadProfileData(selectedFormat!);
+        setReloadTrigger(prev => prev + 1);
       } else {
         const errorText = await response.text();
         console.error('❌ Save failed:', errorText);
@@ -234,10 +274,19 @@ export function OraclePanel() {
         </div>
       </div>
 
-      {/* Bottom Right - Profile Viewer */}
-      <ProfileViewer
+      {/* Bottom Right - Scoring Viewer */}
+      <ScoringViewer
         profileId={selectedProfile}
         format={selectedFormat}
+        reloadTrigger={reloadTrigger}
+      />
+
+      {/* Save Success Overlay */}
+      <SaveSuccessOverlay
+        show={showSaveOverlay}
+        modifications={saveModifications}
+        profileId={profileData?.profile_id || ''}
+        onClose={() => setShowSaveOverlay(false)}
       />
 
       <style jsx>{`
