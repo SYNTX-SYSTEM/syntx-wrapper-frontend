@@ -1,0 +1,9 @@
+# Find this line:
+avgScore: avg * 100, // Convert to percentage
+maxScore: max * 100,
+minScore: min * 100,
+
+# Replace with:
+avgScore: avg, // Already in correct range (0-1)
+maxScore: max,
+minScore: min,

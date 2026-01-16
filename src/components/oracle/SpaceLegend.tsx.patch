@@ -1,0 +1,4 @@
+# Change toFixed(1) to toFixed(2) for more precision
+value={`${stats.avgScore.toFixed(1)}%`}
+# to:
+value={`${(stats.avgScore * 100).toFixed(1)}%`}

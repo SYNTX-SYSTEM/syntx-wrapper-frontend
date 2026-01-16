@@ -19,12 +19,71 @@ export function OraclePanel() {
   const [reloadTrigger, setReloadTrigger] = useState(0);
   const [showSaveOverlay, setShowSaveOverlay] = useState(false);
   const [saveModifications, setSaveModifications] = useState<any[]>([]);
+  const [legendStats, setLegendStats] = useState({
+    avgScore: 0,
+    maxScore: 0,
+    minScore: 0,
+    fieldCount: 0,
+  });
 
   useEffect(() => {
     if (selectedFormat && selectedProfile) {
       loadProfileData(selectedFormat);
     }
   }, [selectedFormat, selectedProfile]);
+
+  // Calculate legend stats when profile data or modifications change
+  useEffect(() => {
+    if (profileData) {
+      calculateLegendStats();
+    }
+  }, [profileData, modifiedProperties]);
+
+  const calculateLegendStats = () => {
+    const allValues: number[] = [];
+
+    // Get all current values (original + modifications)
+    if (profileData?.entity_weights) {
+      Object.entries(profileData.entity_weights).forEach(([k, v]) => {
+        const id = `entity_${k}`;
+        allValues.push(modifiedProperties[id] ?? (v as number));
+      });
+    }
+
+    if (profileData?.thresholds) {
+      Object.entries(profileData.thresholds).forEach(([k, v]) => {
+        const id = `threshold_${k}`;
+        allValues.push(modifiedProperties[id] ?? (v as number));
+      });
+    }
+
+    if (profileData?.field_scoring_methods) {
+      Object.entries(profileData.field_scoring_methods).forEach(([k, v]: [string, any]) => {
+        const id = `method_${k}`;
+        allValues.push(modifiedProperties[id] ?? v.weight);
+      });
+    }
+
+    if (allValues.length > 0) {
+      const avg = allValues.reduce((a, b) => a + b, 0) / allValues.length;
+      const max = Math.max(...allValues);
+      const min = Math.min(...allValues);
+
+      setLegendStats({
+        avgScore: avg, // Convert to percentage
+        maxScore: max,
+        minScore: min,
+        fieldCount: allValues.length,
+      });
+    } else {
+      setLegendStats({
+        avgScore: 0,
+        maxScore: 0,
+        minScore: 0,
+        fieldCount: 0,
+      });
+    }
+  };
 
   const loadProfileData = async (format: string) => {
     try {
@@ -261,13 +320,13 @@ export function OraclePanel() {
             onPropertyChange={handlePropertyChange}
           />
 
-          {/* Right Column - Stacked Panels (NO OVERLAP!) */}
+          {/* Right Column - Stacked Panels */}
           <div style={{
             display: 'flex',
             flexDirection: 'column',
             gap: 20,
           }}>
-            <SpaceLegend scores={null} />
+            <SpaceLegend stats={legendStats} />
             
             <ScoringViewer
               profileId={selectedProfile}

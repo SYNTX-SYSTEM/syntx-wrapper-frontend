@@ -4,10 +4,15 @@ import React from 'react';
 import { ORACLE_COLORS } from './constants';
 
 type Props = {
-  scores: any;
+  stats: {
+    avgScore: number;
+    maxScore: number;
+    minScore: number;
+    fieldCount: number;
+  };
 };
 
-export function SpaceLegend({ scores }: Props) {
+export function SpaceLegend({ stats }: Props) {
   return (
     <div style={{
       padding: 24,
@@ -69,23 +74,23 @@ export function SpaceLegend({ scores }: Props) {
         marginBottom: 20,
       }}>
         <MetricCard
-          label="AVG SCORE"
-          value="0.0%"
+          label="AVG WEIGHT"
+          value={stats.avgScore.toFixed(2)}
           color={ORACLE_COLORS.primary}
         />
         <MetricCard
-          label="MAX SCORE"
-          value="0.0%"
+          label="MAX WEIGHT"
+          value={stats.maxScore.toFixed(2)}
           color={ORACLE_COLORS.secondary}
         />
         <MetricCard
-          label="MIN SCORE"
-          value="0.0%"
+          label="MIN WEIGHT"
+          value={stats.minScore.toFixed(2)}
           color={ORACLE_COLORS.tertiary}
         />
         <MetricCard
           label="FIELDS"
-          value="6"
+          value={stats.fieldCount.toString()}
           color={ORACLE_COLORS.primary}
         />
       </div>

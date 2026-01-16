@@ -12,6 +12,7 @@ type Props = {
 export function ScoringViewer({ profileId, format, reloadTrigger }: Props) {
   const [scoringData, setScoringData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (format && profileId) {
@@ -54,6 +55,15 @@ export function ScoringViewer({ profileId, format, reloadTrigger }: Props) {
     }
   };
 
+  const handleCopy = () => {
+    if (scoringData) {
+      const jsonString = JSON.stringify(scoringData, null, 2);
+      navigator.clipboard.writeText(jsonString);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   if (!format || !profileId) {
     return (
       <div style={{
@@ -87,29 +97,59 @@ export function ScoringViewer({ profileId, format, reloadTrigger }: Props) {
       flexDirection: 'column',
       overflow: 'hidden',
     }}>
-      {/* Header */}
+      {/* Header with Copy Button */}
       <div style={{
         padding: 16,
         borderBottom: `1px solid ${ORACLE_COLORS.tertiary}40`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
       }}>
-        <div style={{
-          fontSize: 12,
-          fontWeight: 800,
-          color: ORACLE_COLORS.tertiary,
-          letterSpacing: 2,
-          fontFamily: 'monospace',
-          marginBottom: 4,
-        }}>
-          ⚡ SCORING WEIGHTS
+        <div>
+          <div style={{
+            fontSize: 12,
+            fontWeight: 800,
+            color: ORACLE_COLORS.tertiary,
+            letterSpacing: 2,
+            fontFamily: 'monospace',
+            marginBottom: 4,
+          }}>
+            ⚡ SCORING WEIGHTS
+          </div>
+          <div style={{
+            fontSize: 9,
+            color: ORACLE_COLORS.textDim,
+            fontFamily: 'monospace',
+            letterSpacing: 1,
+          }}>
+            Real-time calibration data
+          </div>
         </div>
-        <div style={{
-          fontSize: 9,
-          color: ORACLE_COLORS.textDim,
-          fontFamily: 'monospace',
-          letterSpacing: 1,
-        }}>
-          Real-time calibration data
-        </div>
+
+        {/* Copy Button */}
+        {scoringData && (
+          <button
+            onClick={handleCopy}
+            style={{
+              padding: '8px 16px',
+              background: copied 
+                ? `linear-gradient(135deg, ${ORACLE_COLORS.tertiary}, ${ORACLE_COLORS.primary})`
+                : `${ORACLE_COLORS.tertiary}20`,
+              border: `2px solid ${ORACLE_COLORS.tertiary}`,
+              borderRadius: 8,
+              color: copied ? '#fff' : ORACLE_COLORS.tertiary,
+              fontSize: 10,
+              fontWeight: 800,
+              cursor: 'pointer',
+              fontFamily: 'monospace',
+              letterSpacing: 1,
+              boxShadow: copied ? `0 0 20px ${ORACLE_COLORS.tertiary}80` : 'none',
+              transition: 'all 0.2s',
+            }}
+          >
+            {copied ? '✅ COPIED!' : '📋 COPY'}
+          </button>
+        )}
       </div>
 
       {/* Content */}
