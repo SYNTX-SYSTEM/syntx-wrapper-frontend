@@ -9,7 +9,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { ProfileListSidebar } from './ProfileListSidebar';
 import { ProfileDetailsPanel } from './ProfileDetailsPanel';
 import { ProfileFormModal } from './ProfileFormModal';
-import { getProfiles } from '@/lib/api';
+import { api } from '@/lib/api';
 import { getAllProfileAnalytics } from '@/lib/api-profiles';
 import { useProfileMutations, ProfileFormData } from '@/hooks/useProfileMutations';
 
@@ -31,7 +31,7 @@ export function ProfilesPanel() {
     setLoading(true);
     try {
       const [profilesRes, analyticsRes] = await Promise.all([
-        getProfiles(),
+        api.getProfiles(),
         getAllProfileAnalytics(7)
       ]);
       

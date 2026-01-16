@@ -1,5 +1,5 @@
 // ╔═══════════════════════════════════════════════════════════════════════════╗
-// ║   👁️ FORMAT SELECTOR - SIDEBAR CONTROL                                   ║
+// ║   👁️ FORMAT SELECTOR - WITH CORRECT FIELD COUNT                          ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
 'use client';
@@ -11,6 +11,7 @@ type Format = {
   name: string;
   description: string;
   field_count?: number;
+  fields?: Array<any>;
 };
 
 type Props = {
@@ -21,6 +22,11 @@ type Props = {
 };
 
 export function FormatSelector({ formats, activeFormat, onChange, loading }: Props) {
+  // Calculate field count for each format
+  const getFieldCount = (format: Format) => {
+    return format.fields?.length || format.field_count || 0;
+  };
+
   return (
     <div style={{
       padding: 20,
@@ -63,11 +69,14 @@ export function FormatSelector({ formats, activeFormat, onChange, loading }: Pro
           }}
         >
           <option value="">Select Format...</option>
-          {formats.map(format => (
-            <option key={format.name} value={format.name}>
-              {format.name} ({format.field_count || 0} fields)
-            </option>
-          ))}
+          {formats.map(format => {
+            const fieldCount = getFieldCount(format);
+            return (
+              <option key={format.name} value={format.name}>
+                {format.name} ({fieldCount} fields)
+              </option>
+            );
+          })}
         </select>
       )}
 
