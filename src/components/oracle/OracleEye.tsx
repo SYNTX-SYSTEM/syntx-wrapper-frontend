@@ -10,6 +10,12 @@ type SpaceballData = {
   value: number;
   color: string;
   position: { x: number; y: number };
+  metadata?: {
+    method?: string;
+    description?: string;
+    profile_id?: string;
+    category?: string;
+  };
 };
 
 type Props = {
@@ -23,7 +29,6 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Calculate container center on mount and resize
     const updateCenter = () => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
@@ -63,6 +68,11 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
             x: containerCenter.x + Math.cos(angle) * radius,
             y: containerCenter.y + Math.sin(angle) * radius,
           },
+          metadata: {
+            category: 'Entity Weight',
+            profile_id: profileData.profile_id,
+            description: `Scoring weight for ${name.replace(/_/g, ' ')} entity`,
+          },
         });
         index++;
       });
@@ -81,6 +91,11 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
             x: containerCenter.x + Math.cos(angle) * radius,
             y: containerCenter.y + Math.sin(angle) * radius,
           },
+          metadata: {
+            category: 'Threshold',
+            profile_id: profileData.profile_id,
+            description: `Score threshold for ${name} rating level`,
+          },
         });
         index++;
       });
@@ -88,16 +103,22 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
 
     // Field Scoring Methods
     if (profileData.field_scoring_methods) {
-      Object.entries(profileData.field_scoring_methods).forEach(([name, method]: [string, any]) => {
+      Object.entries(profileData.field_scoring_methods).forEach(([name, methodData]: [string, any]) => {
         const angle = (index / 10) * 2 * Math.PI;
         balls.push({
           id: `method_${name}`,
           name: name.replace(/_/g, ' ').substring(0, 15),
-          value: method.weight,
+          value: methodData.weight,
           color: ORACLE_COLORS.tertiary,
           position: {
             x: containerCenter.x + Math.cos(angle) * radius,
             y: containerCenter.y + Math.sin(angle) * radius,
+          },
+          metadata: {
+            method: methodData.method || 'N/A',
+            description: methodData.description || 'No description available',
+            category: 'Field Scoring Method',
+            profile_id: profileData.profile_id,
           },
         });
         index++;
@@ -206,7 +227,7 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
         </div>
       </div>
 
-      {/* Spaceballs */}
+      {/* Spaceballs with Metadata */}
       {containerCenter.x > 0 && spaceballs.map(ball => (
         <Spaceball
           key={ball.id}
@@ -215,6 +236,7 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
           color={ball.color}
           position={ball.position}
           centerPosition={containerCenter}
+          metadata={ball.metadata}
           onDrag={(newPos, newVal) => handleSpaceballDrag(ball.id, newPos, newVal)}
         />
       ))}
