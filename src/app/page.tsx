@@ -15,9 +15,10 @@ import FormatPanel from "@/components/formats/FormatPanel";
 import { OptimizerPanel } from "@/components/optimizer";
 import ProfileOrgan from "@/components/profiles/ProfileOrgan";
 import ScoringOrgan from "@/components/scoring/ScoringOrgan";
+import { OraclePanel } from "@/components/oracle";
 import { ProfilesPanel } from "@/components/profiles/system-organs";
 
-type TabId = "data" | "system" | "chat" | "chat-v6" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff" | "optimizer" | "profiles" | "profile-organ" | "scoring";
+type TabId = "data" | "system" | "chat" | "chat-v6" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff" | "optimizer" | "profiles" | "profile-organ" | "scoring" | "oracle";
 
 const TABS = [
   { id: "data", label: "DATA", icon: "📊", color: "#8b5cf6" },
@@ -34,6 +35,7 @@ const TABS = [
   { id: "optimizer", label: "OPTIMIZER", icon: "🤖", color: "#00d4ff" },
   { id: "profiles", label: "PROFILES", icon: "👤", color: "#8b5cf6" },
   { id: "scoring", label: "SCORING", icon: "💎", color: "#9d00ff" },
+  { id: "oracle", label: "ORACLE", icon: "👁️", color: "#d946ef" },
   { id: "profile-organ", label: "PROFILE ORGAN", icon: "🧬", color: "#00ff9d" },
 ] as const;
 
@@ -57,6 +59,7 @@ export default function Home() {
       case "optimizer": return <OptimizerPanel />;
       case "profiles": return <ProfilesPanel />;
       case "scoring": return <ScoringOrgan />;
+      case "oracle": return <OraclePanel />;
       case "profile-organ": return <ProfileOrgan />;
       default: return null;
     }
