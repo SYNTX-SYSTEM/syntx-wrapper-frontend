@@ -117,7 +117,7 @@ export function Spaceball({ name, value, color, position, centerPosition, metada
             inset 0 0 30px ${color}10
           `,
           padding: 16,
-          zIndex: 1000,
+          zIndex: 9999,
           animation: 'tooltipFadeIn 0.2s ease-out',
           pointerEvents: 'none',
         }}>

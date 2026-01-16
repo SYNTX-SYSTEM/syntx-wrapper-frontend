@@ -55,7 +55,6 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
     const radius = 280;
     let index = 0;
 
-    // Entity Weights
     if (profileData.entity_weights) {
       Object.entries(profileData.entity_weights).forEach(([name, value]) => {
         const angle = (index / 10) * 2 * Math.PI;
@@ -78,7 +77,6 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
       });
     }
 
-    // Thresholds
     if (profileData.thresholds) {
       Object.entries(profileData.thresholds).forEach(([name, value]) => {
         const angle = (index / 10) * 2 * Math.PI;
@@ -101,7 +99,6 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
       });
     }
 
-    // Field Scoring Methods
     if (profileData.field_scoring_methods) {
       Object.entries(profileData.field_scoring_methods).forEach(([name, methodData]: [string, any]) => {
         const angle = (index / 10) * 2 * Math.PI;
@@ -150,84 +147,205 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        overflow: 'visible',
       }}
     >
-      {/* Logo Background - Behind Eye */}
+      {/* MEGA MILKY WAY GALAXY BACKGROUND */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: `
+          radial-gradient(ellipse 80% 40% at 50% 50%, ${ORACLE_COLORS.primary}25, transparent 60%),
+          radial-gradient(ellipse 60% 30% at 30% 50%, ${ORACLE_COLORS.secondary}20, transparent 50%),
+          radial-gradient(ellipse 60% 30% at 70% 50%, ${ORACLE_COLORS.tertiary}20, transparent 50%),
+          radial-gradient(ellipse 40% 20% at 50% 50%, ${ORACLE_COLORS.primary}15, transparent 40%)
+        `,
+        animation: 'galaxyRotate 60s linear infinite, galaxyPulse 8s ease-in-out infinite',
+        zIndex: 0,
+      }}>
+        {/* Spiral Arms Effect */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: `
+            conic-gradient(
+              from 0deg at 50% 50%,
+              transparent 0deg,
+              ${ORACLE_COLORS.primary}15 45deg,
+              transparent 90deg,
+              ${ORACLE_COLORS.secondary}15 135deg,
+              transparent 180deg,
+              ${ORACLE_COLORS.tertiary}15 225deg,
+              transparent 270deg,
+              ${ORACLE_COLORS.primary}15 315deg,
+              transparent 360deg
+            )
+          `,
+          animation: 'spiralRotate 40s linear infinite',
+          opacity: 0.6,
+        }} />
+
+        {/* Dense Star Field - Milky Way Style */}
+        {[...Array(200)].map((_, i) => {
+          const isCluster = i % 4 === 0;
+          const size = isCluster ? Math.random() * 2 + 1.5 : Math.random() * 1.5 + 0.5;
+          const left = Math.random() * 100;
+          const top = Math.random() * 100;
+          
+          // Create density towards center (Milky Way effect)
+          const distFromCenter = Math.sqrt(Math.pow(left - 50, 2) + Math.pow(top - 50, 2));
+          const opacity = Math.max(0.2, 1 - (distFromCenter / 70));
+          
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${left}%`,
+                top: `${top}%`,
+                width: size,
+                height: size,
+                borderRadius: '50%',
+                background: isCluster ? ORACLE_COLORS.primary : '#fff',
+                boxShadow: `0 0 ${size * 3}px ${isCluster ? ORACLE_COLORS.primary : '#fff'}`,
+                opacity: opacity * 0.8,
+                animation: `starTwinkle ${Math.random() * 4 + 2}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 3}s`,
+              }}
+            />
+          );
+        })}
+
+        {/* Nebula Clouds */}
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={`nebula-${i}`}
+            style={{
+              position: 'absolute',
+              left: `${20 + i * 15}%`,
+              top: `${30 + (i % 2) * 20}%`,
+              width: `${100 + Math.random() * 100}px`,
+              height: `${50 + Math.random() * 50}px`,
+              borderRadius: '50%',
+              background: `radial-gradient(ellipse, ${i % 2 === 0 ? ORACLE_COLORS.primary : ORACLE_COLORS.secondary}20, transparent 70%)`,
+              filter: 'blur(20px)',
+              animation: `nebulaDrift ${15 + i * 5}s ease-in-out infinite`,
+              animationDelay: `${i * 2}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Logo BEHIND Eye - Larger & More Visible */}
       <div style={{
         position: 'absolute',
         left: '50%',
         top: '50%',
         transform: 'translate(-50%, -50%)',
-        width: 400,
-        height: 400,
+        width: 500,
+        height: 500,
         borderRadius: '50%',
-        background: `radial-gradient(circle, ${ORACLE_COLORS.primary}40, transparent 70%)`,
-        animation: 'rotate 20s linear infinite, pulse-glow 3s ease-in-out infinite',
+        background: `radial-gradient(circle, ${ORACLE_COLORS.primary}15, transparent 70%)`,
+        animation: 'logoRotate 30s linear infinite, logoPulse 4s ease-in-out infinite',
         zIndex: 1,
+        overflow: 'visible',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}>
         <img
           src="/logo_original.png"
           alt="SYNTX Logo"
           style={{
-            width: '100%',
-            height: '100%',
+            width: '80%',
+            height: '80%',
             objectFit: 'contain',
-            opacity: 0.3,
-            filter: `drop-shadow(0 0 40px ${ORACLE_COLORS.primary})`,
+            opacity: 0.25,
+            filter: `
+              drop-shadow(0 0 60px ${ORACLE_COLORS.primary})
+              drop-shadow(0 0 100px ${ORACLE_COLORS.primary}80)
+            `,
           }}
         />
       </div>
 
-      {/* Eye Center */}
+      {/* Mega Eye Center - ON TOP */}
       <div style={{
         position: 'absolute',
         left: '50%',
         top: '50%',
         transform: 'translate(-50%, -50%)',
-        width: 300,
-        height: 300,
+        width: 320,
+        height: 320,
         borderRadius: '50%',
-        border: `3px solid ${ORACLE_COLORS.primary}`,
+        border: `4px solid ${ORACLE_COLORS.primary}`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         boxShadow: `
-          0 0 50px ${ORACLE_COLORS.primary}80,
-          0 0 100px ${ORACLE_COLORS.primary}40,
-          inset 0 0 50px ${ORACLE_COLORS.primary}20
+          0 0 80px ${ORACLE_COLORS.primary}ff,
+          0 0 120px ${ORACLE_COLORS.primary}80,
+          0 0 160px ${ORACLE_COLORS.primary}40,
+          inset 0 0 80px ${ORACLE_COLORS.primary}20
         `,
-        background: `radial-gradient(circle at center, ${ORACLE_COLORS.bg}f0, ${ORACLE_COLORS.bgLight}80)`,
+        background: `
+          radial-gradient(circle at center, ${ORACLE_COLORS.bg}ff 30%, ${ORACLE_COLORS.bgLight}f0 70%, ${ORACLE_COLORS.primary}20)
+        `,
         zIndex: 10,
+        animation: 'eyePulse 4s ease-in-out infinite',
       }}>
+        {/* Iris Ring */}
+        <div style={{
+          position: 'absolute',
+          width: 200,
+          height: 200,
+          borderRadius: '50%',
+          border: `3px solid ${ORACLE_COLORS.secondary}80`,
+          boxShadow: `
+            0 0 40px ${ORACLE_COLORS.secondary}60,
+            inset 0 0 40px ${ORACLE_COLORS.secondary}20
+          `,
+          animation: 'irisRotate 10s linear infinite',
+        }} />
+
+        {/* Profile Name */}
         {profile && (
           <div style={{
             position: 'absolute',
-            top: -50,
+            top: -60,
             left: '50%',
             transform: 'translateX(-50%)',
-            fontSize: 12,
-            fontWeight: 800,
+            fontSize: 14,
+            fontWeight: 900,
             color: ORACLE_COLORS.primary,
             fontFamily: 'monospace',
-            letterSpacing: 2,
+            letterSpacing: 3,
             textAlign: 'center',
             whiteSpace: 'nowrap',
-            textShadow: `0 0 20px ${ORACLE_COLORS.primary}`,
+            textShadow: `
+              0 0 20px ${ORACLE_COLORS.primary},
+              0 0 40px ${ORACLE_COLORS.primary}80
+            `,
+            animation: 'textGlow 3s ease-in-out infinite',
           }}>
             {profile.profile_name}
           </div>
         )}
 
+        {/* Eye Emoji */}
         <div style={{
-          fontSize: 100,
-          filter: `drop-shadow(0 0 30px ${ORACLE_COLORS.primary})`,
+          fontSize: 120,
+          filter: `
+            drop-shadow(0 0 40px ${ORACLE_COLORS.primary})
+            drop-shadow(0 0 80px ${ORACLE_COLORS.primary}80)
+          `,
           animation: 'blink 5s ease-in-out infinite',
         }}>
           👁️
         </div>
       </div>
 
-      {/* Spaceballs with Metadata */}
+      {/* Spaceballs */}
       {containerCenter.x > 0 && spaceballs.map(ball => (
         <Spaceball
           key={ball.id}
@@ -242,18 +360,69 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
       ))}
 
       <style jsx>{`
-        @keyframes rotate {
+        @keyframes galaxyRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes spiralRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(-360deg); }
+        }
+        @keyframes galaxyPulse {
+          0%, 100% { opacity: 0.8; }
+          50% { opacity: 1; }
+        }
+        @keyframes starTwinkle {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.5); }
+        }
+        @keyframes nebulaDrift {
+          0%, 100% { transform: translate(0, 0); }
+          25% { transform: translate(20px, -10px); }
+          50% { transform: translate(-10px, 20px); }
+          75% { transform: translate(-20px, -15px); }
+        }
+        @keyframes logoRotate {
           from { transform: translate(-50%, -50%) rotate(0deg); }
           to { transform: translate(-50%, -50%) rotate(360deg); }
         }
-        @keyframes pulse-glow {
+        @keyframes logoPulse {
           0%, 100% { 
-            opacity: 0.3;
-            filter: drop-shadow(0 0 40px ${ORACLE_COLORS.primary});
+            opacity: 0.25;
+            filter: 
+              drop-shadow(0 0 60px ${ORACLE_COLORS.primary})
+              drop-shadow(0 0 100px ${ORACLE_COLORS.primary}80);
           }
           50% { 
-            opacity: 0.5;
-            filter: drop-shadow(0 0 80px ${ORACLE_COLORS.primary});
+            opacity: 0.4;
+            filter: 
+              drop-shadow(0 0 80px ${ORACLE_COLORS.primary})
+              drop-shadow(0 0 120px ${ORACLE_COLORS.primary}ff);
+          }
+        }
+        @keyframes eyePulse {
+          0%, 100% { 
+            transform: translate(-50%, -50%) scale(1);
+          }
+          50% { 
+            transform: translate(-50%, -50%) scale(1.02);
+          }
+        }
+        @keyframes irisRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes textGlow {
+          0%, 100% { 
+            text-shadow: 
+              0 0 20px ${ORACLE_COLORS.primary},
+              0 0 40px ${ORACLE_COLORS.primary}80;
+          }
+          50% { 
+            text-shadow: 
+              0 0 30px ${ORACLE_COLORS.primary},
+              0 0 60px ${ORACLE_COLORS.primary}ff,
+              0 0 90px ${ORACLE_COLORS.primary}80;
           }
         }
         @keyframes blink {

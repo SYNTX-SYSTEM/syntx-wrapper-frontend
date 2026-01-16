@@ -32,7 +32,6 @@ export function OraclePanel() {
     }
   }, [selectedFormat, selectedProfile]);
 
-  // Calculate legend stats when profile data or modifications change
   useEffect(() => {
     if (profileData) {
       calculateLegendStats();
@@ -42,7 +41,6 @@ export function OraclePanel() {
   const calculateLegendStats = () => {
     const allValues: number[] = [];
 
-    // Get all current values (original + modifications)
     if (profileData?.entity_weights) {
       Object.entries(profileData.entity_weights).forEach(([k, v]) => {
         const id = `entity_${k}`;
@@ -70,7 +68,7 @@ export function OraclePanel() {
       const min = Math.min(...allValues);
 
       setLegendStats({
-        avgScore: avg, // Convert to percentage
+        avgScore: avg,
         maxScore: max,
         minScore: min,
         fieldCount: allValues.length,
@@ -127,7 +125,6 @@ export function OraclePanel() {
   };
 
   const handleFormatChange = (format: string) => {
-    console.log('🔥 FORMAT CHANGED:', format);
     setSelectedFormat(format);
     setSelectedProfile(null);
     setProfileData(null);
@@ -136,13 +133,10 @@ export function OraclePanel() {
   };
 
   const handleProfileChange = (profile: string) => {
-    console.log('🔥 PROFILE CHANGED:', profile);
     setSelectedProfile(profile);
   };
 
   const handlePropertyChange = (propertyId: string, newValue: number) => {
-    console.log('🎯 PROPERTY CHANGED:', { propertyId, newValue });
-    
     setModifiedProperties(prev => ({
       ...prev,
       [propertyId]: newValue,
@@ -159,11 +153,8 @@ export function OraclePanel() {
     
     if (!actualProfileId) {
       alert('Profile ID not found');
-      console.error('❌ profileData:', profileData);
       return;
     }
-
-    console.log('💾 SAVING WITH PROFILE ID:', actualProfileId);
 
     try {
       const AUTH = btoa('syntx:ekv2xp73zdEUEH5u9fVu');
@@ -174,14 +165,11 @@ export function OraclePanel() {
 
       Object.entries(modifiedProperties).forEach(([id, value]) => {
         if (id.startsWith('entity_')) {
-          const entityName = id.replace('entity_', '');
-          entityWeights[entityName] = value;
+          entityWeights[id.replace('entity_', '')] = value;
         } else if (id.startsWith('threshold_')) {
-          const thresholdName = id.replace('threshold_', '');
-          thresholds[thresholdName] = value;
+          thresholds[id.replace('threshold_', '')] = value;
         } else if (id.startsWith('method_')) {
-          const methodName = id.replace('method_', '');
-          methodWeights[methodName] = value;
+          methodWeights[id.replace('method_', '')] = value;
         }
       });
 
@@ -189,8 +177,6 @@ export function OraclePanel() {
       if (Object.keys(entityWeights).length > 0) payload.entity_weights = entityWeights;
       if (Object.keys(thresholds).length > 0) payload.thresholds = thresholds;
       if (Object.keys(methodWeights).length > 0) payload.method_weights = methodWeights;
-
-      console.log('📦 PAYLOAD:', payload);
 
       const response = await fetch(
         `https://dev.syntx-system.com/scoring/profiles/${actualProfileId}/weights`,
@@ -205,9 +191,6 @@ export function OraclePanel() {
       );
 
       if (response.ok) {
-        const result = await response.json();
-        console.log('✅ SAVE SUCCESS:', result);
-        
         const mods = Object.entries(modifiedProperties).map(([id, newValue]) => ({
           property: id.replace(/^(entity|threshold|method)_/, ''),
           oldValue: originalValues[id] || 0,
@@ -216,18 +199,15 @@ export function OraclePanel() {
         
         setSaveModifications(mods);
         setShowSaveOverlay(true);
-        
         setModifiedProperties({});
         
         await loadProfileData(selectedFormat!);
         setReloadTrigger(prev => prev + 1);
       } else {
         const errorText = await response.text();
-        console.error('❌ Save failed:', errorText);
         alert(`❌ Failed to save: ${errorText}`);
       }
     } catch (error) {
-      console.error('❌ Save failed:', error);
       alert(`❌ Save failed: ${error}`);
     }
   };
@@ -240,8 +220,76 @@ export function OraclePanel() {
       background: ORACLE_COLORS.bg,
       padding: 40,
       position: 'relative',
-      overflow: 'hidden',
+      overflow: 'visible', // ✅ CHANGED: Allow modals to overflow
     }}>
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 🌌 SUBTLE GALAXY BACKGROUND (Performance optimized) */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: 'none',
+      }}>
+        {/* Subtle Galaxy Glow */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: `
+            radial-gradient(ellipse 80% 40% at 50% 50%, ${ORACLE_COLORS.primary}15, transparent 60%),
+            radial-gradient(ellipse 60% 30% at 30% 60%, ${ORACLE_COLORS.secondary}10, transparent 50%),
+            radial-gradient(ellipse 60% 30% at 70% 40%, ${ORACLE_COLORS.tertiary}10, transparent 50%)
+          `,
+          animation: 'galaxyPulse 15s ease-in-out infinite',
+        }} />
+
+        {/* Reduced Star Field (100 stars only) */}
+        {[...Array(30)].map((_, i) => {
+          const size = Math.random() * 2 + 0.5;
+          return (
+            <div
+              key={`star-${i}`}
+              style={{
+                position: 'absolute',
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                width: size,
+                height: size,
+                borderRadius: '50%',
+                background: i % 5 === 0 ? ORACLE_COLORS.primary : '#fff',
+                boxShadow: `0 0 ${size * 3}px ${i % 5 === 0 ? ORACLE_COLORS.primary : '#fff'}`,
+                opacity: 0.5,
+                animation: `starTwinkle ${Math.random() * 6 + 4}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            />
+          );
+        })}
+
+        {/* Few Nebula Clouds (5 only) */}
+        {[...Array(5)].map((_, i) => {
+          const colors = [ORACLE_COLORS.primary, ORACLE_COLORS.secondary, ORACLE_COLORS.tertiary];
+          return (
+            <div
+              key={`nebula-${i}`}
+              style={{
+                position: 'absolute',
+                left: `${(i * 20) + 10}%`,
+                top: `${(i * 20) + 10}%`,
+                width: `${150 + Math.random() * 100}px`,
+                height: `${80 + Math.random() * 60}px`,
+                borderRadius: '60%',
+                background: `radial-gradient(ellipse, ${colors[i % 3]}20, transparent 70%)`,
+                filter: 'blur(40px)',
+                animation: `nebulaDrift ${25 + i * 5}s ease-in-out infinite`,
+                animationDelay: `${i * 2}s`,
+              }}
+            />
+          );
+        })}
+      </div>
+
+      {/* Content Container */}
       <div style={{
         maxWidth: 1800,
         margin: '0 auto',
@@ -256,7 +304,6 @@ export function OraclePanel() {
           gap: 40,
           alignItems: 'start',
         }}>
-          {/* Left Column - Selectors */}
           <div>
             <FormatSelector
               activeFormat={selectedFormat}
@@ -314,20 +361,17 @@ export function OraclePanel() {
             )}
           </div>
 
-          {/* Center - Oracle Eye */}
           <OracleEye
             profile={profileData}
             onPropertyChange={handlePropertyChange}
           />
 
-          {/* Right Column - Stacked Panels */}
           <div style={{
             display: 'flex',
             flexDirection: 'column',
             gap: 20,
           }}>
             <SpaceLegend stats={legendStats} />
-            
             <ScoringViewer
               profileId={selectedProfile}
               format={selectedFormat}
@@ -345,6 +389,18 @@ export function OraclePanel() {
       />
 
       <style jsx>{`
+        @keyframes galaxyPulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 0.9; }
+        }
+        @keyframes starTwinkle {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.8; }
+        }
+        @keyframes nebulaDrift {
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(20px, -10px); }
+        }
         @keyframes pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.02); }
