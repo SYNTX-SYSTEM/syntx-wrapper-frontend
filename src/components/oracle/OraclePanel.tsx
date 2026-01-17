@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { OracleHeader } from './OracleHeader';
 import { OracleEye } from './OracleEye';
+import { BirthTrigger } from './BirthTrigger';
 import { FormatSelector } from './FormatSelector';
 import { ProfileSelector } from './ProfileSelector';
 import { ScoringViewer } from './ScoringViewer';
@@ -361,7 +362,7 @@ export function OraclePanel() {
             )}
           </div>
 
-          <OracleEye
+          <BirthTrigger
             profile={profileData}
             onPropertyChange={handlePropertyChange}
           />
