@@ -293,6 +293,10 @@ export function Spaceball({ name, value, color, position, centerPosition, metada
       </div>
 
       <style jsx>{`
+        @keyframes lineFlow {
+          from { stroke-dashoffset: 0; }
+          to { stroke-dashoffset: -15; }
+        }
         @keyframes float {
           0%, 100% { transform: translate(-50%, -50%) translateY(0); }
           50% { transform: translate(-50%, -50%) translateY(-10px); }
