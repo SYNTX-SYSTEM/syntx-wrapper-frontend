@@ -180,8 +180,18 @@ export function OraclePanel() {
       const entityWeights: Record<string, number> = {};
       const thresholds: Record<string, number> = {};
       const methodWeights: Record<string, number> = {};
+      
+      // 🔥 FIX: Collect ALL drift thresholds (modified + unmodified)
       const driftThresholds: Record<string, number> = {};
 
+      // First, add all original drift thresholds
+      if (profileData?.drift_thresholds) {
+        Object.entries(profileData.drift_thresholds).forEach(([k, v]) => {
+          driftThresholds[k] = v as number;
+        });
+      }
+
+      // Collect modified properties
       Object.entries(modifiedProperties).forEach(([id, value]) => {
         if (id.startsWith('entity_')) {
           entityWeights[id.replace('entity_', '')] = value;
@@ -233,7 +243,6 @@ export function OraclePanel() {
       alert(`❌ Save failed: ${error}`);
     }
   };
-
   const hasModifications = Object.keys(modifiedProperties).length > 0;
 
   return (
