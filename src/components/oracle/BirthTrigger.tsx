@@ -4,16 +4,17 @@ import React, { useState } from 'react';
 import { OracleEye } from './OracleEye';
 import { GenesisGate } from './GenesisGate';
 import { JsonInjectPortal } from './JsonInjectPortal';
-import { WizardFlow } from './WizardFlow';
+import { WizardFlow } from './wizard';
 import { ORACLE_COLORS } from './constants';
 
 interface BirthTriggerProps {
   profile?: any;
+  selectedFormat?: string | null;
   onPropertyChange?: (propertyId: string, newValue: number) => void;
   onBirthComplete?: (data: any) => void;
 }
 
-export function BirthTrigger({ profile, onPropertyChange, onBirthComplete }: BirthTriggerProps) {
+export function BirthTrigger({ profile, selectedFormat, onPropertyChange, onBirthComplete }: BirthTriggerProps) {
   const [birthMode, setBirthMode] = useState<string | null>(null);
   const [isHovering, setIsHovering] = useState(false);
 
@@ -21,6 +22,22 @@ export function BirthTrigger({ profile, onPropertyChange, onBirthComplete }: Bir
     console.log('🌊 BIRTH COMPLETE:', data);
     setBirthMode(null);
     onBirthComplete?.(data);
+  };
+
+  const handleModeSelect = (mode: 'json' | 'wizard') => {
+    if (!selectedFormat) {
+      alert('⚠️ Please select a format first!');
+      return;
+    }
+    setBirthMode(mode);
+  };
+
+  const handleBirthClick = () => {
+    if (!selectedFormat) {
+      alert('⚠️ Please select a format first!');
+      return;
+    }
+    setBirthMode('gate');
   };
 
   return (
@@ -36,7 +53,7 @@ export function BirthTrigger({ profile, onPropertyChange, onBirthComplete }: Bir
         onPropertyChange={onPropertyChange}
       />
 
-      {/* BIRTH BUTTON - Fixed position over Eye center */}
+      {/* BIRTH BUTTON */}
       {!birthMode && (
         <div
           style={{
@@ -53,7 +70,7 @@ export function BirthTrigger({ profile, onPropertyChange, onBirthComplete }: Bir
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setBirthMode('gate');
+              handleBirthClick();
             }}
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
@@ -79,12 +96,11 @@ export function BirthTrigger({ profile, onPropertyChange, onBirthComplete }: Bir
               animation: isHovering ? 'birthPulse 1s ease-in-out infinite' : 'none',
               outline: 'none',
             }}
-            title="🌙 Click to create new scoring"
+            title={selectedFormat ? '🌙 Click to create new scoring' : '⚠️ Select format first'}
           >
             +
           </button>
 
-          {/* Label */}
           {isHovering && (
             <div style={{
               position: 'absolute',
@@ -106,7 +122,7 @@ export function BirthTrigger({ profile, onPropertyChange, onBirthComplete }: Bir
               pointerEvents: 'none',
               animation: 'labelFade 0.3s ease-out',
             }}>
-              🌙 NEW BIRTH
+              {selectedFormat ? '🌙 NEW BIRTH' : '⚠️ SELECT FORMAT'}
             </div>
           )}
         </div>
@@ -115,7 +131,7 @@ export function BirthTrigger({ profile, onPropertyChange, onBirthComplete }: Bir
       {/* Birth Overlays */}
       {birthMode === 'gate' && (
         <GenesisGate
-          onModeSelect={(mode) => setBirthMode(mode)}
+          onModeSelect={handleModeSelect}
           onClose={() => setBirthMode(null)}
         />
       )}
@@ -127,8 +143,9 @@ export function BirthTrigger({ profile, onPropertyChange, onBirthComplete }: Bir
         />
       )}
 
-      {birthMode === 'wizard' && (
+      {birthMode === 'wizard' && selectedFormat && (
         <WizardFlow
+          selectedFormat={selectedFormat}
           onComplete={handleBirthComplete}
           onClose={() => setBirthMode(null)}
         />
@@ -136,23 +153,12 @@ export function BirthTrigger({ profile, onPropertyChange, onBirthComplete }: Bir
 
       <style jsx>{`
         @keyframes birthPulse {
-          0%, 100% { 
-            transform: scale(1);
-          }
-          50% { 
-            transform: scale(1.1);
-          }
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
         }
-        
         @keyframes labelFade {
-          from { 
-            opacity: 0;
-            transform: translateX(-50%) translateY(-10px);
-          }
-          to { 
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-          }
+          from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+          to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
       `}</style>
     </div>

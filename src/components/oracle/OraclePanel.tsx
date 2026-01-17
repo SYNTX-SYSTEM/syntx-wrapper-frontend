@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { OracleHeader } from './OracleHeader';
+import { ProfileIdDisplay } from './ProfileIdDisplay';
 import { OracleEye } from './OracleEye';
 import { BirthTrigger } from './BirthTrigger';
 import { FormatSelector } from './FormatSelector';
@@ -142,6 +143,17 @@ export function OraclePanel() {
       ...prev,
       [propertyId]: newValue,
     }));
+
+  const handleBirthComplete = async (newProfileData: any) => {
+    console.log("🌊 BIRTH COMPLETE:", newProfileData);
+    try {
+      setSelectedProfile(newProfileData.profile_id);
+      await loadProfileData(selectedFormat!);
+      setReloadTrigger(prev => prev + 1);
+    } catch (error) {
+      console.error("Failed to reload:", error);
+    }
+  };
   };
 
   const handleSave = async () => {
@@ -299,6 +311,13 @@ export function OraclePanel() {
       }}>
         <OracleHeader />
 
+          {profileData && (
+            <ProfileIdDisplay
+              profileName={profileData.profile_name || profileData.profile_id}
+              formatName={selectedFormat || "unknown"}
+            />
+          )}
+
         <div style={{
           display: 'grid',
           gridTemplateColumns: '300px 1fr 400px',
@@ -363,6 +382,7 @@ export function OraclePanel() {
           </div>
 
           <BirthTrigger
+            selectedFormat={selectedFormat}
             profile={profileData}
             onPropertyChange={handlePropertyChange}
           />
