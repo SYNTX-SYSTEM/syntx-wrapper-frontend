@@ -26,7 +26,6 @@ type Props = {
 export function OracleEye({ profile, onPropertyChange }: Props) {
   const [spaceballs, setSpaceballs] = useState<SpaceballData[]>([]);
   const [containerCenter, setContainerCenter] = useState({ x: 0, y: 0 });
-  const [currentView, setCurrentView] = useState(0); // 0=entities, 1=methods, 2=thresholds, 3=drift
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,31 +48,16 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
     if (profile && containerCenter.x > 0) {
       generateSpaceballs(profile);
     }
-  }, [profile, containerCenter, currentView]);
-
-  // 🔥 WHEEL EVENT HANDLER - Navigate between views
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const totalViews = 4; // entities, methods, thresholds, drift
-    
-    if (e.deltaY > 0) {
-      // Scroll DOWN → Next view
-      setCurrentView(prev => (prev + 1) % totalViews);
-    } else {
-      // Scroll UP → Previous view
-      setCurrentView(prev => (prev - 1 + totalViews) % totalViews);
-    }
-  };
+  }, [profile, containerCenter]);
 
   const generateSpaceballs = (profileData: any) => {
     const balls: SpaceballData[] = [];
     const radius = 280;
     let index = 0;
 
-    // VIEW 0: ENTITY WEIGHTS
-    if (currentView === 0 && profileData.entity_weights) {
+    if (profileData.entity_weights) {
       Object.entries(profileData.entity_weights).forEach(([name, value]) => {
-        const angle = (index / Object.keys(profileData.entity_weights).length) * 2 * Math.PI;
+        const angle = (index / 10) * 2 * Math.PI;
         balls.push({
           id: `entity_${name}`,
           name: name.replace(/_/g, ' ').substring(0, 15),
@@ -93,34 +77,9 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
       });
     }
 
-    // VIEW 1: FIELD SCORING METHODS
-    if (currentView === 1 && profileData.field_scoring_methods) {
-      Object.entries(profileData.field_scoring_methods).forEach(([name, methodData]: [string, any]) => {
-        const angle = (index / Object.keys(profileData.field_scoring_methods).length) * 2 * Math.PI;
-        balls.push({
-          id: `method_${name}`,
-          name: name.replace(/_/g, ' ').substring(0, 15),
-          value: methodData.weight,
-          color: ORACLE_COLORS.tertiary,
-          position: {
-            x: containerCenter.x + Math.cos(angle) * radius,
-            y: containerCenter.y + Math.sin(angle) * radius,
-          },
-          metadata: {
-            method: methodData.method || 'N/A',
-            description: methodData.description || 'No description available',
-            category: 'Field Scoring Method',
-            profile_id: profileData.profile_id,
-          },
-        });
-        index++;
-      });
-    }
-
-    // VIEW 2: THRESHOLDS (Pass Threshold)
-    if (currentView === 2 && profileData.thresholds) {
+    if (profileData.thresholds) {
       Object.entries(profileData.thresholds).forEach(([name, value]) => {
-        const angle = (index / Object.keys(profileData.thresholds).length) * 2 * Math.PI;
+        const angle = (index / 10) * 2 * Math.PI;
         balls.push({
           id: `threshold_${name}`,
           name,
@@ -140,23 +99,23 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
       });
     }
 
-    // VIEW 3: DRIFT THRESHOLDS
-    if (currentView === 3 && profileData.drift_thresholds) {
-      Object.entries(profileData.drift_thresholds).forEach(([name, value]) => {
-        const angle = (index / Object.keys(profileData.drift_thresholds).length) * 2 * Math.PI;
+    if (profileData.field_scoring_methods) {
+      Object.entries(profileData.field_scoring_methods).forEach(([name, methodData]: [string, any]) => {
+        const angle = (index / 10) * 2 * Math.PI;
         balls.push({
-          id: `drift_${name}`,
-          name: name.replace(/_/g, ' '),
-          value: value as number,
-          color: '#ff6b00',
+          id: `method_${name}`,
+          name: name.replace(/_/g, ' ').substring(0, 15),
+          value: methodData.weight,
+          color: ORACLE_COLORS.tertiary,
           position: {
             x: containerCenter.x + Math.cos(angle) * radius,
             y: containerCenter.y + Math.sin(angle) * radius,
           },
           metadata: {
-            category: 'Drift Threshold',
+            method: methodData.method || 'N/A',
+            description: methodData.description || 'No description available',
+            category: 'Field Scoring Method',
             profile_id: profileData.profile_id,
-            description: `Drift detection threshold for ${name.replace(/_/g, ' ')}`,
           },
         });
         index++;
@@ -181,7 +140,6 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
   return (
     <div
       ref={containerRef}
-      onWheel={handleWheel}
       style={{
         position: 'relative',
         width: '100%',
@@ -349,29 +307,6 @@ export function OracleEye({ profile, onPropertyChange }: Props) {
           `,
           animation: 'irisRotate 10s linear infinite',
         }} />
-
-        {/* View Indicator */}
-        <div style={{
-          position: 'absolute',
-          top: -100,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          fontSize: 10,
-          fontWeight: 700,
-          color: ORACLE_COLORS.tertiary,
-          fontFamily: 'monospace',
-          letterSpacing: 2,
-          textAlign: 'center',
-          opacity: 0.7,
-        }}>
-          {currentView === 0 && '🎯 ENTITY WEIGHTS'}
-          {currentView === 1 && '⚡ FIELD METHODS'}
-          {currentView === 2 && '⚖️ THRESHOLDS'}
-          {currentView === 3 && '🌊 DRIFT THRESHOLDS'}
-          <div style={{ fontSize: 8, marginTop: 4, opacity: 0.5 }}>
-            (scroll wheel to switch view)
-          </div>
-        </div>
 
         {/* Profile Name */}
         {profile && (

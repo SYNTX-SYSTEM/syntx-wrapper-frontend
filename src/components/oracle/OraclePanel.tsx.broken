@@ -62,6 +62,11 @@ export function OraclePanel() {
         const id = `method_${k}`;
         allValues.push(modifiedProperties[id] ?? v.weight);
       });
+        if (profile?.drift_thresholds) {
+          Object.entries(profile.drift_thresholds).forEach(([k, v]) => {
+            originals[`drift_${k}`] = v as number;
+          });
+        }
     }
 
     if (allValues.length > 0) {
@@ -117,11 +122,11 @@ export function OraclePanel() {
           Object.entries(profile.field_scoring_methods).forEach(([k, v]: [string, any]) => {
             originals[`method_${k}`] = v.weight;
           });
-        }
         if (profile?.drift_thresholds) {
           Object.entries(profile.drift_thresholds).forEach(([k, v]) => {
             originals[`drift_${k}`] = v as number;
           });
+        }
         }
         
         setOriginalValues(originals);
@@ -148,7 +153,6 @@ export function OraclePanel() {
       ...prev,
       [propertyId]: newValue,
     }));
-  };
 
   const handleBirthComplete = async (newProfileData: any) => {
     console.log("🌊 BIRTH COMPLETE:", newProfileData);
@@ -159,6 +163,7 @@ export function OraclePanel() {
     } catch (error) {
       console.error("Failed to reload:", error);
     }
+  };
   };
 
   const handleSave = async () => {
@@ -177,6 +182,16 @@ export function OraclePanel() {
     try {
       const AUTH = btoa('syntx:ekv2xp73zdEUEH5u9fVu');
 
+      const entityWeights: Record<string, number> = {};
+      const thresholds: Record<string, number> = {};
+      const methodWeights: Record<string, number> = {};
+
+      Object.entries(modifiedProperties).forEach(([id, value]) => {
+        if (id.startsWith('entity_')) {
+          entityWeights[id.replace('entity_', '')] = value;
+        } else if (id.startsWith('threshold_')) {
+          thresholds[id.replace('threshold_', '')] = value;
+        } else if (id.startsWith('method_')) {
       const entityWeights: Record<string, number> = {};
       const thresholds: Record<string, number> = {};
       const methodWeights: Record<string, number> = {};
@@ -210,11 +225,10 @@ export function OraclePanel() {
           },
           body: JSON.stringify(payload),
         }
-      );
 
       if (response.ok) {
         const mods = Object.entries(modifiedProperties).map(([id, newValue]) => ({
-          property: id.replace(/^(entity|threshold|method|drift)_/, ''),
+          property: id.replace(/^(entity|threshold|method)_/, ''),
           oldValue: originalValues[id] || 0,
           newValue: newValue,
         }));
@@ -242,14 +256,18 @@ export function OraclePanel() {
       background: ORACLE_COLORS.bg,
       padding: 40,
       position: 'relative',
-      overflow: 'visible',
+      overflow: 'visible', // ✅ CHANGED: Allow modals to overflow
     }}>
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* 🌌 SUBTLE GALAXY BACKGROUND (Performance optimized) */}
+      {/* ═══════════════════════════════════════════════════ */}
       <div style={{
         position: 'fixed',
         inset: 0,
         zIndex: 0,
         pointerEvents: 'none',
       }}>
+        {/* Subtle Galaxy Glow */}
         <div style={{
           position: 'absolute',
           inset: 0,
@@ -261,6 +279,7 @@ export function OraclePanel() {
           animation: 'galaxyPulse 15s ease-in-out infinite',
         }} />
 
+        {/* Reduced Star Field (100 stars only) */}
         {[...Array(30)].map((_, i) => {
           const size = Math.random() * 2 + 0.5;
           return (
@@ -283,6 +302,7 @@ export function OraclePanel() {
           );
         })}
 
+        {/* Few Nebula Clouds (5 only) */}
         {[...Array(5)].map((_, i) => {
           const colors = [ORACLE_COLORS.primary, ORACLE_COLORS.secondary, ORACLE_COLORS.tertiary];
           return (
@@ -305,6 +325,7 @@ export function OraclePanel() {
         })}
       </div>
 
+      {/* Content Container */}
       <div style={{
         maxWidth: 1800,
         margin: '0 auto',
