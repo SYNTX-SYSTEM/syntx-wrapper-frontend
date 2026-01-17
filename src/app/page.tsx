@@ -15,7 +15,7 @@ import FormatPanel from "@/components/formats/FormatPanel";
 import { OptimizerPanel } from "@/components/optimizer";
 import ProfileOrgan from "@/components/profiles/ProfileOrgan";
 import ScoringOrgan from "@/components/scoring/ScoringOrgan";
-import { OraclePanel } from "@/components/oracle";
+import { OracleWithBirth } from "@/components/oracle/OracleWithBirth";
 import { ProfilesPanel } from "@/components/profiles/system-organs";
 
 type TabId = "data" | "system" | "chat" | "chat-v6" | "graphs" | "wrappers" | "formats" | "analytics" | "flow" | "alchemy" | "diff" | "optimizer" | "profiles" | "profile-organ" | "scoring" | "oracle";
@@ -59,7 +59,7 @@ export default function Home() {
       case "optimizer": return <OptimizerPanel />;
       case "profiles": return <ProfilesPanel />;
       case "scoring": return <ScoringOrgan />;
-      case "oracle": return <OraclePanel />;
+      case "oracle": return <OracleWithBirth />;
       case "profile-organ": return <ProfileOrgan />;
       default: return null;
     }

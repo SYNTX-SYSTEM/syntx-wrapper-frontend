@@ -11,6 +11,9 @@ export function OracleHeader() {
       alignItems: 'center',
       marginBottom: 60,
       position: 'relative',
+      // IMPORTANT: Allow clicks to pass through!
+      pointerEvents: 'auto',
+      cursor: 'pointer',
     }}>
       {/* Mega Eye with SYNTX Logo */}
       <div style={{
@@ -29,6 +32,7 @@ export function OracleHeader() {
           background: `radial-gradient(circle, ${ORACLE_COLORS.primary}40, transparent 70%)`,
           animation: 'eyeGlow 3s ease-in-out infinite',
           filter: 'blur(20px)',
+          pointerEvents: 'none',
         }} />
 
         {/* SYNTX Logo Inside Eye */}
@@ -52,6 +56,8 @@ export function OracleHeader() {
           justifyContent: 'center',
           animation: 'eyePulse 2s ease-in-out infinite',
           overflow: 'hidden',
+          cursor: 'pointer',
+          transition: 'all 0.3s',
         }}>
           {/* Iris Ring */}
           <div style={{
@@ -61,6 +67,7 @@ export function OracleHeader() {
             borderRadius: '50%',
             border: `2px solid ${ORACLE_COLORS.secondary}60`,
             animation: 'irisRotate 8s linear infinite',
+            pointerEvents: 'none',
           }} />
 
           {/* SYNTX Logo */}
@@ -77,6 +84,7 @@ export function OracleHeader() {
               `,
               animation: 'logoPulse 2s ease-in-out infinite',
               zIndex: 10,
+              pointerEvents: 'none',
             }}
           />
         </div>
@@ -98,6 +106,7 @@ export function OracleHeader() {
         `,
         marginBottom: 8,
         animation: 'titleGlow 3s ease-in-out infinite',
+        pointerEvents: 'none',
       }}>
         THE ORACLE
       </div>
@@ -109,6 +118,7 @@ export function OracleHeader() {
         letterSpacing: 6,
         fontFamily: 'monospace',
         fontWeight: 600,
+        pointerEvents: 'none',
       }}>
         SEMANTIC SCORING SYSTEM
       </div>
