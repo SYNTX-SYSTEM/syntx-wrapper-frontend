@@ -1,5 +1,5 @@
 // SYNTX SYSTEM API - Health, Config, Training
-const BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3000';
+const BASE = process.env.NEXT_PUBLIC_API_BASE || '';
 
 const req = async (path: string, opts: RequestInit = {}) => {
   const res = await fetch(`${BASE}${path}`, { ...opts, credentials: 'include' });
