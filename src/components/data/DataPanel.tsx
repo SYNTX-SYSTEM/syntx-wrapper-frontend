@@ -1,32 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useExport } from '@/hooks/useExport';
-import ExportButton from '@/components/ui/ExportButton';
 import { api, statsAPI, StatsResponse, StreamEvent } from '@/lib/api';
+import { SYNTX_COLORS, getWrapperColor } from '@/lib/colorUtils';
+import { NeuralPulseWave } from './charts/NeuralPulseWave';
+import { HolographicDonut } from './charts/HolographicDonut';
+import { EnergyBars } from './charts/EnergyBars';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area, Legend,
-  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-  ComposedChart, Scatter
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, Legend
 } from 'recharts';
-
-const COLORS = {
-  cyan: '#00d4ff',
-  magenta: '#d946ef',
-  green: '#10b981',
-  orange: '#f59e0b',
-  red: '#ef4444',
-  purple: '#8b5cf6',
-};
-
-const WRAPPER_COLORS: Record<string, string> = {
-  'syntex_wrapper_sigma': '#f59e0b',
-  'syntex_wrapper_human': '#10b981',
-  'syntex_wrapper_deepsweep': '#d946ef',
-  'syntex_wrapper_true_raw': '#ef4444',
-  'syntex_wrapper_frontend': '#00d4ff',
-};
 
 function DataBackground() {
   return (
@@ -102,21 +85,6 @@ function StatBox({ label, value, icon, color, suffix = '' }: any) {
   );
 }
 
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{ background: 'rgba(10,26,46,0.98)', border: '1px solid rgba(0,212,255,0.4)', borderRadius: 12, padding: '14px 18px', boxShadow: '0 0 30px rgba(0,212,255,0.3)' }}>
-      <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>{label}</div>
-      {payload.map((p: any, i: number) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <div style={{ width: 10, height: 10, borderRadius: 3, background: p.color }} />
-          <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'white' }}>{p.name}: <strong style={{ color: p.color }}>{typeof p.value === 'number' ? p.value.toFixed(2) : p.value}</strong></span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function ActivityHeatmap({ events }: { events: StreamEvent[] }) {
   const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
   const activity = React.useMemo(() => {
@@ -150,22 +118,25 @@ function ActivityHeatmap({ events }: { events: StreamEvent[] }) {
 function LiveFeed({ events }: { events: StreamEvent[] }) {
   return (
     <div style={{ maxHeight: 300, overflow: 'auto' }}>
-      {events.slice(0, 10).map((event, i) => (
-        <div key={event.request_id + i} style={{
-          display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
-          background: i === 0 ? 'rgba(0,212,255,0.05)' : 'transparent',
-          borderLeft: `3px solid ${WRAPPER_COLORS[event.wrapper_chain?.[0] as keyof typeof WRAPPER_COLORS] || '#00d4ff'}`,
-          marginBottom: 4, borderRadius: '0 8px 8px 0',
-        }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: event.latency_ms ? '#10b981' : '#f59e0b' }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'white' }}>{event.stage}</div>
-            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>{event.request_id.slice(0, 8)}...</div>
+      {events.slice(0, 10).map((event, i) => {
+        const color = getWrapperColor(event.wrapper_chain?.[0] || 'unknown');
+        return (
+          <div key={event.request_id + i} style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+            background: i === 0 ? 'rgba(0,212,255,0.05)' : 'transparent',
+            borderLeft: `3px solid ${color}`,
+            marginBottom: 4, borderRadius: '0 8px 8px 0',
+          }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: event.latency_ms ? '#10b981' : '#f59e0b' }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'white' }}>{event.stage}</div>
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>{event.request_id.slice(0, 8)}...</div>
+            </div>
+            {event.latency_ms && <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#f59e0b' }}>{(event.latency_ms / 1000).toFixed(1)}s</div>}
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>{new Date(event.timestamp).toLocaleTimeString('de-DE')}</div>
           </div>
-          {event.latency_ms && <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#f59e0b' }}>{(event.latency_ms / 1000).toFixed(1)}s</div>}
-          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>{new Date(event.timestamp).toLocaleTimeString('de-DE')}</div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -248,79 +219,53 @@ export default function DataPanel() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, marginBottom: 24 }}>
-          <StatBox label="Total Requests" value={stats?.total_requests || 0} icon="📡" color={COLORS.cyan} />
-          <StatBox label="Success Rate" value={stats?.success_rate || 0} suffix="%" icon="✅" color={COLORS.green} />
-          <StatBox label="Avg Latency" value={((stats?.average_latency_ms || 0) / 1000).toFixed(1)} suffix="s" icon="⚡" color={COLORS.orange} />
-          <StatBox label="Wrappers" value={Object.keys(stats?.wrapper_usage || {}).length} icon="📦" color={COLORS.magenta} />
-          <StatBox label="Events" value={events.length} icon="🌊" color={COLORS.purple} />
+          <StatBox label="Total Requests" value={stats?.total_requests || 0} icon="📡" color={SYNTX_COLORS.cyan} />
+          <StatBox label="Success Rate" value={stats?.success_rate || 0} suffix="%" icon="✅" color={SYNTX_COLORS.green} />
+          <StatBox label="Avg Latency" value={((stats?.average_latency_ms || 0) / 1000).toFixed(1)} suffix="s" icon="⚡" color={SYNTX_COLORS.orange} />
+          <StatBox label="Wrappers" value={Object.keys(stats?.wrapper_usage || {}).length} icon="📦" color={SYNTX_COLORS.magenta} />
+          <StatBox label="Events" value={events.length} icon="🌊" color={SYNTX_COLORS.purple} />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24, marginBottom: 24 }}>
-          <GlassCard title="Latency Timeline" icon="📈" glowColor={COLORS.cyan} height={350}>
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={latencyTimeline}>
-                <defs><linearGradient id="latencyGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={COLORS.cyan} stopOpacity={0.4}/><stop offset="95%" stopColor={COLORS.cyan} stopOpacity={0}/></linearGradient></defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="time" stroke="rgba(255,255,255,0.3)" fontSize={10} />
-                <YAxis stroke="rgba(255,255,255,0.3)" fontSize={10} tickFormatter={(v) => `${v}s`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="latency" stroke={COLORS.cyan} strokeWidth={2} fill="url(#latencyGrad)" name="Latency (s)" />
-                <Scatter dataKey="latency" fill={COLORS.cyan} />
-              </ComposedChart>
-            </ResponsiveContainer>
+          <GlassCard title="⚡ NEURAL PULSE WAVE" icon="📈" glowColor={SYNTX_COLORS.cyan} height={350}>
+            <NeuralPulseWave data={latencyTimeline} />
           </GlassCard>
-          <GlassCard title="Wrapper Distribution" icon="🍩" glowColor={COLORS.magenta} height={350}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={wrapperPieData} cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={4} dataKey="value" stroke="none">
-                  {wrapperPieData.map((entry, i) => <Cell key={i} fill={WRAPPER_COLORS[entry.fullName] || COLORS.cyan} />)}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend verticalAlign="bottom" formatter={(v) => <span style={{ color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace', fontSize: 10 }}>{v}</span>} />
-              </PieChart>
-            </ResponsiveContainer>
+          <GlassCard title="🌀 HOLOGRAPHIC DISTRIBUTION" icon="🍩" glowColor={SYNTX_COLORS.magenta} height={350}>
+            <HolographicDonut data={wrapperPieData} />
           </GlassCard>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 24, marginBottom: 24 }}>
-          <GlassCard title="Latency by Wrapper" icon="📊" glowColor={COLORS.orange} height={300}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={latencyByWrapper} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis type="number" stroke="rgba(255,255,255,0.3)" fontSize={10} />
-                <YAxis type="category" dataKey="name" stroke="rgba(255,255,255,0.3)" fontSize={10} width={80} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="avg" name="Avg (s)" radius={[0, 8, 8, 0]}>{latencyByWrapper.map((e, i) => <Cell key={i} fill={WRAPPER_COLORS[`syntex_wrapper_${e.name.toLowerCase()}`] || COLORS.cyan} />)}</Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <GlassCard title="⚡ ENERGY BARS" icon="📊" glowColor={SYNTX_COLORS.orange} height={300}>
+            <EnergyBars data={latencyByWrapper} />
           </GlassCard>
-          <GlassCard title="Wrapper Performance" icon="🎯" glowColor={COLORS.purple} height={300}>
+          <GlassCard title="Wrapper Performance" icon="🎯" glowColor={SYNTX_COLORS.purple} height={300}>
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData}>
                 <PolarGrid stroke="rgba(255,255,255,0.1)" />
                 <PolarAngleAxis dataKey="wrapper" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} />
-                <Radar name="Speed" dataKey="speed" stroke={COLORS.cyan} fill={COLORS.cyan} fillOpacity={0.3} />
-                <Radar name="Volume" dataKey="volume" stroke={COLORS.magenta} fill={COLORS.magenta} fillOpacity={0.3} />
-                <Tooltip content={<CustomTooltip />} />
+                <Radar name="Speed" dataKey="speed" stroke={SYNTX_COLORS.cyan} fill={SYNTX_COLORS.cyan} fillOpacity={0.3} />
+                <Radar name="Volume" dataKey="volume" stroke={SYNTX_COLORS.magenta} fill={SYNTX_COLORS.magenta} fillOpacity={0.3} />
+                <Tooltip contentStyle={{ background: 'rgba(10,26,46,0.98)', border: '1px solid rgba(0,212,255,0.4)', borderRadius: 12, fontFamily: 'monospace' }} />
               </RadarChart>
             </ResponsiveContainer>
           </GlassCard>
-          <GlassCard title="Pipeline Stages" icon="🔄" glowColor={COLORS.green} height={300}>
+          <GlassCard title="Pipeline Stages" icon="🔄" glowColor={SYNTX_COLORS.green} height={300}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stageDistribution}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                 <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" fontSize={8} angle={-45} textAnchor="end" height={60} />
                 <YAxis stroke="rgba(255,255,255,0.3)" fontSize={10} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" name="Count" fill={COLORS.green} radius={[4, 4, 0, 0]} />
+                <Tooltip contentStyle={{ background: 'rgba(10,26,46,0.98)', border: '1px solid rgba(0,212,255,0.4)', borderRadius: 12, fontFamily: 'monospace' }} />
+                <Bar dataKey="value" name="Count" fill={SYNTX_COLORS.green} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </GlassCard>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24 }}>
-          <GlassCard title="Activity Heatmap" icon="🗓️" glowColor={COLORS.cyan}><ActivityHeatmap events={events} /></GlassCard>
-          <GlassCard title="Live Event Feed" icon="📡" glowColor={COLORS.green}><LiveFeed events={events} /></GlassCard>
+          <GlassCard title="Activity Heatmap" icon="🗓️" glowColor={SYNTX_COLORS.cyan}><ActivityHeatmap events={events} /></GlassCard>
+          <GlassCard title="Live Event Feed" icon="📡" glowColor={SYNTX_COLORS.green}><LiveFeed events={events} /></GlassCard>
         </div>
       </div>
       <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
