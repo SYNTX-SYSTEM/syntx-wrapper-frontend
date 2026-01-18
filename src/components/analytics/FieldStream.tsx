@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { Card, Button } from '@/components/ui';
 import { useApi } from '@/hooks/useApi';
 import { api } from '@/lib/api';
-import type { StreamEvent } from '@/types/api';
 
+// SYNTX STAGE COLORS - Feld Resonanz Visualisierung
 const STAGE_COLORS: Record<string, string> = {
   '1_INCOMING': 'text-gray-400 border-gray-500/30',
   '2_WRAPPERS_LOADED': 'text-blue-400 border-blue-500/30',
@@ -13,6 +13,13 @@ const STAGE_COLORS: Record<string, string> = {
   '4_BACKEND_FORWARD': 'text-fuchsia-400 border-fuchsia-500/30',
   '5_RESPONSE': 'text-syntx-green border-syntx-green/30',
 };
+
+interface StreamEvent {
+  request_id: string;
+  stage: string;
+  timestamp: string;
+  latency_ms?: number;
+}
 
 export function FieldStream() {
   const [limit, setLimit] = useState(10);
@@ -48,8 +55,8 @@ export function FieldStream() {
           [...Array(5)].map((_, i) => (
             <div key={i} className="h-10 rounded bg-syntx-dark/50 animate-pulse" />
           ))
-        ) : data?.events.length ? (
-          data.events.map((event, i) => (
+        ) : data?.events?.length ? (
+          data.events.map((event: StreamEvent, i: number) => (
             <StreamEventRow key={`${event.request_id}-${event.stage}-${i}`} event={event} />
           ))
         ) : (

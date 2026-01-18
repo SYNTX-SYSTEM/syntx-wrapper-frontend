@@ -129,7 +129,7 @@ export default function CreateSidebar({ isOpen, onClose }: CreateSidebarProps) {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value.toLowerCase().replace(/\s/g, '_'))}
+              onChange={(e: any) => setName(e.target.value.toLowerCase().replace(/\s/g, '_'))}
               placeholder="profile_name"
               style={{
                 width: '100%',
@@ -152,7 +152,7 @@ export default function CreateSidebar({ isOpen, onClose }: CreateSidebarProps) {
             <input
               type="text"
               value={label}
-              onChange={(e) => setLabel(e.target.value)}
+              onChange={(e: any) => setLabel(e.target.value)}
               placeholder="Profile Label"
               style={{
                 width: '100%',
@@ -174,7 +174,7 @@ export default function CreateSidebar({ isOpen, onClose }: CreateSidebarProps) {
             </label>
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e: any) => setDescription(e.target.value)}
               placeholder="Describe the profile..."
               rows={4}
               style={{
@@ -198,7 +198,7 @@ export default function CreateSidebar({ isOpen, onClose }: CreateSidebarProps) {
             </label>
             <select
               value={strategy}
-              onChange={(e) => setStrategy(e.target.value)}
+              onChange={(e: any) => setStrategy(e.target.value)}
               style={{
                 width: '100%',
                 background: 'rgba(0,0,0,0.3)',
@@ -227,7 +227,7 @@ export default function CreateSidebar({ isOpen, onClose }: CreateSidebarProps) {
               min="0"
               max="100"
               value={weight}
-              onChange={(e) => setWeight(parseInt(e.target.value))}
+              onChange={(e: any) => setWeight(parseInt(e.target.value))}
               style={{ width: '100%' }}
             />
           </div>

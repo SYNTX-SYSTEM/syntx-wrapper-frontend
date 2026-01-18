@@ -90,7 +90,7 @@ export function GrimoireModal({ style, onClose, onSave }: GrimoireModalProps) {
     if (!newForbidden.trim()) return;
     setSaving(true); setError('');
     try {
-      await api.addForbiddenWord(style.name, newForbidden.trim());
+      await api.addForbidden(style.name, newForbidden.trim());
       await refreshData();
       setNewForbidden('');
       onSave();
@@ -104,7 +104,7 @@ export function GrimoireModal({ style, onClose, onSave }: GrimoireModalProps) {
   const handleDeleteForbidden = async (word: string) => {
     setSaving(true); setError('');
     try {
-      await api.deleteForbiddenWord(style.name, word);
+      await api.deleteForbidden(style.name, word);
       await refreshData();
       onSave();
     } catch (e: any) { 

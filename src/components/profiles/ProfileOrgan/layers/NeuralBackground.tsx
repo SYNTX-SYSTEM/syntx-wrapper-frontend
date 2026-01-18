@@ -35,7 +35,7 @@ export default function NeuralBackground() {
       ctx.fillStyle = 'rgba(10, 14, 39, 0.08)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      nodes.forEach((node, i) => {
+      nodes.forEach((node, i: number) => {
         node.x += node.vx;
         node.y += node.vy;
         node.energy = (node.energy + 0.005) % 1;
@@ -54,7 +54,7 @@ export default function NeuralBackground() {
         ctx.fill();
 
         // CONNECTIONS
-        nodes.slice(i + 1).forEach((otherNode) => {
+        nodes.slice(i + 1).forEach((otherNode: any) => {
           const dx = node.x - otherNode.x;
           const dy = node.y - otherNode.y;
           const distance = Math.sqrt(dx * dx + dy * dy);

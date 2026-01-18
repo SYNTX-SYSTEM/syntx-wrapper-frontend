@@ -18,7 +18,7 @@ export default function ErrorNotification({ message, isVisible, onClose }: Error
     // AUTO CLOSE AFTER 5 SECONDS
     const timer = setTimeout(() => {
       // GENERATE PIXELS FOR DISSOLUTION
-      const newPixels = Array.from({ length: 50 }, (_, i) => ({
+      const newPixels = Array.from({ length: 50 }, (_, i: number) => ({
         x: Math.random() * 400,
         y: Math.random() * 100,
         vx: (Math.random() - 0.5) * 10,
@@ -126,7 +126,7 @@ export default function ErrorNotification({ message, isVisible, onClose }: Error
             </div>
 
             {/* GLITCH LINES */}
-            {[...Array(3)].map((_, i) => (
+            {[...Array(3)].map((_, i: number) => (
               <motion.div
                 key={i}
                 animate={{
@@ -153,7 +153,7 @@ export default function ErrorNotification({ message, isVisible, onClose }: Error
           </motion.div>
 
           {/* PIXEL DISSOLUTION */}
-          {pixels.map((pixel, i) => (
+          {pixels.map((pixel, i: number) => (
             <motion.div
               key={i}
               initial={{ x: pixel.x, y: pixel.y, opacity: 1, scale: 1 }}

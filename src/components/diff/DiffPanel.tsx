@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { api } from '@/lib/api';
+import { api, wrapperAPI } from '@/lib/api';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🎨 COLORS
@@ -65,7 +65,7 @@ export default function DiffPanel() {
 
   // Load wrappers
   useEffect(() => {
-    api.getWrappers().then((data: any) => {
+    wrapperAPI.getWrappers().then((data: any) => {
       setWrappers(data.wrappers || []);
       // Pre-select first 2 wrappers
       if (data.wrappers?.length >= 2) {

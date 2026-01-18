@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { api, StatsResponse, StreamEvent } from '@/lib/api';
+import { api, statsAPI, StatsResponse, StreamEvent } from '@/lib/api';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area, Legend
@@ -172,7 +172,7 @@ export default function GraphsPanel() {
     try {
       setLoading(true);
       const [statsData, streamData] = await Promise.all([
-        api.getStats(),
+        statsAPI.getStats(),
         api.getStream(100),
       ]);
       setStats(statsData);

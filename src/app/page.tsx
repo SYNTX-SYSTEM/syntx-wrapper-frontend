@@ -41,7 +41,6 @@ const TABS = [
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>("chat-v6");
-  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const renderPanel = () => {
     switch (activeTab) {
@@ -50,7 +49,7 @@ export default function Home() {
       case "chat": return <div style={{ padding: 40, color: 'white' }}>OLD CHAT (Legacy)</div>;
       case "chat-v6": return <ChatPanel />;
       case "graphs": return <GraphsPanel />;
-      case "wrappers": return <WrapperControl onCreateNew={() => setCreateModalOpen(true)} />;
+      case "wrappers": return <WrapperControl />;
       case "formats": return <FormatPanel />;
       case "analytics": return <StatsPanel />;
       case "flow": return <FlowPanel />;
@@ -105,7 +104,6 @@ export default function Home() {
         {renderPanel()}
       </div>
 
-      {createModalOpen && <CreateWrapperModal onClose={() => setCreateModalOpen(false)} />}
     </div>
   );
 }

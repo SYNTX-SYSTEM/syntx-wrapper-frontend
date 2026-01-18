@@ -4,11 +4,11 @@ import { useOrganStore } from '../store';
 import { useEffect } from 'react';
 
 export default function EditOverlay() {
-  const snapshot = useOrganStore((state) => state.snapshot);
-  const editProfileId = useOrganStore((state) => state.editProfileId);
-  const setEdit = useOrganStore((state) => state.setEdit);
-  const stabilize = useOrganStore((state) => state.stabilize);
-  const markDirty = useOrganStore((state) => state.markDirty);
+  const snapshot = useOrganStore((state: any) => state.snapshot);
+  const editProfileId = useOrganStore((state: any) => state.editProfileId);
+  const setEdit = useOrganStore((state: any) => state.setEdit);
+  const stabilize = useOrganStore((state: any) => state.stabilize);
+  const markDirty = useOrganStore((state: any) => state.markDirty);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -25,7 +25,7 @@ export default function EditOverlay() {
 
   if (!editProfileId || !snapshot) return null;
 
-  const profile = snapshot.profiles.find(p => p.id === editProfileId);
+  const profile = snapshot.profiles.find((p: any) => p.id === editProfileId);
   if (!profile) return null;
 
   return (

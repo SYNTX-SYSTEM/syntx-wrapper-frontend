@@ -2,4 +2,4 @@
 // 🌊 CHAT HOOKS - EXPORT INDEX
 // ═══════════════════════════════════════════════════════════════
 
-export { useHealthCheck, useHealthAnimation } from './useHealthCheck';
+export { useHealthCheck } from './useHealthCheck';

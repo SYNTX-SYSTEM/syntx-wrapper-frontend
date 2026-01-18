@@ -5,7 +5,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { api } from '@/lib/api';
+import { api, formatAPI } from '@/lib/api';
 import { LocalFormat, EditField, CreateField, FullFormatDetail, COLORS, getFormatColor, getDesc } from './types';
 import { cyberStyles } from './styles';
 import { CreateModal, ViewModal, EditModal, ScoreModal, DeleteModal } from './modals';
@@ -86,7 +86,7 @@ export default function FormatPanel() {
     setScoreLoading(true);
     setScoreData(null);
     try {
-      const data = await api.scoreFormat({ format: format.name });
+      const data = await api.scoreFormat({ format_name: format.name, text: "" });
       setScoreData(data);
     } catch (err: any) {
       setScoreData({ error: err.message });
@@ -99,7 +99,7 @@ export default function FormatPanel() {
   const handleDelete = async () => {
     if (!deleteFormat) return;
     try {
-      await api.deleteFormat(deleteFormat.name);
+      await formatAPI.deleteFormat(deleteFormat.name);
       setDeleteFormat(null);
       fetchFormats();
     } catch (err: any) {
@@ -113,7 +113,7 @@ export default function FormatPanel() {
     if (!createName.trim() || validFields.length === 0) return;
     setCreateSaving(true);
     try {
-      await api.createFormatQuick({
+      await formatAPI.createFormatQuick({
         name: createName.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
         field_names: validFields.map(f => f.name.toLowerCase().replace(/[^a-z0-9_]/g, '_')),
         description_de: createDesc || 'Neues Format',
@@ -157,7 +157,7 @@ export default function FormatPanel() {
     setEditSaving(true);
     try {
       const enabled = editFields.filter(f => f.enabled);
-      await api.updateFormat(editFormat.name, {
+      await formatAPI.updateFormat(editFormat.name, {
         description: { de: editDesc, en: editDesc },
         fields: enabled.map(f => ({
           name: f.name,

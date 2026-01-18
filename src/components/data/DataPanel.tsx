@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useExport } from '@/hooks/useExport';
 import ExportButton from '@/components/ui/ExportButton';
-import { api, StatsResponse, StreamEvent } from '@/lib/api';
+import { api, statsAPI, StatsResponse, StreamEvent } from '@/lib/api';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area, Legend,
@@ -178,7 +178,7 @@ export default function DataPanel() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [statsData, streamData] = await Promise.all([api.getStats(), api.getStream(200)]);
+      const [statsData, streamData] = await Promise.all([statsAPI.getStats(), api.getStream(200)]);
       setStats(statsData);
       setEvents(streamData.events || []);
       setLastUpdate(new Date());

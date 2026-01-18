@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useExport } from '@/hooks/useExport';
 import ExportButton from '@/components/ui/ExportButton';
-import { api, StatsResponse, StreamEvent, TrainingRequest } from '@/lib/api';
+import { api, statsAPI, StatsResponse, StreamEvent, TrainingRequest } from '@/lib/api';
 import { usePagination } from '@/hooks/usePagination';
 import Pagination from '@/components/ui/Pagination';
 import SortHeader from '@/components/ui/SortHeader';
@@ -24,7 +24,7 @@ function FlowDetailModal({ requestId, onClose }: { requestId: string; onClose: (
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.getHistory(requestId).then(setDetail).catch(console.error).finally(() => setLoading(false));
+    statsAPI.getHistory(requestId).then(setDetail).catch(console.error).finally(() => setLoading(false));
   }, [requestId]);
 
   const STAGE_CONFIG: Record<string, { color: string; icon: string }> = {
@@ -86,9 +86,9 @@ export default function StatsPanel() {
   const fetchData = useCallback(async () => {
     try {
       const [statsData, streamData, training] = await Promise.all([
-        api.getStats(),
+        statsAPI.getStats(),
         api.getStream(200),
-        api.getTraining(200),
+        statsAPI.getTraining(200),
       ]);
       setStats(statsData);
       setStreamEvents(streamData.events || []);

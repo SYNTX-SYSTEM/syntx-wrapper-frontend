@@ -162,7 +162,8 @@ function useIsMobile() {
 // ═══════════════════════════════════════════════════════════════
 export default function ChatPanel() {
   const isMobile = useIsMobile();
-  const { isHealthy } = useHealthCheck();
+  const { status } = useHealthCheck();
+  const isHealthy = !!status;
   
   // STATE
   const [wrappers, setWrappers] = useState<Wrapper[]>([]);
@@ -369,7 +370,7 @@ export default function ChatPanel() {
             <FormatCard
               profileWeight={panelData?.mapping?.resonanz_score}
               profileId={panelData?.mapping?.profile_id}
-              scoringId={panelData?.profile_id}
+              scoringId={panelData?.profile_id || undefined}
               selectedFormat={panelData?.format_name || ''}
               formatDetails={panelData?.format_details || null}
               loading={panelLoading}

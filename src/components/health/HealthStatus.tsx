@@ -6,7 +6,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import { systemAPI } from '@/lib/api';
 
 interface HealthData {
   status: string;
@@ -24,7 +24,7 @@ export function HealthStatus() {
 
   const fetchHealth = async () => {
     try {
-      const result = await api.getHealth();
+      const result = await systemAPI.getHealth();
       setData(result);
       setError(null);
     } catch (e: any) {

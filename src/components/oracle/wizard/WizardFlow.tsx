@@ -22,7 +22,7 @@ interface ScoringData {
   field_scoring_methods: Record<string, { weight: number }>;
   entity_weights: Record<string, number>;
   thresholds: { pass: number };
-  drift_thresholds: Record<string, number>;
+  drift_thresholds: { no_drift: number; minor_drift: number; moderate_drift: number; major_drift: number; };
 }
 
 export function WizardFlow({ selectedFormat, onComplete, onClose }: WizardFlowProps) {

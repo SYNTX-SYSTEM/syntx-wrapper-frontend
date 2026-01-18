@@ -125,7 +125,7 @@ export default function PlanetBirthWizard({ isOpen, onClose }: PlanetBirthWizard
         overflow: 'hidden',
         opacity: 0.15,
       }}>
-        {[...Array(20)].map((_, i) => (
+        {[...Array(20)].map((_, i: number) => (
           <motion.div
             key={i}
             initial={{ 
@@ -258,7 +258,7 @@ export default function PlanetBirthWizard({ isOpen, onClose }: PlanetBirthWizard
               zIndex: 9997,
             }}
           >
-            {[...Array(100)].map((_, i) => (
+            {[...Array(100)].map((_, i: number) => (
               <motion.div
                 key={i}
                 initial={{ 
@@ -383,7 +383,7 @@ export default function PlanetBirthWizard({ isOpen, onClose }: PlanetBirthWizard
                 }}
               />
 
-              {[...Array(Math.floor(progress * 40))].map((_, i) => (
+              {[...Array(Math.floor(progress * 40))].map((_, i: number) => (
                 <motion.div
                   key={i}
                   animate={{ 
@@ -416,7 +416,7 @@ export default function PlanetBirthWizard({ isOpen, onClose }: PlanetBirthWizard
                 {(progress * 100).toFixed(0)}%
               </div>
 
-              {progress > 0.3 && [...Array(2)].map((_, i) => (
+              {progress > 0.3 && [...Array(2)].map((_, i: number) => (
                 <motion.div
                   key={i}
                   animate={{ opacity: 1, rotate: 360 }}
@@ -481,8 +481,8 @@ export default function PlanetBirthWizard({ isOpen, onClose }: PlanetBirthWizard
                         autoFocus
                         type="text"
                         value={name}
-                        onChange={(e) => setName(e.target.value.toLowerCase().replace(/\s/g, '_'))}
-                        onKeyPress={(e) => e.key === 'Enter' && canProceed() && nextStep()}
+                        onChange={(e: any) => setName(e.target.value.toLowerCase().replace(/\s/g, '_'))}
+                        onKeyPress={(e: any) => e.key === 'Enter' && canProceed() && nextStep()}
                         placeholder="profile_name"
                         style={{
                           position: 'relative',
@@ -512,8 +512,8 @@ export default function PlanetBirthWizard({ isOpen, onClose }: PlanetBirthWizard
                         autoFocus
                         type="text"
                         value={label}
-                        onChange={(e) => setLabel(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && canProceed() && nextStep()}
+                        onChange={(e: any) => setLabel(e.target.value)}
+                        onKeyPress={(e: any) => e.key === 'Enter' && canProceed() && nextStep()}
                         placeholder="Display Name"
                         style={{
                           position: 'relative',
@@ -542,7 +542,7 @@ export default function PlanetBirthWizard({ isOpen, onClose }: PlanetBirthWizard
                         transition={{ delay: 0.2 }}
                         autoFocus
                         value={description}
-                        onChange={(e) => setDescription(e.target.value)}
+                        onChange={(e: any) => setDescription(e.target.value)}
                         placeholder="Profile description..."
                         rows={4}
                         style={{
@@ -571,7 +571,7 @@ export default function PlanetBirthWizard({ isOpen, onClose }: PlanetBirthWizard
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.2 }}
                         value={strategy}
-                        onChange={(e) => setStrategy(e.target.value)}
+                        onChange={(e: any) => setStrategy(e.target.value)}
                         style={{
                           position: 'relative',
                           width: '100%',
@@ -617,7 +617,7 @@ export default function PlanetBirthWizard({ isOpen, onClose }: PlanetBirthWizard
                         min="0"
                         max="100"
                         value={weight}
-                        onChange={(e) => setWeight(parseInt(e.target.value))}
+                        onChange={(e: any) => setWeight(parseInt(e.target.value))}
                         style={{ 
                           width: '100%',
                           height: 12,

@@ -4,10 +4,10 @@ import { useOrganStore } from '../store';
 import { motion } from 'framer-motion';
 
 export default function BindingLayer() {
-  const snapshot = useOrganStore((state) => state.snapshot);
-  const nodes = useOrganStore((state) => state.nodes);
-  const hoverProfileId = useOrganStore((state) => state.hoverProfileId);
-  const hoverFormatName = useOrganStore((state) => state.hoverFormatName);
+  const snapshot = useOrganStore((state: any) => state.snapshot);
+  const nodes = useOrganStore((state: any) => state.nodes);
+  const hoverProfileId = useOrganStore((state: any) => state.hoverProfileId);
+  const hoverFormatName = useOrganStore((state: any) => state.hoverFormatName);
 
   if (!snapshot) return null;
 
@@ -21,9 +21,9 @@ export default function BindingLayer() {
 
   return (
     <svg style={{ position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'none' }}>
-      {snapshot.bindings.map((binding, idx) => {
+      {snapshot.bindings.map((binding: any, idx: number) => {
         const profileNode = nodes[binding.profileId];
-        const formatIndex = snapshot.formats.findIndex(f => f.name === binding.formatName);
+        const formatIndex = snapshot.formats.findIndex((f: any) => f.name === binding.formatName);
         if (!profileNode || formatIndex === -1) return null;
 
         const formatPos = getFormatPosition(binding.formatName, snapshot.formats.length, formatIndex);
@@ -55,7 +55,7 @@ export default function BindingLayer() {
             />
             
             {/* ENERGY PARTICLES */}
-            {isActive && [0, 0.5].map((offset) => (
+            {isActive && [0, 0.5].map((offset: any) => (
               <motion.circle
                 key={offset}
                 r={4}

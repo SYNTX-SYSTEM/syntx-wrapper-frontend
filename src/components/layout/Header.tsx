@@ -4,10 +4,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { StatusBadge } from '@/components/ui';
 import { useApi } from '@/hooks/useApi';
-import { api } from '@/lib/api';
+import { systemAPI } from '@/lib/api';
 
 export function Header() {
-  const { data: health } = useApi(() => api.getHealth(), []);
+  const { data: health } = useApi(() => systemAPI.getHealth(), []);
 
   return (
     <header className="relative z-50 border-b border-syntx-border/30 bg-syntx-dark/50 backdrop-blur-xl">

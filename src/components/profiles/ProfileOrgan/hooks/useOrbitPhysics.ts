@@ -4,17 +4,17 @@ import { useEffect, useRef } from 'react';
 import { useOrganStore } from '../store';
 
 export function useOrbitPhysics() {
-  const nodes = useOrganStore((state) => state.nodes);
-  const draggingProfileId = useOrganStore((state) => state.draggingProfileId);
-  const editProfileId = useOrganStore((state) => state.editProfileId);
-  const updateNodePosition = useOrganStore((state) => state.updateNodePosition);
+  const nodes = useOrganStore((state: any) => state.nodes);
+  const draggingProfileId = useOrganStore((state: any) => state.draggingProfileId);
+  const editProfileId = useOrganStore((state: any) => state.editProfileId);
+  const updateNodePosition = useOrganStore((state: any) => state.updateNodePosition);
 
   const angleRef = useRef<Record<string, number>>({});
   const animationRef = useRef<number | undefined>(undefined);
   const wasDraggingRef = useRef<string | null>(null);
 
   useEffect(() => {
-    Object.keys(nodes).forEach((id, i) => {
+    Object.keys(nodes).forEach((id, i: number) => {
       if (!angleRef.current[id]) {
         angleRef.current[id] = (i / Object.keys(nodes).length) * Math.PI * 2;
       }
@@ -27,7 +27,7 @@ export function useOrbitPhysics() {
       const centerY = h / 2;
       const orbitRadius = Math.min(w, h) * 0.3;
 
-      Object.values(nodes).forEach((node) => {
+      Object.values(nodes).forEach((node: any) => {
         if (draggingProfileId === node.id || editProfileId === node.id) {
           wasDraggingRef.current = node.id;
           return;

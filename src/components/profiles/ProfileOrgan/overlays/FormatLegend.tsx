@@ -79,7 +79,7 @@ export default function FormatLegend() {
 
         {/* FORMATS LIST - STERNEN STROM */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {formats.map((format, index) => {
+          {formats.map((format: any, index: number) => {
             const color = getFormatColor(format.name);
             
             return (

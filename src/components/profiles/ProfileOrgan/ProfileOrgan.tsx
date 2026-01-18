@@ -15,7 +15,7 @@ import BindingFlash from './overlays/BindingFlash';
 import ErrorNotification from './overlays/ErrorNotification';
 
 export default function ProfileOrgan() {
-  const setSnapshot = useOrganStore((state) => state.setSnapshot);
+  const setSnapshot = useOrganStore((state: any) => state.setSnapshot);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [flashMessage, setFlashMessage] = useState('');
   const [showFlash, setShowFlash] = useState(false);
@@ -91,12 +91,12 @@ export default function ProfileOrgan() {
     // Show molecule animation
     const snapshot = useOrganStore.getState().snapshot;
     if (snapshot) {
-      const profile = snapshot.profiles.find(p => p.id === profileId);
+      const profile = snapshot.profiles.find((p: any) => p.id === profileId);
       if (profile) {
         setBindingNotification({
           profileId: profileId,
           profileLabel: profile.label || profileId,
-          profileStrategy: profile.strategy || 'unknown',
+          profileStrategy: (profile as any).strategy || 'unknown',
           formatName: formatName,
         });
       }

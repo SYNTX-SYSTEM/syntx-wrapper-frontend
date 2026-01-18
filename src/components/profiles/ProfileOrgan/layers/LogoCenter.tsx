@@ -19,7 +19,7 @@ export default function LogoCenter({ onCreateClick }: LogoCenterProps) {
         zIndex: 1, 
         pointerEvents: 'none' 
       }}>
-        {[300, 350, 400].map((radius, idx) => (
+        {[300, 350, 400].map((radius, idx: number) => (
           <motion.div
             key={radius}
             style={{
@@ -81,7 +81,7 @@ export default function LogoCenter({ onCreateClick }: LogoCenterProps) {
             <div style={{ 
               width: '100%', 
               height: '4px', 
-              background: 'linear-gradient(90deg, transparent, rgba(0,255,100,0.6), transparent)' 
+              background: 'linear-gradient(90deg, transparent, rgba(0,255,100,0.6), transparent: any)' 
             }} />
           </motion.div>
 

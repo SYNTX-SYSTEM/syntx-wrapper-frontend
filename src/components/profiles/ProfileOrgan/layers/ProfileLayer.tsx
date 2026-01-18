@@ -11,19 +11,19 @@ interface ProfileLayerProps {
 }
 
 export default function ProfileLayer({ onBindingCreated, onBindingError }: ProfileLayerProps) {
-  const snapshot = useOrganStore((state) => state.snapshot);
-  const nodes = useOrganStore((state) => state.nodes);
-  const hoverProfileId = useOrganStore((state) => state.hoverProfileId);
-  const focusProfileId = useOrganStore((state) => state.focusProfileId);
-  const draggingProfileId = useOrganStore((state) => state.draggingProfileId);
-  const editProfileId = useOrganStore((state) => state.editProfileId);
-  const setHover = useOrganStore((state) => state.setHover);
-  const setFocus = useOrganStore((state) => state.setFocus);
-  const setDragging = useOrganStore((state) => state.setDragging);
-  const setEdit = useOrganStore((state) => state.setEdit);
-  const updateNodePosition = useOrganStore((state) => state.updateNodePosition);
-  const setBindingPreview = useOrganStore((state) => state.setBindingPreview);
-  const bindProfile = useOrganStore((state) => state.bindProfile);
+  const snapshot = useOrganStore((state: any) => state.snapshot);
+  const nodes = useOrganStore((state: any) => state.nodes);
+  const hoverProfileId = useOrganStore((state: any) => state.hoverProfileId);
+  const focusProfileId = useOrganStore((state: any) => state.focusProfileId);
+  const draggingProfileId = useOrganStore((state: any) => state.draggingProfileId);
+  const editProfileId = useOrganStore((state: any) => state.editProfileId);
+  const setHover = useOrganStore((state: any) => state.setHover);
+  const setFocus = useOrganStore((state: any) => state.setFocus);
+  const setDragging = useOrganStore((state: any) => state.setDragging);
+  const setEdit = useOrganStore((state: any) => state.setEdit);
+  const updateNodePosition = useOrganStore((state: any) => state.updateNodePosition);
+  const setBindingPreview = useOrganStore((state: any) => state.setBindingPreview);
+  const bindProfile = useOrganStore((state: any) => state.bindProfile);
 
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
@@ -57,7 +57,7 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
         ];
         
         const colors: Record<string, string> = {};
-        Array.from(uniqueStrategies).forEach((strat, idx) => {
+        Array.from(uniqueStrategies).forEach((strat, idx: number) => {
           colors[strat] = colorPalette[idx % colorPalette.length];
         });
         
@@ -95,7 +95,7 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
     const newPos = { x: e.clientX - dragStart.x, y: e.clientY - dragStart.y };
     updateNodePosition(draggingProfileId, newPos);
 
-    const closestResult = snapshot.formats.reduce<{ name: string; distance: number } | null>((closest, format, idx) => {
+    const closestResult = snapshot.formats.reduce((closest: any, format: any, idx: number) => {
       const formatPos = getFormatPosition(format.name, snapshot.formats.length, idx);
       const dist = Math.hypot(newPos.x - formatPos.x, newPos.y - formatPos.y);
       if (!closest || dist < closest.distance) {
@@ -145,7 +145,7 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
 
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 10 }} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
-      {snapshot.profiles.map((profile) => {
+      {snapshot.profiles.map((profile: any) => {
         const node = nodes[profile.id];
         if (!node) return null;
         
@@ -160,7 +160,7 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
           { offset: 58, speed: 0.0003, opacity: 0.08, dashArray: '1 14' },
         ];
         const isDragging = draggingProfileId === profile.id;
-        const bindingCount = snapshot.bindings.filter(b => b.profileId === profile.id).length;
+        const bindingCount = snapshot.bindings.filter((b: any) => b.profileId === profile.id).length;
         const colors = getProfileColor(bindingCount);
         const strategy = profileStrategies[profile.id] || 'unknown';
         const ringColor = strategyColors[strategy] || '#606080';
@@ -191,8 +191,8 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
         return (
           <div
             key={profile.id}
-            onMouseDown={(e) => handleMouseDown(e, profile.id)}
-            onMouseEnter={(e) => {
+            onMouseDown={(e: any) => handleMouseDown(e, profile.id)}
+            onMouseEnter={(e: any) => {
               setHover(profile.id);
               setHoverPosition({ x: e.clientX, y: e.clientY });
             }}
@@ -222,7 +222,7 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
               overflow: 'visible',
             }}>
               {/* ORBITAL SATURN RINGS 🪐 */}
-              {orbitalRings.map((ring, idx) => {
+              {orbitalRings.map((ring, idx: number) => {
                 const rotation = (time * ring.speed + idx * 0.5) % (Math.PI * 2);
                 const rotationDeg = (rotation * 180 / Math.PI);
                 
@@ -264,7 +264,7 @@ export default function ProfileLayer({ onBindingCreated, onBindingError }: Profi
             </div>
             
             {/* RIPPLE WAVES FROM INSIDE OUT 🌊 */}
-            {[1, 2, 3, 4].map((waveIdx) => {
+            {[1, 2, 3, 4].map((waveIdx: any) => {
               const waveDelay = waveIdx * 0.25;
               const wavePhase = (time * 0.8 + profile.id.length * 0.2 + waveDelay) % 2;
               

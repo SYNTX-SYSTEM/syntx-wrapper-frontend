@@ -50,7 +50,7 @@ export function BirthTrigger({ profile, selectedFormat, onPropertyChange, onBirt
       {/* Oracle Eye */}
       <OracleEye 
         profile={profile}
-        onPropertyChange={onPropertyChange}
+        onPropertyChange={onPropertyChange || (() => {})}
       />
 
       {/* BIRTH BUTTON */}

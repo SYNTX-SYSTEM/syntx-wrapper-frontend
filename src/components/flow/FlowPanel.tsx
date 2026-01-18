@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { api } from '@/lib/api';
+import { api, systemAPI } from '@/lib/api';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🎨 SYNTX COLORS & CONFIG
@@ -162,8 +162,8 @@ function SessionDetailModal({ sessionId, onClose, onReplay }: {
 
   useEffect(() => {
     Promise.all([
-      api.getSession(sessionId),
-      api.getSessionReplay(sessionId)
+      systemAPI.getSession(sessionId),
+      systemAPI.getSessionReplay(sessionId)
     ]).then(([detailData, replayData]) => {
       setDetail(detailData as SessionDetail);
       setReplay(replayData);
@@ -388,7 +388,7 @@ export default function FlowPanel() {
   const fetchSessions = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.getSessions(limit, page * limit);
+      const data = await systemAPI.getSessions(limit, page * limit);
       setSessions(data.sessions || []);
       setTotalSessions(data.total || 0);
     } catch (e) {

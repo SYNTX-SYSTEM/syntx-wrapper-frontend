@@ -131,7 +131,7 @@ export default function BindingSuccessNotification({
               style={{ position: 'relative' }}
             >
               {/* ORBITS */}
-              {[0, 60, 120].map((rotation, i) => (
+              {[0, 60, 120].map((rotation, i: number) => (
                 <motion.div
                   key={i}
                   animate={{ rotate: rotation + 360 }}
@@ -192,7 +192,7 @@ export default function BindingSuccessNotification({
               }}
             >
               {/* PARTICLES TRAVELING */}
-              {[0, 0.5, 1].map((delay) => (
+              {[0, 0.5, 1].map((delay: any) => (
                 <motion.div
                   key={delay}
                   animate={{
@@ -225,7 +225,7 @@ export default function BindingSuccessNotification({
               style={{ position: 'relative' }}
             >
               {/* ORBITS */}
-              {[0, 60, 120].map((rotation, i) => (
+              {[0, 60, 120].map((rotation, i: number) => (
                 <motion.div
                   key={i}
                   animate={{ rotate: rotation - 360 }}

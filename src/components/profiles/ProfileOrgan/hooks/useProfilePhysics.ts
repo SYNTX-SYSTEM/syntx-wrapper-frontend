@@ -4,17 +4,17 @@ import { useEffect, useRef } from 'react';
 import { useOrganStore } from '../store';
 
 export function useProfilePhysics() {
-  const nodes = useOrganStore((state) => state.nodes);
-  const draggingProfileId = useOrganStore((state) => state.draggingProfileId);
-  const editProfileId = useOrganStore((state) => state.editProfileId);
-  const updateNodePosition = useOrganStore((state) => state.updateNodePosition);
-  const updateNodeVelocity = useOrganStore((state) => state.updateNodeVelocity);
+  const nodes = useOrganStore((state: any) => state.nodes);
+  const draggingProfileId = useOrganStore((state: any) => state.draggingProfileId);
+  const editProfileId = useOrganStore((state: any) => state.editProfileId);
+  const updateNodePosition = useOrganStore((state: any) => state.updateNodePosition);
+  const updateNodeVelocity = useOrganStore((state: any) => state.updateNodeVelocity);
 
   const animationRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const breathe = () => {
-      Object.values(nodes).forEach((node) => {
+      Object.values(nodes).forEach((node: any) => {
         if (draggingProfileId === node.id || editProfileId === node.id) return;
 
         const drift = {

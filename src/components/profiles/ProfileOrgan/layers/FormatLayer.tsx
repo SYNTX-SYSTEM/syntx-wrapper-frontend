@@ -8,9 +8,9 @@ import { motion } from 'framer-motion';
 
 export default function FormatLayer() {
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
-  const snapshot = useOrganStore((state) => state.snapshot);
-  const hoverFormatName = useOrganStore((state) => state.hoverFormatName);
-  const setHoverFormat = useOrganStore((state) => state.setHoverFormat);
+  const snapshot = useOrganStore((state: any) => state.snapshot);
+  const hoverFormatName = useOrganStore((state: any) => state.hoverFormatName);
+  const setHoverFormat = useOrganStore((state: any) => state.setHoverFormat);
 
   if (!snapshot) return null;
 
@@ -24,15 +24,15 @@ export default function FormatLayer() {
 
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none' }}>
-      {snapshot.formats.map((format, index) => {
+      {snapshot.formats.map((format: any, index: number) => {
         const pos = getFormatPosition(format.name, snapshot.formats.length, index);
         const isHovered = hoverFormatName === format.name;
-        const hasBinding = snapshot.bindings.some(b => b.formatName === format.name);
+        const hasBinding = snapshot.bindings.some((b: any) => b.formatName === format.name);
 
         return (
           <motion.div
             key={format.name}
-            onMouseEnter={(e) => {
+            onMouseEnter={(e: any) => {
               console.log('🔥 onMouseEnter fired!', format.name, { x: e.clientX, y: e.clientY });
               setHoverFormat(format.name);
               setHoverPosition({ x: e.clientX, y: e.clientY });
@@ -88,7 +88,7 @@ export default function FormatLayer() {
               />
               
               {/* DOCKING PORTS */}
-              {[0, 120, 240].map((angle, i) => {
+              {[0, 120, 240].map((angle, i: number) => {
                 const x = 40 + Math.cos((angle * Math.PI) / 180) * 20;
                 const y = 40 + Math.sin((angle * Math.PI) / 180) * 20;
                 return (

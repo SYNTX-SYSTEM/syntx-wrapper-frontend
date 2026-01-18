@@ -14,8 +14,8 @@ interface ProfileHoverOverlayProps {
 }
 
 export default function ProfileHoverOverlay({ isVisible, position, profileId }: ProfileHoverOverlayProps) {
-  const bindingRefreshTrigger = useOrganStore((state) => state.bindingRefreshTrigger);
-  const profileBindings = useOrganStore((state) => state.profileBindings);
+  const bindingRefreshTrigger = useOrganStore((state: any) => state.bindingRefreshTrigger);
+  const profileBindings = useOrganStore((state: any) => state.profileBindings);
   
   const [data, setData] = useState<ProfileTooltipData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,7 @@ export default function ProfileHoverOverlay({ isVisible, position, profileId }: 
     setError(false);
 
     getProfileTooltipData(profileId)
-      .then((tooltipData) => {
+      .then((tooltipData: any) => {
         if (tooltipData) {
           const cachedFormat = profileBindings.get(profileId);
           if (cachedFormat) {
@@ -422,7 +422,7 @@ export default function ProfileHoverOverlay({ isVisible, position, profileId }: 
                   </motion.div>
 
                   {data.boundFormats.length > 0 ? (
-                    data.boundFormats.slice(0, 1).map((formatName) => {
+                    data.boundFormats.slice(0, 1).map((formatName: any) => {
                       const formatColor = getFormatColor(formatName);
                       return (
                         <motion.div
@@ -458,7 +458,7 @@ export default function ProfileHoverOverlay({ isVisible, position, profileId }: 
                             { top: '5px', right: '5px', rotate: 90 },
                             { bottom: '5px', right: '5px', rotate: 180 },
                             { bottom: '5px', left: '5px', rotate: 270 }
-                          ].map((pos, i) => (
+                          ].map((pos, i: number) => (
                             <motion.div
                               key={i}
                               animate={{
@@ -480,7 +480,7 @@ export default function ProfileHoverOverlay({ isVisible, position, profileId }: 
                           ))}
 
                           {/* MEGA PARTICLES */}
-                          {[...Array(18)].map((_, i) => (
+                          {[...Array(18)].map((_, i: number) => (
                             <motion.div
                               key={i}
                               animate={{
