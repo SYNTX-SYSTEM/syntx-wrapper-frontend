@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import type { SystemSnapshot, ProfileNodeState, Vector2, BindingPreview } from '@/types/profile-organ';
-
+import type { SystemSnapshot, ProfileNodeState, Vector2, BindingPreview, Profile } from '@/types/profile-organ';
 export const PREVIEW_THRESHOLD = 150;
 export const COMMIT_THRESHOLD = 100;
 
@@ -29,7 +28,7 @@ interface OrganState {
   unbindProfile: (formatName: string) => Promise<{ success: boolean; error?: string }>;
 }
 
-export const useOrganStore = create<OrganState>((set) => ({
+export const useOrganStore = create<OrganState>((set: any) => ({
   snapshot: null,
   nodes: {},
   hoverProfileId: null,
@@ -41,11 +40,11 @@ export const useOrganStore = create<OrganState>((set) => ({
   bindingRefreshTrigger: 0,
   profileBindings: new Map(),
   
-  setSnapshot: (snapshot) => set((state) => {
+  setSnapshot: (snapshot: any) => set((state: any) => {
     const existingNodes = state.nodes;
     const newNodes: Record<string, ProfileNodeState> = {};
     
-    snapshot.profiles.forEach((profile, index) => {
+    snapshot.profiles.forEach((profile: Profile, index: number) => {
       if (existingNodes[profile.id]) {
         newNodes[profile.id] = existingNodes[profile.id];
       } else {
@@ -70,29 +69,29 @@ export const useOrganStore = create<OrganState>((set) => ({
     return { snapshot, nodes: newNodes };
   }),
   
-  updateNodePosition: (id, position) => set((state) => ({
+  updateNodePosition: (id, position: any) => set((state: any) => ({
     nodes: {
       ...state.nodes,
       [id]: { ...state.nodes[id], position }
     }
   })),
   
-  updateNodeVelocity: (id, velocity) => set((state) => ({
+  updateNodeVelocity: (id, velocity: any) => set((state: any) => ({
     nodes: {
       ...state.nodes,
       [id]: { ...state.nodes[id], velocity }
     }
   })),
   
-  setHover: (id) => set({ hoverProfileId: id }),
-  setHoverFormat: (name) => set({ hoverFormatName: name }),
-  setFocus: (id) => set({ focusProfileId: id }),
-  setDragging: (id) => set({ draggingProfileId: id }),
-  setEdit: (id) => set({ editProfileId: id }),
-  setBindingPreview: (preview) => set({ bindingPreview: preview }),
+  setHover: (id: any) => set({ hoverProfileId: id }),
+  setHoverFormat: (name: any) => set({ hoverFormatName: name }),
+  setFocus: (id: any) => set({ focusProfileId: id }),
+  setDragging: (id: any) => set({ draggingProfileId: id }),
+  setEdit: (id: any) => set({ editProfileId: id }),
+  setBindingPreview: (preview: any) => set({ bindingPreview: preview }),
 
   
-  unbindProfile: async (formatName) => {
+  unbindProfile: async (formatName: any) => {
     try {
       const deleteUrl = `https://dev.syntx-system.com/mapping/formats/${formatName}/loesche-format-profil-binding`;
       const response = await fetch(deleteUrl, {
@@ -106,9 +105,9 @@ export const useOrganStore = create<OrganState>((set) => ({
       // Update store - remove binding
       const currentSnapshot = useOrganStore.getState().snapshot;
       if (currentSnapshot) {
-        const newBindings = currentSnapshot.bindings.filter(b => b.formatName !== formatName);
+        const newBindings = currentSnapshot.bindings.filter((b: any) => b.formatName !== formatName);
         useOrganStore.getState().setSnapshot({
-          ...updatedSnapshot,
+          ...currentSnapshot,
           bindings: newBindings,
           timestamp: Date.now(),
         });
@@ -116,7 +115,7 @@ export const useOrganStore = create<OrganState>((set) => ({
       
       // Remove from cache
       const profile = useOrganStore.getState().snapshot?.profiles.find(p => 
-        useOrganStore.getState().snapshot?.bindings.some(b => 
+        useOrganStore.getState().snapshot?.bindings.some((b: any) => 
           b.profileId === p.id && b.formatName === formatName
         )
       );
@@ -133,7 +132,7 @@ export const useOrganStore = create<OrganState>((set) => ({
       return { success: false, error: 'NETWORK ERROR' };
     }
   },
-  bindProfile: async (profileId, formatName) => {
+  bindProfile: async (profileId, formatName: any) => {
     try {
       // 0. Check if profile already has a binding - UNBIND OLD FIRST! 🔥
       const existingSnapshot = useOrganStore.getState().snapshot;
@@ -173,7 +172,7 @@ export const useOrganStore = create<OrganState>((set) => ({
       const updatedSnapshot = useOrganStore.getState().snapshot;
       if (updatedSnapshot) {
         const newBindings = [
-          ...updatedSnapshot.bindings.filter(b => b.formatName !== formatName),
+          ...updatedSnapshot.bindings.filter((b: any) => b.formatName !== formatName),
           { profileId: profileId, formatName: formatName }
         ];
         

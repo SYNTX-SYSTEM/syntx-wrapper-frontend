@@ -81,11 +81,11 @@ export const useScoringStore = create<FieldState>((set, get) => ({
     
     // Calculate remaining weight for other components
     const otherComponents = componentsList.filter(([name]) => name !== componentName);
-    const totalOtherWeight = otherComponents.reduce((sum, [_, comp]) => sum + comp.weight, 0);
+    const totalOtherWeight = otherComponents.reduce((sum, [_, comp]: [string, any]) => sum + comp.weight, 0);
     const remainingWeight = 1.0 - newWeight;
     
     // Distribute remaining weight proportionally
-    otherComponents.forEach(([name, comp]) => {
+    otherComponents.forEach(([name, comp]: [string, any]) => {
       const proportion = totalOtherWeight > 0 ? comp.weight / totalOtherWeight : 1 / otherComponents.length;
       components[name].weight = remainingWeight * proportion;
     });

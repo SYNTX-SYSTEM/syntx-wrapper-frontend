@@ -2,7 +2,7 @@
 
 import { Card, Button, StatusBadge } from '@/components/ui';
 import { useApi, useMutation } from '@/hooks/useApi';
-import { api } from '@/lib/api';
+import { api, wrapperAPI } from '@/lib/api';
 import type { Wrapper } from '@/types/api';
 
 const FREQUENCY_MAP: Record<string, { label: string; color: string }> = {
@@ -12,8 +12,8 @@ const FREQUENCY_MAP: Record<string, { label: string; color: string }> = {
 };
 
 export function WrapperList() {
-  const { data, loading, refetch } = useApi(() => api.getWrappers(), []);
-  const { mutate: activate, loading: activating } = useMutation(api.setRuntimeWrapper);
+  const { data, loading, refetch } = useApi(() => wrapperAPI.getWrappers(), []);
+  const { mutate: activate, loading: activating } = useMutation((name: string) => wrapperAPI.updateWrapper(name, {}));
 
   const handleActivate = async (name: string) => {
     try {
@@ -50,7 +50,7 @@ export function WrapperList() {
         </div>
       ) : (
         <div className="space-y-3">
-          {data?.wrappers.map((wrapper) => (
+          {data?.wrappers.map((wrapper: any) => (
             <div key={wrapper.name} className={`
               relative p-4 rounded-xl border transition-all duration-300
               ${wrapper.is_active 

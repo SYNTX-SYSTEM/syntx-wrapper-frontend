@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getProfile } from '@/lib/api';
+// getProfile removed - not available
 import ComponentBreakdownPanel from '../component-breakdown/ComponentBreakdownPanel';
 
 interface Props {
@@ -23,7 +23,8 @@ export default function ResonanceStream({ profileId }: Props) {
     if (!profileId) return;
     setLoading(true);
     try {
-      const data = await getProfile(profileId);
+      // const data = await getProfile(profileId); // getProfile not available
+      const data = null;
       setProfile(data);
     } catch (error) {
       console.error('Failed to fetch profile:', error);

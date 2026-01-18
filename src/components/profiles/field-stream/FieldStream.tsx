@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Zap, Moon } from 'lucide-react';
 import { api } from '@/lib/api';
-import { getProfileAnalytics } from '@/lib/api-profiles';
+import { getAllProfileAnalytics } from '@/lib/api-profiles';
 
 interface Props {
   onSelectProfile: (profileId: string) => void;
@@ -35,11 +35,11 @@ export default function FieldStream({ onSelectProfile, selectedProfile }: Props)
     try {
       const [profilesData, analyticsData] = await Promise.all([
         api.getProfiles(),
-        getProfileAnalytics(7)
+        getAllProfileAnalytics(7)
       ]);
       
       const profilesList: ProfileData[] = Object.entries(profilesData.profiles).map(([id, profile]: [string, any]) => {
-        const analytics = analyticsData.profiles[id];
+        const analytics = (analyticsData.profiles as any)[id];
         
         return {
           id,

@@ -5,7 +5,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { api } from '@/lib/api';
+import { api, wrapperAPI } from '@/lib/api';
 import { Wrapper, WrapperDetail, WrapperStats, COLORS, getWrapperColor, formatDate } from './types';
 import { cyberStyles } from './styles';
 import { CreateModal, ViewModal, EditModal, StatsModal, DeleteModal } from './modals';
@@ -45,7 +45,7 @@ export default function WrapperPanel() {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.getWrappersFull();
+      const data = await wrapperAPI.getWrappersFull();
       setWrappers((data.wrappers || []).map((w: any) => ({ name: w.name, size_bytes: w.size_bytes, size_human: w.size_human, last_modified: w.last_modified, is_active: w.is_active })));
       setActiveWrapper((data as any).active_wrapper || "");
       
@@ -68,7 +68,7 @@ export default function WrapperPanel() {
   const openView = async (wrapper: Wrapper) => {
     setViewLoading(true);
     try {
-      const detail = await api.getWrapper(wrapper.name);
+      const detail = await wrapperAPI.getWrapper(wrapper.name);
       setViewWrapper(detail);
     } catch (err) {
       console.error('Failed to load:', err);
@@ -80,9 +80,9 @@ export default function WrapperPanel() {
 
   const openEdit = async (wrapper: Wrapper) => {
     try {
-      const detail = await api.getWrapper(wrapper.name);
+      const detail = await wrapperAPI.getWrapper(wrapper.name);
       // Load meta separately
-      const metaResponse = await api.getWrapperMeta(wrapper.name);
+      const metaResponse = await wrapperAPI.getWrapperMeta(wrapper.name);
       setEditWrapper({
         ...detail,
         meta: metaResponse.meta
@@ -107,7 +107,7 @@ export default function WrapperPanel() {
     setStatsError(null);
     setStatsData(null);
     try {
-      const data = await api.getWrapperStats(wrapper.name);
+      const data = await wrapperAPI.getWrapperStats(wrapper.name);
       setStatsData(data);
     } catch (err: any) {
       setStatsError(err.message || 'Keine Stats');
@@ -120,7 +120,7 @@ export default function WrapperPanel() {
   const handleCreate = async (data: { name: string; content: string; description?: string; author?: string }) => {
     setCreateSaving(true);
     try {
-      await api.createWrapper(data);
+      await wrapperAPI.createWrapper(data);
       setCreateOpen(false);
       fetchWrappers();
     } catch (err: any) {
@@ -135,15 +135,15 @@ export default function WrapperPanel() {
     if (!editWrapper) return;
     setEditSaving(true);
     try {
-      await api.updateWrapper(editWrapper.name, { content });
+      await wrapperAPI.updateWrapper(editWrapper.name, { content });
       if (formatData?.format) {
-        await api.bindFormat(editWrapper.name, formatData.format);
+        await wrapperAPI.updateWrapper(editWrapper.name, formatData.format);
       }
       setSuccessMessage(formatData?.format ? "⚡ " + editWrapper.name + " → " + formatData.format : "⚡ " + editWrapper.name + " gespeichert");
       setShowSuccess(true);
       setTimeout(() => { setShowSuccess(false); }, 2000);
       // Formats neu laden ohne Modal zu schließen
-      const freshData = await api.getWrappersFull();
+      const freshData = await wrapperAPI.getWrappersFull();
       const newFormats: Record<string, string> = {};
       (freshData.wrappers || []).forEach((w: any) => { newFormats[w.name] = w.meta?.format?.toUpperCase() || "KEIN FORMAT"; });
       setWrapperFormats(newFormats);
@@ -158,7 +158,7 @@ export default function WrapperPanel() {
   // 🎯 ACTIVATE
   const handleActivate = async (name: string) => {
     try {
-      await api.setRuntimeWrapper(name);
+      await wrapperAPI.updateWrapper(name, {});
       setViewWrapper(null);
       fetchWrappers();
     } catch (err: any) {
@@ -171,7 +171,7 @@ export default function WrapperPanel() {
     if (!deleteWrapper) return;
     setDeleting(true);
     try {
-      await api.deleteWrapper(deleteWrapper.name);
+      await wrapperAPI.deleteWrapper(deleteWrapper.name);
       setDeleteWrapper(null);
       fetchWrappers();
     } catch (err: any) {

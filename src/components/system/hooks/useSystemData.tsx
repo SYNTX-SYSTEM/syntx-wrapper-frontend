@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { api, Wrapper } from '@/lib/api';
+import { systemAPI } from '@/lib/api';
+import { wrapperAPI, Wrapper } from '@/lib/api';
 
 // ═══════════════════════════════════════════════════════════════
 // 🌊 SYSTEM DATA HOOK - CENTRALIZED DATA FETCHING
@@ -61,9 +62,9 @@ export function useSystemData(): UseSystemDataReturn {
 
       // Use CORRECT endpoints!
       const [healthData, configData, wrappersData] = await Promise.all([
-        api.getResonanzHealth(),     // ✅ /resonanz/health
-        api.getConfig(),              // ✅ /resonanz/config/default-wrapper
-        api.getWrappers()             // ✅ /resonanz/wrappers
+        systemAPI.getResonanzHealth(),     // ✅ /resonanz/health
+        systemAPI.getConfig(),              // ✅ /resonanz/config/default-wrapper
+        wrapperAPI.getWrappers()             // ✅ /resonanz/wrappers
       ]);
 
       setData({
@@ -94,7 +95,7 @@ export function useSystemData(): UseSystemDataReturn {
   // Set default wrapper
   const setDefaultWrapper = useCallback(async (name: string) => {
     try {
-      await api.setConfig(name);
+      await wrapperAPI.updateWrapper(name, {});
       await fetchData(); // Refresh after change
     } catch (err: any) {
       console.error('Failed to set default wrapper:', err);
@@ -105,7 +106,7 @@ export function useSystemData(): UseSystemDataReturn {
   // Get wrapper stats
   const getWrapperStats = useCallback(async (name: string): Promise<WrapperStats | null> => {
     try {
-      const stats = await api.getWrapperStats(name);
+      const stats = await wrapperAPI.getWrapperStats(name);
       return stats;
     } catch (err) {
       console.error(`Failed to get stats for ${name}:`, err);

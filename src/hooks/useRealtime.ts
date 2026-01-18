@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { api, StreamEvent, StatsResponse } from '@/lib/api';
+import { api, statsAPI, StreamEvent, StatsResponse } from '@/lib/api';
+import { systemAPI } from '@/lib/api';
 
 interface RealtimeState {
   events: StreamEvent[];
@@ -29,15 +30,15 @@ export function useRealtime(interval = 5000) {
     try {
       const [streamData, statsData] = await Promise.all([
         api.getStream(50),
-        api.getStats(),
+        statsAPI.getStats(),
       ]);
 
       const newEvents = streamData.events || [];
-      const newEventIds = newEvents.map(e => e.request_id);
+      const newEventIds = newEvents.map((e: any) => e.request_id);
       
       // Check for new events
       const brandNewCount = newEventIds.filter(
-        id => !prevEventsRef.current.includes(id)
+        (id: any) => !prevEventsRef.current.includes(id)
       ).length;
 
       if (brandNewCount > 0 && prevEventsRef.current.length > 0) {
@@ -78,7 +79,7 @@ export function useRealtimeHealth(interval = 10000) {
   useEffect(() => {
     const check = async () => {
       try {
-        const data = await api.getHealth();
+        const data = await systemAPI.getHealth();
         setHealth(data);
         setIsOnline(data?.status?.includes('GESUND') || data?.status === 'healthy');
       } catch {

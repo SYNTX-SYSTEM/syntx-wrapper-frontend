@@ -22,7 +22,7 @@ export function useHealthCheck(checkInterval = 30000) {
     setIsChecking(true);
     
     try {
-      const response = await fetch('/health', {
+      const response = await fetch('/resonanz/health', {
         method: 'GET',
         cache: 'no-store',
       });

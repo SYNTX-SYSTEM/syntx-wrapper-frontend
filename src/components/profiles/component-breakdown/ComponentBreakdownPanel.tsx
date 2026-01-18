@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import PatternMolecule from './PatternMolecule';
-import { getProfile, getProfileComponentBreakdown } from '@/lib/api';
+import { getProfileComponentBreakdown } from '@/lib/api-profiles';
 
 interface Props {
   profileId: string;
