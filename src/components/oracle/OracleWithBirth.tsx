@@ -5,11 +5,12 @@ import { OracleHeader } from './OracleHeader';
 import { OracleGraph } from './OracleGraph';
 import { GenesisGate } from './GenesisGate';
 import { JsonInjectPortal } from './JsonInjectPortal';
-import { WizardFlow } from './WizardFlow';
+import { WizardFlow } from './wizard/WizardFlow';
 import { ORACLE_COLORS } from './constants';
 
 export function OracleWithBirth() {
   const [birthMode, setBirthMode] = useState<string | null>(null);
+  const [formatName, setFormatName] = useState<string>("sigma");
 
   console.log('🔄 OracleWithBirth RENDER - birthMode:', birthMode);
 
@@ -127,6 +128,7 @@ export function OracleWithBirth() {
 
       {birthMode === 'wizard' && (
         <WizardFlow
+          selectedFormat={formatName || "sigma"}
           onComplete={(data) => {
             console.log('🌊 WIZARD COMPLETE:', data);
             alert('WIZARD COMPLETE!');
